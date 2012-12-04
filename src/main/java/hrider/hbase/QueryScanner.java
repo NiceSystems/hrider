@@ -1,6 +1,5 @@
 package hrider.hbase;
 
-import hrider.data.DataRow;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.*;

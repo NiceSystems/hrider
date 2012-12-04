@@ -16,6 +16,11 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
+  <component name="Commander">
+    <leftPanel />
+    <rightPanel />
+    <splitter proportion="0.5" />
+  </component>
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="" />
   </component>
@@ -70,8 +75,8 @@
       <property name="field_breakpoints_groupByClasses" value="true" />
       <property name="method_breakpoints_groupByClasses" value="true" />
       <property name="exception_breakpoints_viewId" value="TABLE" />
-      <property name="exception_breakpoints_groupByClasses" value="true" />
       <property name="field_breakpoints_viewId" value="TABLE" />
+      <property name="exception_breakpoints_groupByClasses" value="true" />
       <property name="method_breakpoints_groupByMethods" value="false" />
     </ui_properties>
   </component>
@@ -96,10 +101,6 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/src/main/java/hrider/hbase/QueryType.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/hbase/Operator.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/forms/ScanDialog.form" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/forms/ScanDialog.java" />
         <option value="$PROJECT_DIR$/src/main/java/hrider/hbase/Query.java" />
         <option value="$PROJECT_DIR$/src/main/java/hrider/hbase/Scanner.java" />
         <option value="$PROJECT_DIR$/src/main/java/hrider/hbase/QueryScanner.java" />
@@ -112,6 +113,10 @@
         <option value="$PROJECT_DIR$/src/main/java/hrider/ui/controls/xml/XmlEditor.java" />
         <option value="$PROJECT_DIR$/src/main/java/hrider/ui/design/JCellEditor.java" />
         <option value="$PROJECT_DIR$/src/main/java/hrider/ui/forms/PasteDialog.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/config/Configurator.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/forms/ScanDialog.form" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/forms/ScanDialog.java" />
+        <option value="$PROJECT_DIR$/pom.xml" />
       </list>
     </option>
   </component>
@@ -133,6 +138,20 @@
         <PATH_ELEMENT>
           <option name="myItemId" value="h-rider" />
           <option name="myItemType" value="org.jetbrains.idea.maven.navigator.MavenProjectsStructure$ProjectNode" />
+        </PATH_ELEMENT>
+      </PATH>
+      <PATH>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="" />
+          <option name="myItemType" value="org.jetbrains.idea.maven.navigator.MavenProjectsStructure$RootNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="h-rider" />
+          <option name="myItemType" value="org.jetbrains.idea.maven.navigator.MavenProjectsStructure$ProjectNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="Lifecycle" />
+          <option name="myItemType" value="org.jetbrains.idea.maven.navigator.MavenProjectsStructure$LifecycleNode" />
         </PATH_ELEMENT>
       </PATH>
       <PATH>
@@ -193,6 +212,20 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="PackagesPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="h-rider" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="h-rider" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
       <pane id="Scope">
         <subPane subId="Project Files">
           <PATH>
@@ -217,22 +250,52 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="h-rider" />
+              <option name="myItemId" value="hrider" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
-        </subPane>
-      </pane>
-      <pane id="PackagesPane">
-        <subPane>
           <PATH>
             <PATH_ELEMENT>
               <option name="myItemId" value="h-rider" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
+              <option name="myItemId" value="hrider" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="main" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
               <option name="myItemId" value="h-rider" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="hrider" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="main" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="java" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="hrider" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
@@ -241,14 +304,14 @@
   </component>
   <component name="PropertiesComponent">
     <property name="GenerateAntBuildDialog.generateIdeaHomeProperty" value="false" />
-    <property name="project.structure.last.edited" value="Artifacts" />
-    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.last.edited" value="Libraries" />
     <property name="OverrideImplement.combined" value="true" />
+    <property name="project.structure.proportion" value="0.15" />
     <property name="options.splitter.main.proportions" value="0.15852742" />
     <property name="Repository.Attach.JavaDocs" value="false" />
-    <property name="recentsLimit" value="5" />
-    <property name="MemberChooser.sorted" value="false" />
     <property name="GenerateAntBuildDialog.generateSingleFile" value="false" />
+    <property name="MemberChooser.sorted" value="false" />
+    <property name="recentsLimit" value="5" />
     <property name="GenerateAntBuildDialog.inclineRuntiemClasspath" value="false" />
     <property name="GenerateAntBuildDialog.outputFileNameProperty" value="hbasereader" />
     <property name="GenerateAntBuildDialog.enableUiFormCompile" value="true" />
@@ -260,13 +323,13 @@
     <property name="options.splitter.details.proportions" value="0.2" />
     <property name="Downloaded.Files.Path" value="D:\workspace\testing\hbase-reader\lib" />
     <property name="GoToFile.includeJavaFiles" value="false" />
-    <property name="options.lastSelected" value="preferences.keymap" />
+    <property name="options.lastSelected" value="reference.projectsettings.compiler.rmicompiler" />
     <property name="project.structure.side.proportion" value="0.4055944" />
     <property name="GenerateAntBuildDialog.forceTargetJdk" value="true" />
     <property name="MemberChooser.copyJavadoc" value="false" />
     <property name="GenerateAntBuildDialog.backupFiles" value="true" />
-    <property name="dynamic.classpath" value="false" />
     <property name="options.searchVisible" value="true" />
+    <property name="dynamic.classpath" value="false" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -323,24 +386,6 @@
         <option name="Maven.BeforeRunTask" enabled="false" />
       </method>
     </configuration>
-    <configuration default="true" type="Applet" factoryName="Applet">
-      <module name="" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="HTML_FILE_NAME" />
-      <option name="HTML_USED" value="false" />
-      <option name="WIDTH" value="400" />
-      <option name="HEIGHT" value="300" />
-      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
-      <option name="VM_PARAMETERS" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <method>
-        <option name="AntTarget" enabled="false" />
-        <option name="BuildArtifacts" enabled="false" />
-        <option name="Make" enabled="true" />
-        <option name="Maven.BeforeRunTask" enabled="false" />
-      </method>
-    </configuration>
     <configuration default="true" type="TestNG" factoryName="TestNG">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <module name="" />
@@ -367,6 +412,24 @@
       <envs />
       <properties />
       <listeners />
+      <method>
+        <option name="AntTarget" enabled="false" />
+        <option name="BuildArtifacts" enabled="false" />
+        <option name="Make" enabled="true" />
+        <option name="Maven.BeforeRunTask" enabled="false" />
+      </method>
+    </configuration>
+    <configuration default="true" type="Applet" factoryName="Applet">
+      <module name="" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="HTML_FILE_NAME" />
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <option name="VM_PARAMETERS" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
       <method>
         <option name="AntTarget" enabled="false" />
         <option name="BuildArtifacts" enabled="false" />
@@ -483,8 +546,28 @@
     </task>
     <servers />
   </component>
+  <component name="TodoView" selected-index="0">
+    <todo-panel id="selected-file">
+      <are-packages-shown value="false" />
+      <are-modules-shown value="false" />
+      <flatten-packages value="false" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <are-modules-shown value="false" />
+      <flatten-packages value="false" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="default-changelist">
+      <are-packages-shown value="false" />
+      <are-modules-shown value="false" />
+      <flatten-packages value="false" />
+      <is-autoscroll-to-source value="false" />
+    </todo-panel>
+  </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1696" height="1026" extended-state="6" />
+    <frame x="-8" y="-8" width="1696" height="1026" extended-state="7" />
     <editor active="false" />
     <layout>
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.1621787" sideWeight="0.6293303" order="2" side_tool="false" content_ui="tabs" />
@@ -500,18 +583,18 @@
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32792208" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3290993" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
-      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.21691176" sideWeight="0.5415704" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.2009804" sideWeight="0.4399538" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.37066975" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.20220588" sideWeight="0.48383373" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39950982" sideWeight="0.6293303" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.19362745" sideWeight="0.48383373" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.51616627" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="REST Client" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="IntelliJad Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3290993" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32792208" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Analysis" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
     </layout>
@@ -609,60 +692,9 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/data/DataRow.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="47" column="61" selection-start="994" selection-end="994" vertical-scroll-proportion="0.35671818" />
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/apache/hbase/hbase/0.90.4/hbase-0.90.4-sources.jar!/org/apache/hadoop/hbase/client/Result.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="68" column="13" selection-start="2756" selection-end="2756" vertical-scroll-proportion="0.033293698" />
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/javax/swing/JList.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="2286" column="16" selection-start="85600" selection-end="85600" vertical-scroll-proportion="0.33293697" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/hbase/Query.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="99" column="18" selection-start="2252" selection-end="2252" vertical-scroll-proportion="0.4827586" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/hbase/Scanner.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="178" column="0" selection-start="5064" selection-end="5064" vertical-scroll-proportion="0.24019025">
-          <folding>
-            <element signature="docComment;class#Scanner#0" expanded="false" />
-            <element signature="class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="method#Marker#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="method#equals#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="method#hashCode#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="n#!!doc;n#factory#0;n#Scanner#0" expanded="false" />
-            <element signature="n#!!doc;n#Scanner#0;n#Scanner#0" expanded="false" />
-            <element signature="method#Scanner#0;class#Scanner#0" expanded="false" />
-            <element signature="method#getTableName#0;class#Scanner#0" expanded="false" />
-            <element signature="method#getColumnTypes#0;class#Scanner#0" expanded="false" />
-            <element signature="method#setColumnTypes#0;class#Scanner#0" expanded="false" />
-            <element signature="method#updateColumnType#0;class#Scanner#0" expanded="false" />
-            <element signature="method#current#0;class#Scanner#0" expanded="false" />
-            <element signature="method#prev#0;class#Scanner#0" expanded="false" />
-            <element signature="method#getScanner#0;class#Scanner#0" expanded="false" />
-            <element signature="method#loadColumns#0;class#Scanner#0" expanded="false" />
-            <element signature="method#popMarker#0;class#Scanner#0" expanded="false" />
-            <element signature="method#peekMarker#0;class#Scanner#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/hrider/hbase/QueryScanner.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="96" column="77" selection-start="3152" selection-end="3152" vertical-scroll-proportion="0.4839477">
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#820#855#0" expanded="true" />
-          </folding>
-        </state>
+        <state line="96" column="77" selection-start="3152" selection-end="3152" vertical-scroll-proportion="0.4839477" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/views/DesignerView.form">
@@ -672,132 +704,85 @@
     </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/javax/swing/AbstractCellEditor.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="36" column="22" selection-start="1123" selection-end="1123" vertical-scroll-proportion="0.33293697">
-          <folding />
-        </state>
+        <state line="36" column="22" selection-start="1123" selection-end="1123" vertical-scroll-proportion="0.33293697" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/design/JCheckBoxRenderer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="20" column="13" selection-start="472" selection-end="472" vertical-scroll-proportion="0.10933334">
+        <state line="20" column="13" selection-start="472" selection-end="472" vertical-scroll-proportion="0.10933334" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/views/DesignerView.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="932" column="79" selection-start="39598" selection-end="39598" vertical-scroll-proportion="0.33174792" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/data/ObjectType.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="27" column="4" selection-start="487" selection-end="487" vertical-scroll-proportion="0.33293697" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/controls/json/JsonEditor.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="0" selection-start="433" selection-end="433" vertical-scroll-proportion="-0.29845423" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/forms/AddRowDialog.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="51" column="100" selection-start="2188" selection-end="2188" vertical-scroll-proportion="0.28180736" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/forms/PasteDialog.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="4" selection-start="505" selection-end="505" vertical-scroll-proportion="0.116527945" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/config/Configurator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="14" selection-start="8" selection-end="14" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/controls/xml/XmlEditor.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/forms/Window.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="38" column="47" selection-start="1055" selection-end="1055" vertical-scroll-proportion="0.0011890606">
+        <state line="58" column="29" selection-start="1870" selection-end="1886" vertical-scroll-proportion="0.0">
           <folding>
-            <element signature="docComment;class#XmlEditor#0" expanded="false" />
+            <element signature="e#1918#2093#0" expanded="true" />
+            <element signature="e#2078#2079#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/design/JCellEditor.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="79" column="35" selection-start="2764" selection-end="2764" vertical-scroll-proportion="-0.8977408">
-          <folding>
-            <element signature="e#619#675#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/views/DesignerView.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="932" column="79" selection-start="39598" selection-end="39598" vertical-scroll-proportion="0.33174792">
-          <folding>
-            <element signature="docComment;class#DesignerView#0" expanded="false" />
-            <element signature="method#DesignerView#0;class#DesignerView#0" expanded="false" />
-            <element signature="class#5125:5542" expanded="false" />
-            <element signature="method#insertUpdate#0;class#5125:5542" expanded="false" />
-            <element signature="method#removeUpdate#0;class#5125:5542" expanded="false" />
-            <element signature="method#changedUpdate#0;class#5125:5542" expanded="false" />
-            <element signature="class#5624:6061" expanded="false" />
-            <element signature="method#insertUpdate#0;class#5624:6061" expanded="false" />
-            <element signature="method#removeUpdate#0;class#5624:6061" expanded="false" />
-            <element signature="method#changedUpdate#0;class#5624:6061" expanded="false" />
-            <element signature="class#6119:7388" expanded="false" />
-            <element signature="method#copyOperation#0;class#6119:7388" expanded="false" />
-            <element signature="method#tableOperation#0;class#6119:7388" expanded="false" />
-            <element signature="method#rowOperation#0;class#6119:7388" expanded="false" />
-            <element signature="method#columnOperation#0;class#6119:7388" expanded="false" />
-            <element signature="method#load#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getView#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getHbaseHelper#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#initializeTablesList#0;class#DesignerView#0" expanded="false" />
-            <element signature="class#25023:25821" expanded="false" />
-            <element signature="method#keyReleased#0;class#25023:25821" expanded="false" />
-            <element signature="class#29424:29979" expanded="false" />
-            <element signature="method#mouseMoved#0;class#29424:29979" expanded="false" />
-            <element signature="method#initializeRowsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="class#30680:31223" expanded="false" />
-            <element signature="method#mouseMoved#0;class#30680:31223" expanded="false" />
-            <element signature="class#31282:32240" expanded="false" />
-            <element signature="method#keyReleased#0;class#31282:32240" expanded="false" />
-            <element signature="class#32962:33286" expanded="false" />
-            <element signature="method#mouseClicked#0;class#32962:33286" expanded="false" />
-            <element signature="class#33370:34303" expanded="false" />
-            <element signature="method#columnAdded#0;class#33370:34303" expanded="false" />
-            <element signature="method#columnRemoved#0;class#33370:34303" expanded="false" />
-            <element signature="method#columnMoved#0;class#33370:34303" expanded="false" />
-            <element signature="method#columnMarginChanged#0;class#33370:34303" expanded="false" />
-            <element signature="method#columnSelectionChanged#0;class#33370:34303" expanded="false" />
-            <element signature="method#updateColumns#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#reloadColumns#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#addRows#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#loadTables#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#populateColumnsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#populateColumnsTable#1;class#DesignerView#0" expanded="false" />
-            <element signature="method#copySelectedRowsToClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#copyTableToClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#pasteRowsFromClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#pasteTableFromClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#addColumn#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getVisibleColumns#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#createColumnsPopupMenu#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#clearRows#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#clearTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#stopCellEditing#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getPageSize#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getTableName#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getSelectedTables#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getColumnType#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#isShown#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#hasRawsInClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#hasTableInClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#enableDisablePagingButtons#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#clearError#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#setError#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#setInfo#0;class#DesignerView#0" expanded="false" />
-            <element signature="class#Direction#0;class#DesignerView#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/data/ObjectType.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="4" selection-start="487" selection-end="487" vertical-scroll-proportion="0.33293697">
+        <state line="51" column="0" selection-start="1629" selection-end="1699" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/controls/json/JsonEditor.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/controls/xml/XmlEditor.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="0" selection-start="433" selection-end="433" vertical-scroll-proportion="-0.29845423">
+        <state line="76" column="47" selection-start="2499" selection-end="2538" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/forms/AddRowDialog.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/forms/ScanDialog.form">
+      <provider selected="true" editor-type-id="ui-designer">
+        <state />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/forms/ScanDialog.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="51" column="100" selection-start="2188" selection-end="2188" vertical-scroll-proportion="0.28180736">
+        <state line="35" column="59" selection-start="1156" selection-end="1156" vertical-scroll-proportion="0.3888889">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/forms/PasteDialog.java">
+    <entry file="file://$PROJECT_DIR$/pom.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="4" selection-start="505" selection-end="505" vertical-scroll-proportion="0.116527945">
+        <state line="28" column="58" selection-start="940" selection-end="940" vertical-scroll-proportion="-0.352657">
           <folding />
         </state>
       </provider>
@@ -836,7 +821,7 @@
           <splitter-proportions>
             <option name="proportions">
               <list>
-                <option value="0.15260115" />
+                <option value="0.4055944" />
               </list>
             </option>
           </splitter-proportions>
@@ -848,7 +833,7 @@
           <splitter-proportions>
             <option name="proportions">
               <list>
-                <option value="0.15260115" />
+                <option value="0.4055944" />
               </list>
             </option>
           </splitter-proportions>
@@ -881,7 +866,7 @@
       </state>
       <state key="ProjectLibrariesConfigurable.UI">
         <settings>
-          <last-edited>gson-2.2.2</last-edited>
+          <last-edited>Maven: xmlenc:xmlenc:0.52</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>

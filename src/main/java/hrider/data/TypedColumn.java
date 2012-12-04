@@ -1,7 +1,5 @@
 package hrider.data;
 
-import hrider.data.ObjectType;
-
 /**
  * Created with IntelliJ IDEA.
  * User: igorc

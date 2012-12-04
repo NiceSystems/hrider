@@ -7,11 +7,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created with IntelliJ IDEA.
- * User: igorc
- * Date: 9/12/12
- * Time: 11:19 AM
- * To change this template use File | Settings | File Templates.
+ * This class is responsible for
  */
 public class Configurator {
 
@@ -27,7 +23,9 @@ public class Configurator {
 
         try {
             File file = new File("./config.properties");
-            file.createNewFile();
+            if (!file.exists()) {
+                file.createNewFile();
+            }
 
             stream = new FileInputStream(file);
             properties.load(stream);
