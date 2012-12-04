@@ -1,0 +1,91 @@
+package hrider.ui.forms;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class AddColumnDialog extends JDialog {
+
+    private JPanel  contentPane;
+    private JButton buttonOK;
+    private JButton buttonCancel;
+    private JComboBox comboBoxColumnFamilies;
+    private JTextField columnNameTextField;
+    private boolean           okPressed;
+
+    public AddColumnDialog(Iterable<String> columnFamilies) {
+        setContentPane(this.contentPane);
+        setModal(true);
+        setTitle("Create new column");
+        getRootPane().setDefaultButton(this.buttonOK);
+
+        this.buttonOK.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    onOK();
+                }
+            });
+
+        this.buttonCancel.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    onCancel();
+                }
+            });
+
+        // call onCancel() when cross is clicked
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(
+            new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    onCancel();
+                }
+            });
+
+        for (String columnFamily : columnFamilies) {
+            this.comboBoxColumnFamilies.addItem(columnFamily);
+        }
+
+        // call onCancel() on ESCAPE
+        this.contentPane.registerKeyboardAction(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    onCancel();
+                }
+            }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+    }
+
+    public void showDialog(Component owner) {
+        this.setComponentOrientation(owner.getComponentOrientation());
+        this.pack();
+        this.setLocationRelativeTo(owner);
+        this.setVisible(true);
+    }
+
+    public String getColumnName() {
+        if (this.okPressed) {
+            return String.format("%s:%s", this.comboBoxColumnFamilies.getSelectedItem(), this.columnNameTextField.getText().trim());
+        }
+        return null;
+    }
+
+
+    private void onOK() {
+        if (this.columnNameTextField.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "The column name is required.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        else {
+            this.okPressed = true;
+            dispose();
+        }
+    }
+
+    private void onCancel() {
+        // add your code here if necessary
+        dispose();
+    }
+}

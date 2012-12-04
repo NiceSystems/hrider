@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.apache.hadoop:hadoop-core:0.20-append-r1056497">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/hadoop/hadoop-core/0.20-append-r1056497/hadoop-core-0.20-append-r1056497.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/hadoop/hadoop-core/0.20-append-r1056497/hadoop-core-0.20-append-r1056497-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/hadoop/hadoop-core/0.20-append-r1056497/hadoop-core-0.20-append-r1056497-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
