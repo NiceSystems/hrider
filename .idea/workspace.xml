@@ -85,81 +85,18 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="Scanner.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/hrider/hbase/Scanner.java">
+      <file leaf-file-name="AddColumnDialog.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/forms/AddColumnDialog.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="35" column="0" selection-start="462" selection-end="1200" vertical-scroll-proportion="0.0">
+            <state line="24" column="12" selection-start="770" selection-end="770" vertical-scroll-proportion="0.36623067">
               <folding>
-                <element signature="e#1232#1250#0" expanded="false" />
-                <element signature="docComment;field#factory#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;field#tableName#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;field#rowsCount#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;field#columnTypes#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;field#markers#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;field#current#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;field#columns#0;class#Scanner#0" expanded="false" />
-                <element signature="e#2706#2726#0" expanded="false" />
-                <element signature="docComment;method#Scanner#0;class#Scanner#0" expanded="false" />
-                <element signature="method#Scanner#0;class#Scanner#0" expanded="false" />
-                <element signature="e#3212#3238#0" expanded="false" />
-                <element signature="docComment;method#getTableName#0;class#Scanner#0" expanded="false" />
-                <element signature="method#getTableName#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;method#getColumns#0;class#Scanner#0" expanded="false" />
-                <element signature="method#getColumns#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;method#getColumnTypes#0;class#Scanner#0" expanded="false" />
-                <element signature="method#getColumnTypes#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;method#setColumnTypes#0;class#Scanner#0" expanded="false" />
-                <element signature="method#setColumnTypes#0;class#Scanner#0" expanded="false" />
-                <element signature="e#4633#4656#0" expanded="false" />
-                <element signature="docComment;method#updateColumnType#0;class#Scanner#0" expanded="false" />
-                <element signature="method#updateColumnType#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;method#resetCurrent#0;class#Scanner#0" expanded="false" />
-                <element signature="method#resetCurrent#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;method#current#0;class#Scanner#0" expanded="false" />
-                <element signature="method#current#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;method#next#0;class#Scanner#0" expanded="false" />
-                <element signature="method#next#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;method#prev#0;class#Scanner#0" expanded="false" />
-                <element signature="method#prev#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;method#getRowsCount#0;class#Scanner#0" expanded="false" />
-                <element signature="method#getRowsCount#0;class#Scanner#0" expanded="false" />
-                <element signature="e#7770#7796#0" expanded="false" />
-                <element signature="docComment;method#getScanner#0;class#Scanner#0" expanded="false" />
-                <element signature="method#getScanner#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;method#isValidRow#0;class#Scanner#0" expanded="false" />
-                <element signature="method#isValidRow#0;class#Scanner#0" expanded="false" />
-                <element signature="e#8370#8394#0" expanded="false" />
-                <element signature="docComment;method#loadRows#0;class#Scanner#0" expanded="false" />
-                <element signature="method#loadRows#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;method#loadColumns#0;class#Scanner#0" expanded="false" />
-                <element signature="method#loadColumns#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;method#next#1;class#Scanner#0" expanded="false" />
-                <element signature="method#next#1;class#Scanner#0" expanded="false" />
-                <element signature="docComment;method#popMarker#0;class#Scanner#0" expanded="false" />
-                <element signature="method#popMarker#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;method#peekMarker#0;class#Scanner#0" expanded="false" />
-                <element signature="method#peekMarker#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;class#Marker#0;class#Scanner#0" expanded="false" />
-                <element signature="class#Marker#0;class#Scanner#0" expanded="false" />
-                <element signature="e#14074#14092#0" expanded="false" />
-                <element signature="docComment;field#key#0;class#Marker#0;class#Scanner#0" expanded="false" />
-                <element signature="docComment;field#rows#0;class#Marker#0;class#Scanner#0" expanded="false" />
-                <element signature="e#14362#14382#0" expanded="false" />
-                <element signature="docComment;method#Marker#0;class#Marker#0;class#Scanner#0" expanded="false" />
-                <element signature="method#Marker#0;class#Marker#0;class#Scanner#0" expanded="false" />
-                <element signature="n#!!doc;n#equals#0;n#Marker#0;n#Scanner#0" expanded="false" />
-                <element signature="method#equals#0;class#Marker#0;class#Scanner#0" expanded="false" />
-                <element signature="method#hashCode#0;class#Marker#0;class#Scanner#0" expanded="false" />
+                <element signature="e#1328#1497#0" expanded="true" />
+                <element signature="e#1482#1483#0" expanded="true" />
+                <element signature="e#1558#1731#0" expanded="true" />
+                <element signature="e#1716#1717#0" expanded="true" />
+                <element signature="e#2277#2450#0" expanded="true" />
+                <element signature="e#2435#2436#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="TableFactory.java" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/main/java/hrider/hbase/TableFactory.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="86" column="24" selection-start="2633" selection-end="2633" vertical-scroll-proportion="1.3483948">
-              <folding />
             </state>
           </provider>
         </entry>
@@ -181,22 +118,22 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/src/main/java/hrider/data/RequiredRow.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/data/TypedColumn.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/config/Configurator.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/data/CheckedRow.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/data/DataCell.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/data/DataRow.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/data/DataTable.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/data/ServerDetails.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/data/TypedObject.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/hbase/HbaseActionListener.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/hbase/HbaseHelper.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/hbase/Operator.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/hbase/Query.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/hbase/QueryScanner.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/hbase/Scanner.java" />
-        <option value="$PROJECT_DIR$/src/main/java/hrider/hbase/TableFactory.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/views/DesignerView.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/system/InMemoryClipboard.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/controls/json/JsonEditor.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/controls/json/JsonTextPane.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/controls/xml/XmlEditor.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/controls/xml/XmlEditorKit.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/controls/xml/XmlTextPane.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/controls/xml/XmlView.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/controls/xml/XmlViewFactory.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/controls/JCloseButton.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/controls/JLinkButton.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/design/EditorType.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/design/JCellEditor.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/design/JCheckBoxRenderer.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/design/ResizeableTableHeader.java" />
+        <option value="$PROJECT_DIR$/src/main/java/hrider/ui/forms/AddColumnDialog.java" />
       </list>
     </option>
   </component>
@@ -407,6 +344,40 @@
               <option name="myItemId" value="hrider" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ui" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="forms" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="h-rider" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="hrider" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="main" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="java" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="hrider" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
           </PATH>
           <PATH>
             <PATH_ELEMENT>
@@ -435,66 +406,6 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="hbase" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="h-rider" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hrider" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hrider" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="data" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="h-rider" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hrider" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="main" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hrider" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="config" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -786,9 +697,9 @@
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32792208" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3290993" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
-      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.20220588" sideWeight="0.46189377" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.20220588" sideWeight="0.46189377" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39950982" sideWeight="0.6293303" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.18321079" sideWeight="0.46189377" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21139705" sideWeight="0.46189377" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.51616627" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="REST Client" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
@@ -892,221 +803,9 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/data/DataCell.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="26" column="43" selection-start="891" selection-end="891" vertical-scroll-proportion="0.43281808">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/data/CheckedRow.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="81" column="56" selection-start="2490" selection-end="2490" vertical-scroll-proportion="1.3483948">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/config/Configurator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="22" column="24" selection-start="695" selection-end="695" vertical-scroll-proportion="0.24970274">
-          <folding>
-            <element signature="e#3947#3963#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/data/TypedColumn.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="0" selection-start="26" selection-end="680" vertical-scroll-proportion="0.31629014">
-          <folding>
-            <element signature="e#891#909#0" expanded="false" />
-            <element signature="docComment;field#column#0;class#TypedColumn#0" expanded="false" />
-            <element signature="docComment;field#type#0;class#TypedColumn#0" expanded="false" />
-            <element signature="e#1085#1105#0" expanded="false" />
-            <element signature="docComment;method#TypedColumn#0;class#TypedColumn#0" expanded="false" />
-            <element signature="method#TypedColumn#0;class#TypedColumn#0" expanded="false" />
-            <element signature="e#1456#1482#0" expanded="false" />
-            <element signature="docComment;method#getColumn#0;class#TypedColumn#0" expanded="false" />
-            <element signature="method#getColumn#0;class#TypedColumn#0" expanded="false" />
-            <element signature="docComment;method#setColumn#0;class#TypedColumn#0" expanded="false" />
-            <element signature="method#setColumn#0;class#TypedColumn#0" expanded="false" />
-            <element signature="docComment;method#getType#0;class#TypedColumn#0" expanded="false" />
-            <element signature="method#getType#0;class#TypedColumn#0" expanded="false" />
-            <element signature="docComment;method#setType#0;class#TypedColumn#0" expanded="false" />
-            <element signature="method#setType#0;class#TypedColumn#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/hbase/HbaseActionListener.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="24" column="0" selection-start="102" selection-end="844" vertical-scroll-proportion="0.38287753">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/data/TypedObject.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="28" column="0" selection-start="175" selection-end="901" vertical-scroll-proportion="0.38287753">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/hbase/HbaseHelper.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="36" column="0" selection-start="489" selection-end="1229" vertical-scroll-proportion="0.38287753">
-          <folding>
-            <element signature="e#1265#1283#0" expanded="false" />
-            <element signature="docComment;field#serverName#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;field#hbaseAdmin#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;field#factory#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;field#listeners#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="e#1760#1780#0" expanded="false" />
-            <element signature="docComment;method#HbaseHelper#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#HbaseHelper#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="e#2483#2506#0" expanded="false" />
-            <element signature="docComment;method#getServerName#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#getServerName#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="e#2707#2730#0" expanded="false" />
-            <element signature="docComment;method#addListener#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#addListener#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#removeListener#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#removeListener#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#reset#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#reset#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#tableExists#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#tableExists#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#createTable#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#createTable#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#createTable#1;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#createTable#1;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#deleteTable#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#deleteTable#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#truncateTable#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#truncateTable#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#copyTable#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#copyTable#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#setRow#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#setRow#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#deleteRow#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#deleteRow#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#getTables#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#getTables#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#getColumnFamilies#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#getColumnFamilies#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#getScanner#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#getScanner#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="docComment;method#getScanner#1;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#getScanner#1;class#HbaseHelper#0" expanded="false" />
-            <element signature="e#12612#12636#0" expanded="false" />
-            <element signature="docComment;method#createFamilies#0;class#HbaseHelper#0" expanded="false" />
-            <element signature="method#createFamilies#0;class#HbaseHelper#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/apache/hbase/hbase/0.90.4/hbase-0.90.4-sources.jar!/org/apache/hadoop/hbase/filter/CompareFilter.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="48" column="14" selection-start="1741" selection-end="1741" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/hbase/Operator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="23" column="0" selection-start="81" selection-end="838" vertical-scroll-proportion="0.38287753">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/hbase/Query.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="25" column="0" selection-start="83" selection-end="884" vertical-scroll-proportion="0.38287753">
-          <folding>
-            <element signature="e#914#932#0" expanded="false" />
-            <element signature="docComment;field#startKey#0;class#Query#0" expanded="false" />
-            <element signature="docComment;field#startKeyType#0;class#Query#0" expanded="false" />
-            <element signature="docComment;field#endKey#0;class#Query#0" expanded="false" />
-            <element signature="docComment;field#endKeyType#0;class#Query#0" expanded="false" />
-            <element signature="docComment;field#startDate#0;class#Query#0" expanded="false" />
-            <element signature="docComment;field#endDate#0;class#Query#0" expanded="false" />
-            <element signature="docComment;field#family#0;class#Query#0" expanded="false" />
-            <element signature="docComment;field#column#0;class#Query#0" expanded="false" />
-            <element signature="docComment;field#columnWithFamily#0;class#Query#0" expanded="false" />
-            <element signature="docComment;field#operator#0;class#Query#0" expanded="false" />
-            <element signature="docComment;field#word#0;class#Query#0" expanded="false" />
-            <element signature="docComment;field#wordType#0;class#Query#0" expanded="false" />
-            <element signature="e#2335#2361#0" expanded="false" />
-            <element signature="docComment;method#getStartKey#0;class#Query#0" expanded="false" />
-            <element signature="method#getStartKey#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getStartKeyAsString#0;class#Query#0" expanded="false" />
-            <element signature="method#getStartKeyAsString#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#setStartKey#0;class#Query#0" expanded="false" />
-            <element signature="method#setStartKey#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#setStartKey#1;class#Query#0" expanded="false" />
-            <element signature="method#setStartKey#1;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getStartKeyType#0;class#Query#0" expanded="false" />
-            <element signature="method#getStartKeyType#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#setStartKeyType#0;class#Query#0" expanded="false" />
-            <element signature="method#setStartKeyType#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getEndKey#0;class#Query#0" expanded="false" />
-            <element signature="method#getEndKey#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getEndKeyAsString#0;class#Query#0" expanded="false" />
-            <element signature="method#getEndKeyAsString#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#setEndKey#0;class#Query#0" expanded="false" />
-            <element signature="method#setEndKey#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#setEndKey#1;class#Query#0" expanded="false" />
-            <element signature="method#setEndKey#1;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getEndKeyType#0;class#Query#0" expanded="false" />
-            <element signature="method#getEndKeyType#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#setEndKeyType#0;class#Query#0" expanded="false" />
-            <element signature="method#setEndKeyType#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getStartDate#0;class#Query#0" expanded="false" />
-            <element signature="method#getStartDate#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#setStartDate#0;class#Query#0" expanded="false" />
-            <element signature="method#setStartDate#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getEndDate#0;class#Query#0" expanded="false" />
-            <element signature="method#getEndDate#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#setEndDate#0;class#Query#0" expanded="false" />
-            <element signature="method#setEndDate#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getFamily#0;class#Query#0" expanded="false" />
-            <element signature="method#getFamily#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#setFamily#0;class#Query#0" expanded="false" />
-            <element signature="method#setFamily#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getColumn#0;class#Query#0" expanded="false" />
-            <element signature="method#getColumn#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getColumnWithFamily#0;class#Query#0" expanded="false" />
-            <element signature="method#getColumnWithFamily#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#setColumn#0;class#Query#0" expanded="false" />
-            <element signature="method#setColumn#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getOperator#0;class#Query#0" expanded="false" />
-            <element signature="method#getOperator#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#setOperator#0;class#Query#0" expanded="false" />
-            <element signature="method#setOperator#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getWord#0;class#Query#0" expanded="false" />
-            <element signature="method#getWord#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getWordAsByteArray#0;class#Query#0" expanded="false" />
-            <element signature="method#getWordAsByteArray#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#setWord#0;class#Query#0" expanded="false" />
-            <element signature="method#setWord#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#getWordType#0;class#Query#0" expanded="false" />
-            <element signature="method#getWordType#0;class#Query#0" expanded="false" />
-            <element signature="docComment;method#setWordType#0;class#Query#0" expanded="false" />
-            <element signature="method#setWordType#0;class#Query#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/views/DesignerView.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="232" column="62" selection-start="9537" selection-end="9537" vertical-scroll-proportion="0.24637681">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/hrider/hbase/QueryScanner.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="30" column="38" selection-start="1076" selection-end="1076" vertical-scroll-proportion="0.49940547">
+        <state line="79" column="20" selection-start="2206" selection-end="2206" vertical-scroll-proportion="0.4054697">
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="e#1087#1105#0" expanded="false" />
@@ -1116,109 +815,206 @@
             <element signature="e#1383#1403#0" expanded="false" />
             <element signature="docComment;method#QueryScanner#0;class#QueryScanner#0" expanded="false" />
             <element signature="method#QueryScanner#0;class#QueryScanner#0" expanded="false" />
-            <element signature="e#1854#1877#0" expanded="false" />
             <element signature="docComment;method#getQuery#0;class#QueryScanner#0" expanded="false" />
             <element signature="method#getQuery#0;class#QueryScanner#0" expanded="false" />
             <element signature="docComment;method#setQuery#0;class#QueryScanner#0" expanded="false" />
-            <element signature="method#setQuery#0;class#QueryScanner#0" expanded="false" />
-            <element signature="e#2358#2384#0" expanded="false" />
             <element signature="docComment;method#getScanner#0;class#QueryScanner#0" expanded="false" />
-            <element signature="method#getScanner#0;class#QueryScanner#0" expanded="false" />
             <element signature="docComment;method#isValidRow#0;class#QueryScanner#0" expanded="false" />
             <element signature="method#isValidRow#0;class#QueryScanner#0" expanded="false" />
-            <element signature="e#5373#5397#0" expanded="false" />
             <element signature="docComment;method#padWithMaxUnicode#0;class#QueryScanner#0" expanded="false" />
             <element signature="method#padWithMaxUnicode#0;class#QueryScanner#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pom.xml">
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/system/InMemoryClipboard.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/hbase/Scanner.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="35" column="0" selection-start="462" selection-end="1200" vertical-scroll-proportion="0.0">
+        <state line="25" column="0" selection-start="80" selection-end="904" vertical-scroll-proportion="0.39952436">
           <folding>
-            <element signature="e#1232#1250#0" expanded="false" />
-            <element signature="docComment;field#factory#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#tableName#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#rowsCount#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#columnTypes#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#markers#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#current#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#columns#0;class#Scanner#0" expanded="false" />
-            <element signature="e#2706#2726#0" expanded="false" />
-            <element signature="docComment;method#Scanner#0;class#Scanner#0" expanded="false" />
-            <element signature="method#Scanner#0;class#Scanner#0" expanded="false" />
-            <element signature="e#3212#3238#0" expanded="false" />
-            <element signature="docComment;method#getTableName#0;class#Scanner#0" expanded="false" />
-            <element signature="method#getTableName#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#getColumns#0;class#Scanner#0" expanded="false" />
-            <element signature="method#getColumns#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#getColumnTypes#0;class#Scanner#0" expanded="false" />
-            <element signature="method#getColumnTypes#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#setColumnTypes#0;class#Scanner#0" expanded="false" />
-            <element signature="method#setColumnTypes#0;class#Scanner#0" expanded="false" />
-            <element signature="e#4633#4656#0" expanded="false" />
-            <element signature="docComment;method#updateColumnType#0;class#Scanner#0" expanded="false" />
-            <element signature="method#updateColumnType#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#resetCurrent#0;class#Scanner#0" expanded="false" />
-            <element signature="method#resetCurrent#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#current#0;class#Scanner#0" expanded="false" />
-            <element signature="method#current#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#next#0;class#Scanner#0" expanded="false" />
-            <element signature="method#next#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#prev#0;class#Scanner#0" expanded="false" />
-            <element signature="method#prev#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#getRowsCount#0;class#Scanner#0" expanded="false" />
-            <element signature="method#getRowsCount#0;class#Scanner#0" expanded="false" />
-            <element signature="e#7770#7796#0" expanded="false" />
-            <element signature="docComment;method#getScanner#0;class#Scanner#0" expanded="false" />
-            <element signature="method#getScanner#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#isValidRow#0;class#Scanner#0" expanded="false" />
-            <element signature="method#isValidRow#0;class#Scanner#0" expanded="false" />
-            <element signature="e#8370#8394#0" expanded="false" />
-            <element signature="docComment;method#loadRows#0;class#Scanner#0" expanded="false" />
-            <element signature="method#loadRows#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#loadColumns#0;class#Scanner#0" expanded="false" />
-            <element signature="method#loadColumns#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#next#1;class#Scanner#0" expanded="false" />
-            <element signature="method#next#1;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#popMarker#0;class#Scanner#0" expanded="false" />
-            <element signature="method#popMarker#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#peekMarker#0;class#Scanner#0" expanded="false" />
-            <element signature="method#peekMarker#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="e#14074#14092#0" expanded="false" />
-            <element signature="docComment;field#key#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#rows#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="e#14362#14382#0" expanded="false" />
-            <element signature="docComment;method#Marker#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="method#Marker#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="n#!!doc;n#equals#0;n#Marker#0;n#Scanner#0" expanded="false" />
-            <element signature="method#equals#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="method#hashCode#0;class#Marker#0;class#Scanner#0" expanded="false" />
+            <element signature="e#2356#2386#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/.gitignore">
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/controls/json/JsonEditor.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+        <state line="169" column="0" selection-start="5430" selection-end="5554" vertical-scroll-proportion="0.81688464">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/hbase/TableFactory.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/controls/xml/XmlEditorKit.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="86" column="24" selection-start="2633" selection-end="2633" vertical-scroll-proportion="1.3483948">
+        <state line="24" column="0" selection-start="116" selection-end="850" vertical-scroll-proportion="0.38287753">
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/controls/xml/XmlEditor.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="37" column="61" selection-start="1234" selection-end="1234" vertical-scroll-proportion="0.549346">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/controls/json/JsonTextPane.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="27" column="0" selection-start="833" selection-end="925" vertical-scroll-proportion="0.0011890606">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/controls/xml/XmlTextPane.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="36" column="0" selection-start="537" selection-end="1299" vertical-scroll-proportion="0.38287753">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/controls/xml/XmlViewFactory.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="31" column="0" selection-start="959" selection-end="959" vertical-scroll-proportion="0.4827586">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/controls/xml/XmlView.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="30" column="0" selection-start="250" selection-end="1036" vertical-scroll-proportion="0.38287753">
+          <folding>
+            <element signature="e#3002#3020#0" expanded="true" />
+            <element signature="e#3080#3096#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/controls/JCloseButton.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="30" column="0" selection-start="236" selection-end="1041" vertical-scroll-proportion="0.38287753">
+          <folding>
+            <element signature="n#!!doc;n#serialVersionUID#0;n#JCloseButton#0" expanded="false" />
+            <element signature="n#!!doc;n#listeners#0;n#JCloseButton#0" expanded="false" />
+            <element signature="n#!!doc;n#JCloseButton#0;n#JCloseButton#0" expanded="false" />
+            <element signature="method#JCloseButton#0;class#JCloseButton#0" expanded="false" />
+            <element signature="n#!!doc;n#addTabClosedListener#0;n#JCloseButton#0" expanded="false" />
+            <element signature="method#addTabClosedListener#0;class#JCloseButton#0" expanded="false" />
+            <element signature="method#removeTabClosedListener#0;class#JCloseButton#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/controls/JLinkButton.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="27" column="0" selection-start="178" selection-end="923" vertical-scroll-proportion="0.38287753">
+          <folding>
+            <element signature="n#!!doc;n#serialVersionUID#0;n#JLinkButton#0" expanded="false" />
+            <element signature="n#!!doc;n#linkBehavior#0;n#JLinkButton#0" expanded="false" />
+            <element signature="n#!!doc;n#JLinkButton#0;n#JLinkButton#0" expanded="false" />
+            <element signature="method#JLinkButton#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#JLinkButton#1;class#JLinkButton#0" expanded="false" />
+            <element signature="n#!!doc;n#updateUI#0;n#JLinkButton#0" expanded="false" />
+            <element signature="method#updateUI#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#getUIClassID#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#setupToolTipText#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#setLinkBehavior#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#getLinkBehavior#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#setLinkColor#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#getLinkColor#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#setActiveLinkColor#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#getActiveLinkColor#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#setDisabledLinkColor#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#getDisabledLinkColor#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#setVisitedLinkColor#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#getVisitedLinkColor#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#getLinkURL#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#setLinkURL#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#setLinkVisited#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#isLinkVisited#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#setDefaultAction#0;class#JLinkButton#0" expanded="false" />
+            <element signature="method#getDefaultAction#0;class#JLinkButton#0" expanded="false" />
+            <element signature="n#!!doc;n#paramString#0;n#JLinkButton#0" expanded="false" />
+            <element signature="method#paramString#0;class#JLinkButton#0" expanded="false" />
+            <element signature="n#!!doc;n#validateLinkBehaviour#0;n#JLinkButton#0" expanded="false" />
+            <element signature="method#validateLinkBehaviour#0;class#JLinkButton#0" expanded="false" />
+            <element signature="class#BasicLinkButtonUI#0;class#JLinkButton#0" expanded="false" />
+            <element signature="n#!!doc;n#ui#0;n#BasicLinkButtonUI#0;n#JLinkButton#0" expanded="false" />
+            <element signature="n#!!doc;n#BasicLinkButtonUI#0;n#BasicLinkButtonUI#0;n#JLinkButton#0" expanded="false" />
+            <element signature="method#BasicLinkButtonUI#0;class#BasicLinkButtonUI#0;class#JLinkButton#0" expanded="false" />
+            <element signature="n#!!doc;n#createUI#0;n#BasicLinkButtonUI#0;n#JLinkButton#0" expanded="false" />
+            <element signature="method#createUI#0;class#BasicLinkButtonUI#0;class#JLinkButton#0" expanded="false" />
+            <element signature="n#!!doc;n#paintText#0;n#BasicLinkButtonUI#0;n#JLinkButton#0" expanded="false" />
+            <element signature="method#paintText#0;class#BasicLinkButtonUI#0;class#JLinkButton#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/design/JCheckBoxRenderer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="32" column="0" selection-start="309" selection-end="1098" vertical-scroll-proportion="0.38287753">
+          <folding>
+            <element signature="n#!!doc;n#checkedRows#0;n#JCheckBoxRenderer#0" expanded="false" />
+            <element signature="n#!!doc;n#JCheckBoxRenderer#0;n#JCheckBoxRenderer#0" expanded="false" />
+            <element signature="method#JCheckBoxRenderer#0;class#JCheckBoxRenderer#0" expanded="false" />
+            <element signature="n#!!doc;n#getTableCellRendererComponent#0;n#JCheckBoxRenderer#0" expanded="false" />
+            <element signature="method#getTableCellRendererComponent#0;class#JCheckBoxRenderer#0" expanded="false" />
+            <element signature="method#getTableCellEditorComponent#0;class#JCheckBoxRenderer#0" expanded="false" />
+            <element signature="method#getCellEditorValue#0;class#JCheckBoxRenderer#0" expanded="false" />
+            <element signature="method#isCellEditable#0;class#JCheckBoxRenderer#0" expanded="false" />
+            <element signature="n#!!doc;n#isEditable#0;n#JCheckBoxRenderer#0" expanded="false" />
+            <element signature="method#isEditable#0;class#JCheckBoxRenderer#0" expanded="false" />
+            <element signature="method#toBoolean#0;class#JCheckBoxRenderer#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/design/JCellEditor.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="38" column="0" selection-start="535" selection-end="1326" vertical-scroll-proportion="0.38287753">
+          <folding>
+            <element signature="n#!!doc;n#serialVersionUID#0;n#JCellEditor#0" expanded="false" />
+            <element signature="n#!!doc;n#textEditor#0;n#JCellEditor#0" expanded="false" />
+            <element signature="n#!!doc;n#JCellEditor#0;n#JCellEditor#0" expanded="false" />
+            <element signature="method#JCellEditor#0;class#JCellEditor#0" expanded="false" />
+            <element signature="method#JCellEditor#1;class#JCellEditor#0" expanded="false" />
+            <element signature="e#2901#2924#0" expanded="false" />
+            <element signature="docComment;method#getTableCellEditorComponent#0;class#JCellEditor#0" expanded="false" />
+            <element signature="method#getTableCellEditorComponent#0;class#JCellEditor#0" expanded="false" />
+            <element signature="docComment;method#getCellEditorValue#0;class#JCellEditor#0" expanded="false" />
+            <element signature="method#getCellEditorValue#0;class#JCellEditor#0" expanded="false" />
+            <element signature="e#5692#5716#0" expanded="false" />
+            <element signature="docComment;method#initializeEditor#0;class#JCellEditor#0" expanded="false" />
+            <element signature="method#initializeEditor#0;class#JCellEditor#0" expanded="false" />
+            <element signature="docComment;method#getEditor#0;class#JCellEditor#0" expanded="false" />
+            <element signature="method#getEditor#0;class#JCellEditor#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/design/EditorType.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="20" column="60" selection-start="762" selection-end="762" vertical-scroll-proportion="0.33293697">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/design/ResizeableTableHeader.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="32" column="0" selection-start="394" selection-end="1162" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/forms/AddColumnDialog.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="24" column="12" selection-start="770" selection-end="770" vertical-scroll-proportion="0.36623067">
+          <folding>
+            <element signature="e#1328#1497#0" expanded="true" />
+            <element signature="e#1482#1483#0" expanded="true" />
+            <element signature="e#1558#1731#0" expanded="true" />
+            <element signature="e#1716#1717#0" expanded="true" />
+            <element signature="e#2277#2450#0" expanded="true" />
+            <element signature="e#2435#2436#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

@@ -6,15 +6,38 @@ import javax.swing.plaf.metal.MetalButtonUI;
 import java.awt.*;
 import java.net.URL;
 
+/**
+ * Copyright (C) 2012 NICE Systems ltd.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author Igor Cher
+ * @version %I%, %G%
+ *          <p/>
+ *          This class represents a custom button that behaves as a link.
+ */
 public class JLinkButton extends JButton {
 
+    //region Constants
     private static final long serialVersionUID = -7843684977763585402L;
 
     public static final int ALWAYS_UNDERLINE = 0;
     public static final int HOVER_UNDERLINE  = 1;
     public static final int NEVER_UNDERLINE  = 2;
     public static final int SYSTEM_DEFAULT   = 3;
+    //endregion
 
+    //region Variables
     private int     linkBehavior;
     private Color   linkColor;
     private Color   colorPressed;
@@ -23,38 +46,17 @@ public class JLinkButton extends JButton {
     private URL     buttonURL;
     private Action  defaultAction;
     private boolean isLinkVisited;
+    //endregion
 
+    //region Constructor
     public JLinkButton() {
         this(null, null, null);
     }
 
-    public JLinkButton(Action action) {
-        this();
-        setAction(action);
-    }
-
-    public JLinkButton(Icon icon) {
-        this(null, icon, null);
-    }
-
-    public JLinkButton(String s) {
-        this(s, null, null);
-    }
-
-    public JLinkButton(URL url) {
-        this(null, null, url);
-    }
-
-    public JLinkButton(String s, URL url) {
-        this(s, null, url);
-    }
-
-    public JLinkButton(Icon icon, URL url) {
-        this(null, icon, url);
-    }
-
     public JLinkButton(String text, Icon icon, URL url) {
         super(text, icon);
+
+        this.defaultAction = null;
         this.linkBehavior = SYSTEM_DEFAULT;
         this.linkColor = Color.blue;
         this.colorPressed = Color.red;
@@ -71,7 +73,9 @@ public class JLinkButton extends JButton {
         setRolloverEnabled(true);
         addActionListener(this.defaultAction);
     }
+    //endregion
 
+    //region Public Methods
     @Override
     public void updateUI() {
         setUI(BasicLinkButtonUI.createUI(this));
@@ -91,20 +95,11 @@ public class JLinkButton extends JButton {
     }
 
     public void setLinkBehavior(int bnew) {
-        checkLinkBehaviour(bnew);
+        validateLinkBehaviour(bnew);
         int old = this.linkBehavior;
         this.linkBehavior = bnew;
         firePropertyChange("linkBehavior", old, bnew);
         repaint();
-    }
-
-    private void checkLinkBehaviour(int beha) {
-        if (beha != ALWAYS_UNDERLINE && beha != HOVER_UNDERLINE && beha != NEVER_UNDERLINE && beha != SYSTEM_DEFAULT) {
-            throw new IllegalArgumentException("Not a legal LinkBehavior");
-        }
-        else {
-            return;
-        }
     }
 
     public int getLinkBehavior() {
@@ -190,7 +185,9 @@ public class JLinkButton extends JButton {
     public Action getDefaultAction() {
         return this.defaultAction;
     }
+    //endregion
 
+    //region Protected Methods
     @Override
     protected String paramString() {
         String str;
@@ -217,18 +214,34 @@ public class JLinkButton extends JButton {
         return super.paramString() + ",linkBehavior=" + str + ",linkURL=" + buttonURLStr + ",linkColor=" + colorStr + ",activeLinkColor=" + colorPressStr +
                ",disabledLinkColor=" + disabledLinkColorStr + ",visitedLinkColor=" + visitedLinkColorStr + ",linkvisitedString=" + isLinkVisitedStr;
     }
+    //endregion
+
+    //region Private Methods
+    private static void validateLinkBehaviour(int beha) {
+        if (beha != ALWAYS_UNDERLINE && beha != HOVER_UNDERLINE && beha != NEVER_UNDERLINE && beha != SYSTEM_DEFAULT) {
+            throw new IllegalArgumentException("Not a legal LinkBehavior");
+        }
+    }
+    //endregion
 
     private static class BasicLinkButtonUI extends MetalButtonUI {
 
+        //region Variables
         private static final BasicLinkButtonUI ui = new BasicLinkButtonUI();
+        //endregion
 
+        //region Constructor
         private BasicLinkButtonUI() {
         }
+        //endregion
 
+        //region Public Methods
         public static ComponentUI createUI(JComponent jcomponent) {
             return ui;
         }
+        //endregion
 
+        //region Protected Methods
         @Override
         protected void paintText(
             Graphics g, JComponent com, Rectangle rect, String s) {
@@ -277,5 +290,6 @@ public class JLinkButton extends JButton {
                 g.drawLine(x, y, x + rect.width - 1, y);
             }
         }
+        //endregion
     }
 }

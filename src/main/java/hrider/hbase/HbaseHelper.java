@@ -78,7 +78,7 @@ public class HbaseHelper {
     }
     //endregion
 
-    //region Public Methods
+    //region Public Properties
 
     /**
      * Gets the name of the hbase muster server.

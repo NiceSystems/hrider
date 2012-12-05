@@ -162,6 +162,7 @@ public class Scanner {
         this.current = null;
         this.rowsCount = 0;
         this.markers.clear();
+        this.columns.clear();
 
         if (startKey != null) {
             this.markers.push(new Marker(startKey, new ArrayList<DataRow>()));
@@ -299,13 +300,16 @@ public class Scanner {
 
                     NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> familyMap = result.getMap();
                     for (NavigableMap.Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> family : familyMap.entrySet()) {
-                        for (NavigableMap.Entry<byte[], NavigableMap<Long, byte[]>> qunitifer : family.getValue().entrySet()) {
-                            String columnName = String.format("%s:%s", Bytes.toString(family.getKey()), Bytes.toString(qunitifer.getKey()));
+                        for (NavigableMap.Entry<byte[], NavigableMap<Long, byte[]>> quantifier : family.getValue().entrySet()) {
+                            String columnName = String.format("%s:%s", Bytes.toString(family.getKey()), Bytes.toString(quantifier.getKey()));
+
+                            ObjectType columnType = ObjectType.String;
                             if (this.columnTypes.containsKey(columnName)) {
-                                ObjectType columnType = this.columnTypes.get(columnName);
-                                for (NavigableMap.Entry<Long, byte[]> cell : qunitifer.getValue().entrySet()) {
-                                    row.addCell(new DataCell(row, columnName, new TypedObject(columnType, cell.getValue())));
-                                }
+                                columnType = this.columnTypes.get(columnName);
+                            }
+
+                            for (NavigableMap.Entry<Long, byte[]> cell : quantifier.getValue().entrySet()) {
+                                row.addCell(new DataCell(row, columnName, new TypedObject(columnType, cell.getValue())));
                             }
 
                             if (!this.columns.contains(columnName)) {

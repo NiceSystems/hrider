@@ -10,13 +10,28 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Created with IntelliJ IDEA.
- * User: igorc
- * Date: 04/11/12
- * Time: 09:44
+ * Copyright (C) 2012 NICE Systems ltd.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author Igor Cher
+ * @version %I%, %G%
+ *          <p/>
+ *          This class represents a custom XML view. All the drawings of different colors performed in this class.
  */
 public class XmlView extends PlainView {
 
+    //region Constants
     private final static HashMap<Pattern, Color> patternColors;
     private final static String TAG_PATTERN           = "(</?[a-zA-Z]*)\\s?>?";
     private final static String TAG_END_PATTERN       = "(/>)";
@@ -25,7 +40,9 @@ public class XmlView extends PlainView {
     private final static String TAG_COMMENT           = "(<!--.*-->)";
     private final static String TAG_CDATA_START       = "(\\<!\\[CDATA\\[).*";
     private final static String TAG_CDATA_END         = ".*(]]>)";
+    //endregion
 
+    //region Constructor
     static {
         // NOTE: the order is important!
         patternColors = new HashMap<Pattern, Color>();
@@ -42,12 +59,14 @@ public class XmlView extends PlainView {
 
         super(element);
 
-        // Set tabsize to 4 (instead of the default 8)
+        // Set tab size to 4 (instead of the default 8)
         getDocument().putProperty(PlainDocument.tabSizeAttribute, 4);
     }
+    //endregion
 
+    //region Protected Methods
     @Override
-    protected int drawUnselectedText(Graphics graphics, int x, int y, int p0, int p1) throws BadLocationException {
+    protected int drawUnselectedText(Graphics g, int x, int y, int p0, int p1) throws BadLocationException {
 
         Document doc = getDocument();
         String text = doc.getText(p0, p1 - p0);
@@ -76,24 +95,25 @@ public class XmlView extends PlainView {
             int end = entry.getValue();
 
             if (i < start) {
-                graphics.setColor(Color.black);
+                g.setColor(Color.black);
                 doc.getText(p0 + i, start - i, segment);
-                x = Utilities.drawTabbedText(segment, x, y, graphics, this, i);
+                x = Utilities.drawTabbedText(segment, x, y, g, this, i);
             }
 
-            graphics.setColor(colorMap.get(start));
+            g.setColor(colorMap.get(start));
             i = end;
             doc.getText(p0 + start, i - start, segment);
-            x = Utilities.drawTabbedText(segment, x, y, graphics, this, start);
+            x = Utilities.drawTabbedText(segment, x, y, g, this, start);
         }
 
         // Paint possible remaining text black
         if (i < text.length()) {
-            graphics.setColor(Color.black);
+            g.setColor(Color.black);
             doc.getText(p0 + i, text.length() - i, segment);
-            x = Utilities.drawTabbedText(segment, x, y, graphics, this, i);
+            x = Utilities.drawTabbedText(segment, x, y, g, this, i);
         }
 
         return x;
     }
+    //endregion
 }

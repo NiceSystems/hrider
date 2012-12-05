@@ -7,18 +7,47 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 /**
- * Created with IntelliJ IDEA.
- * User: igorc
- * Date: 04/11/12
- * Time: 10:32
+ * Copyright (C) 2012 NICE Systems ltd.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author Igor Cher
+ * @version %I%, %G%
+ *          <p/>
+ *          This class represents an editor for a data saved as a XML in the hbase. The editor is used primarily with JTable.
  */
 public class XmlEditor extends JPanel {
 
+    //region Constants
     private static final long serialVersionUID = -6427009457813292664L;
+    //endregion
 
+    //region Variables
+    /**
+     * A text field that is shown within the cell.
+     */
     private JTextField  textField;
+    /**
+     * A text pane that is shown in a popup menu and presents the XML as a formatted string.
+     */
     private XmlTextPane textPane;
+    //endregion
 
+    //region Constructor
+
+    /**
+     * Initializes a new instance of the {@link XmlEditor} class.
+     */
     public XmlEditor() {
 
         this.textPane = new XmlTextPane();
@@ -108,17 +137,36 @@ public class XmlEditor extends JPanel {
         this.invalidate();
         this.repaint();
     }
+    //endregion
 
+    //region Public Methods
+
+    /**
+     * Gets the original or modified text.
+     *
+     * @return An original or modified text.
+     */
     public String getText() {
         return this.textField.getText();
     }
 
+    /**
+     * Sets the new text into the editor.
+     *
+     * @param text The new text to set.
+     */
     public void setText(String text) {
         this.textField.setText(text);
         this.textPane.setText(text);
     }
 
+    /**
+     * Sets the value indicating if the text can be edited.
+     *
+     * @param editable The value to set.
+     */
     public void setEditable(Boolean editable) {
         this.textPane.setEditable(editable);
     }
+    //endregion
 }

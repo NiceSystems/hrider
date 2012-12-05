@@ -79,6 +79,7 @@ public class DesignerView {
     private JTextField               tablesFilter;
     private JTextField               columnsFilter;
     private DefaultTableModel        columnsTableModel;
+    private DefaultTableModel rowsTableModel;
     private JPopupMenu               columnsMenu;
     private Map<String, TableColumn> removedColumns;
     private Query                    lastQuery;
@@ -188,7 +189,7 @@ public class DesignerView {
 
                     DesignerView.this.lastQuery = null;
 
-                    populateRowsTable(Direction.Current);
+                    populateRowsTable(Direction.Current, false);
                 }
             });
 
@@ -203,7 +204,7 @@ public class DesignerView {
 
                     DesignerView.this.lastQuery = dialog.getQuery();
                     if (DesignerView.this.lastQuery != null) {
-                        populateRowsTable(Direction.Current);
+                        populateRowsTable(Direction.Current, true);
                     }
                 }
             });
@@ -242,7 +243,7 @@ public class DesignerView {
                                 Configurator.save();
 
                                 populateColumnsTable(row);
-                                populateRowsTable(Direction.Current);
+                                populateRowsTable(Direction.Current, true);
                             }
                             catch (Exception ex) {
                                 setError("Failed to update rows in HBase: ", ex);
@@ -288,7 +289,7 @@ public class DesignerView {
                             }
 
                             populateColumnsTable();
-                            populateRowsTable(Direction.Current);
+                            populateRowsTable(Direction.Current, false);
                         }
                         finally {
                             DesignerView.this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -454,7 +455,7 @@ public class DesignerView {
                 public void actionPerformed(ActionEvent e) {
                     clearError();
 
-                    populateRowsTable(Direction.Backward);
+                    populateRowsTable(Direction.Backward, false);
                     enableDisablePagingButtons();
                 }
             });
@@ -465,8 +466,7 @@ public class DesignerView {
                 public void actionPerformed(ActionEvent e) {
                     clearError();
 
-                    reloadColumns();
-                    populateRowsTable(Direction.Forward);
+                    populateRowsTable(Direction.Forward, true);
                     enableDisablePagingButtons();
                 }
             });
@@ -702,6 +702,8 @@ public class DesignerView {
     }
 
     private void initializeRowsTable() {
+        this.rowsTableModel = new DefaultTableModel();
+        this.rowsTable.setModel(this.rowsTableModel);
         this.rowsTable.setTableHeader(new ResizeableTableHeader(this.rowsTable.getColumnModel()));
         this.rowsTable.setCellSelectionEnabled(false);
         this.rowsTable.setRowSelectionAllowed(true);
@@ -814,24 +816,29 @@ public class DesignerView {
             });
     }
 
-    private Map<String, ObjectType> updateColumns(DefaultTableModel model) {
-        Map<String, ObjectType> columnTypes = new HashMap<String, ObjectType>();
+    private void addColumnsToRowsTable() {
         for (int i = 0 ; i < DesignerView.this.columnsTable.getRowCount() ; i++) {
             String columnName = (String)DesignerView.this.columnsTableModel.getValueAt(i, 1);
 
             boolean isShown = (Boolean)DesignerView.this.columnsTableModel.getValueAt(i, 0);
             if (isShown) {
                 if (!this.removedColumns.containsKey(columnName)) {
-                    model.addColumn(columnName);
+                    this.rowsTableModel.addColumn(columnName);
                 }
             }
+        }
+    }
 
+    private Map<String, ObjectType> getColumnTypes() {
+        Map<String, ObjectType> columnTypes = new HashMap<String, ObjectType>();
+        for (int i = 0 ; i < DesignerView.this.columnsTable.getRowCount() ; i++) {
+            String columnName = (String)DesignerView.this.columnsTableModel.getValueAt(i, 1);
             columnTypes.put(columnName, (ObjectType)DesignerView.this.columnsTableModel.getValueAt(i, 2));
         }
         return columnTypes;
     }
 
-    private void reloadColumns() {
+    private void updateColumnsTable() {
         if (this.scanner != null) {
             List<String> columns = new ArrayList<String>(this.scanner.getColumns(getPageSize()));
             if (!columns.isEmpty()) {
@@ -843,14 +850,14 @@ public class DesignerView {
                 String tableName = getTableName();
 
                 while (!columns.isEmpty()) {
-                    addColumn(tableName, columns.get(0), null);
+                    addColumnToColumnsTable(tableName, columns.get(0), null);
                     columns.remove(0);
                 }
             }
         }
     }
 
-    private void addRows(DefaultTableModel model, Iterable<DataRow> rows) {
+    private void addRowsToRowsTable(Iterable<DataRow> rows) {
         for (DataRow row : rows) {
             Collection<Object> values = new ArrayList<Object>(DesignerView.this.rowsTable.getColumnCount());
             for (int i = 0 ; i < DesignerView.this.rowsTable.getColumnCount() ; i++) {
@@ -861,7 +868,7 @@ public class DesignerView {
                 }
                 values.add(cell);
             }
-            model.addRow(values.toArray());
+            this.rowsTableModel.addRow(values.toArray());
         }
     }
 
@@ -901,7 +908,7 @@ public class DesignerView {
         }
     }
 
-    private void populateRowsTable(Direction direction) {
+    private void populateRowsTable(Direction direction, boolean reloadColumns) {
 
         this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
@@ -915,10 +922,31 @@ public class DesignerView {
             if (tableName != null) {
                 int rowsCount = this.rowsTable.getRowCount();
 
-                DefaultTableModel model = new DefaultTableModel();
-                this.rowsTable.setModel(model);
+                clearTable(DesignerView.this.rowsTable);
 
-                Map<String, ObjectType> columnTypes = updateColumns(model);
+                Map<String, ObjectType> columnTypes = getColumnTypes();
+
+                this.scanner.setColumnTypes(columnTypes);
+                this.scanner.setQuery(this.lastQuery);
+
+                Collection<DataRow> rows;
+
+                if (direction == Direction.Current) {
+                    rows = this.scanner.current(getPageSize());
+                    this.lastRow = rows.size();
+                }
+                else if (direction == Direction.Forward) {
+                    rows = this.scanner.next(getPageSize());
+                    this.lastRow += rows.size();
+                }
+                else {
+                    rows = this.scanner.prev();
+                    this.lastRow -= rowsCount;
+                }
+
+                if (reloadColumns) {
+                    updateColumnsTable();
+                }
 
                 this.columnsMenu = createColumnsPopupMenu();
 
@@ -937,50 +965,32 @@ public class DesignerView {
                     }
                 }
 
-                try {
-                    this.scanner.setQuery(this.lastQuery);
-                    this.scanner.setColumnTypes(columnTypes);
+                addColumnsToRowsTable();
+                addRowsToRowsTable(rows);
 
-                    Collection<DataRow> rows;
+                this.enableDisablePagingButtons();
 
-                    if (direction == Direction.Current) {
-                        rows = this.scanner.current(getPageSize());
-                        this.lastRow = rows.size();
-                    }
-                    else if (direction == Direction.Forward) {
-                        rows = this.scanner.next(getPageSize());
-                        this.lastRow += rows.size();
-                    }
-                    else {
-                        rows = this.scanner.prev();
-                        this.lastRow -= rowsCount;
-                    }
+                this.visibleRowsLabel.setText(String.format("%s - %s", this.lastRow - rows.size() + 1, this.lastRow));
+                this.rowsNumberSpinner.setEnabled(this.lastRow <= getPageSize());
 
-                    addRows(model, rows);
-
-                    this.enableDisablePagingButtons();
-                    this.visibleRowsLabel.setText(String.format("%s - %s", this.lastRow - rows.size() + 1, this.lastRow));
-                    this.rowsNumberSpinner.setEnabled(this.lastRow <= getPageSize());
-
-                    // To get the number of rows can take the time.
-                    Thread thread = new Thread(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    DesignerView.this.rowsNumberLabel.setText(String.valueOf(DesignerView.this.scanner.getRowsCount()));
-                                }
-                                catch (Exception e) {
-                                    setError("Failed to get the number of rows in the table.", e);
-                                }
+                // To get the number of rows can take the time.
+                Thread thread = new Thread(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                DesignerView.this.rowsNumberLabel.setText(String.valueOf(DesignerView.this.scanner.getRowsCount()));
                             }
-                        });
-                    thread.start();
-                }
-                catch (Exception ex) {
-                    setError("Failed to fill rows: ", ex);
-                }
+                            catch (Exception e) {
+                                setError("Failed to get the number of rows in the table.", e);
+                            }
+                        }
+                    });
+                thread.start();
             }
+        }
+        catch (Exception ex) {
+            setError("Failed to fill rows: ", ex);
         }
         finally {
             this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -1022,7 +1032,7 @@ public class DesignerView {
 
                     for (String column : DesignerView.this.scanner.getColumns(getPageSize())) {
                         if (filter.isEmpty() || column.toLowerCase().contains(filter)) {
-                            addColumn(tableName, column, row);
+                            addColumnToColumnsTable(tableName, column, row);
                         }
                     }
 
@@ -1144,7 +1154,7 @@ public class DesignerView {
                             DesignerView.this.scanner.resetCurrent(sortedRows.get(0).getKey());
                         }
 
-                        populateRowsTable(Direction.Current);
+                        populateRowsTable(Direction.Current, false);
                     }
                 }
                 catch (Exception ex) {
@@ -1224,7 +1234,7 @@ public class DesignerView {
         }
     }
 
-    private void addColumn(String tableName, String column, DataRow row) {
+    private void addColumnToColumnsTable(String tableName, String column, DataRow row) {
         ObjectType columnType = getColumnType(tableName, column);
         if (columnType == null && row != null) {
             DataCell cell = row.getCell(column);
@@ -1300,14 +1310,19 @@ public class DesignerView {
 
     private static void clearRows(DefaultTableModel model) {
         if (model != null) {
-            while (model.getRowCount() > 0) {
-                model.removeRow(0);
-            }
+            model.setRowCount(0);
+        }
+    }
+
+    private static void clearColumns(DefaultTableModel model) {
+        if (model != null) {
+            model.setColumnCount(0);
         }
     }
 
     private static void clearTable(JTable table) {
-        table.setModel(new DefaultTableModel());
+        clearRows((DefaultTableModel)table.getModel());
+        clearColumns((DefaultTableModel)table.getModel());
     }
 
     private static void stopCellEditing(JTable table) {

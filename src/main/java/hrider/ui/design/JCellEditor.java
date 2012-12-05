@@ -18,16 +18,33 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * Created with IntelliJ IDEA.
- * User: igorc
- * Date: 8/26/12
- * Time: 2:02 PM
+ * Copyright (C) 2012 NICE Systems ltd.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author Igor Cher
+ * @version %I%, %G%
+ *          <p/>
+ *          This class represents a cell editor which supports different data types to be edited in the {@link JTable}.
+ *          The list of supported data types can be found here {@link EditorType}.
  */
-@SuppressWarnings("SerializableHasSerializationMethods")
 public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
 
+    //region Constants
     private static final long serialVersionUID = -2190137522499893284L;
+    //endregion
 
+    //region Variables
     private JTextField    textEditor;
     private DatePicker    dateEditor;
     private XmlEditor     xmlEditor;
@@ -36,7 +53,9 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
     private ChangeTracker changeTracker;
     private int           typeColumn;
     private EditorType    editorType;
+    //endregion
 
+    //region Constructor
     public JCellEditor(ChangeTracker changeTracker, boolean canEdit) {
         this(changeTracker, -1, canEdit);
     }
@@ -56,8 +75,20 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         this.jsonEditor = new JsonEditor();
         this.jsonEditor.setEditable(canEdit);
     }
+    //endregion
 
-    // This method is called when a cell value is edited by the user.
+    //region Public Methods
+
+    /**
+     * This method is called when a cell value is edited by the user.
+     *
+     * @param table      The table that owns the cell.
+     * @param value      The value to be edited.
+     * @param isSelected Indicates if the cell is selected.
+     * @param row        The row number.
+     * @param column     The column number.
+     * @return The component used to edit the value.
+     */
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 
@@ -92,8 +123,12 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         return getEditor();
     }
 
-    // This method is called when editing is completed.
-    // It must return the new value to be stored in the cell.
+    /**
+     * This method is called when editing is completed.
+     * It must return the new value to be stored in the cell.
+     *
+     * @return A new value to be stored in the cell
+     */
     @Override
     public Object getCellEditorValue() {
         String text = null;
@@ -132,7 +167,15 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
 
         return text;
     }
+    //endregion
 
+    //region Private Methods
+
+    /**
+     * Initializes an editor with the provided value.
+     *
+     * @param value The value to pass to the editor.
+     */
     private void initializeEditor(Object value) {
         switch (this.editorType) {
             case Date:
@@ -171,6 +214,11 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         }
     }
 
+    /**
+     * Gets a correct editor according to the editor type.
+     *
+     * @return The component used to edit the value.
+     */
     private Component getEditor() {
         switch (this.editorType) {
             case Date:
@@ -184,4 +232,5 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         }
         return this.textEditor;
     }
+    //endregion
 }

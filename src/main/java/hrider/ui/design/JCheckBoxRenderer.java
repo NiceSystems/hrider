@@ -12,25 +12,46 @@ import java.util.Collection;
 import java.util.EventObject;
 
 /**
- * Created with IntelliJ IDEA.
- * User: igorc
- * Date: 8/23/12
- * Time: 5:06 PM
- * To change this template use File | Settings | File Templates.
+ * Copyright (C) 2012 NICE Systems ltd.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author Igor Cher
+ * @version %I%, %G%
+ *          <p/>
+ *          This class represents a custom renderer for {@link JCheckBox} component to be used in the {@link JTable}.
+ *          The main purpose of this class is to provide a cell editor for cells that hold boolean values.
+ *          In addition this class provide an option to mark some of the cells to always remain checked or
+ *          in other words to ensure that some of the cells cannot be unchecked.
  */
 public class JCheckBoxRenderer extends AbstractCellEditor implements TableCellRenderer, TableCellEditor {
 
+    //region Variables
     private Collection<CheckedRow> checkedRows;
-    private JCheckBox component;
-    private boolean isRepresentedAsString;
+    private JCheckBox              component;
+    private boolean                isRepresentedAsString;
+    //endregion
 
+    //region Constructor
     public JCheckBoxRenderer(CheckedRow... checkedRows) {
         this.isRepresentedAsString = false;
         this.checkedRows = Arrays.asList(checkedRows);
         this.component = new JCheckBox();
         this.component.setHorizontalAlignment(SwingConstants.CENTER);
     }
+    //endregion
 
+    //region Public Methods
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 
@@ -72,7 +93,9 @@ public class JCheckBoxRenderer extends AbstractCellEditor implements TableCellRe
         }
         return false;
     }
+    //endregion
 
+    //region Private Methods
     private boolean isEditable(JTable table, int row) {
         for (CheckedRow checkedRow : this.checkedRows) {
             Object obj = table.getValueAt(row, checkedRow.getColumnIndex());
@@ -83,7 +106,6 @@ public class JCheckBoxRenderer extends AbstractCellEditor implements TableCellRe
         return true;
     }
 
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     private boolean toBoolean(Object value) {
         if (value instanceof Boolean) {
             this.isRepresentedAsString = false;
@@ -95,4 +117,5 @@ public class JCheckBoxRenderer extends AbstractCellEditor implements TableCellRe
         }
         return false;
     }
+    //endregion
 }
