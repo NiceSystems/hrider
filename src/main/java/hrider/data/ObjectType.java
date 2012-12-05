@@ -10,10 +10,24 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * Created with IntelliJ IDEA.
- * User: igorc
- * Date: 8/23/12
- * Time: 5:42 PM
+ * Copyright (C) 2012 NICE Systems ltd.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author Igor Cher
+ * @version %I%, %G%
+ *          <p/>
+ *          This enum represents a type of the data supported by the tool.
  */
 @SuppressWarnings("UnnecessaryDefault")
 public enum ObjectType {
@@ -29,6 +43,14 @@ public enum ObjectType {
     Xml,
     Json;
 
+    //region Public Methods
+
+    /**
+     * Gets the type of the column. The default value is {@link ObjectType#String} in case the column is not known.
+     *
+     * @param column The name of the column.
+     * @return The type of the column if found or a {@link ObjectType#String} as a default.
+     */
     public static ObjectType fromColumn(String column) {
         if (column.toLowerCase().endsWith("timestamp")) {
             return Long;
@@ -36,6 +58,12 @@ public enum ObjectType {
         return String;
     }
 
+    /**
+     * Converts a value represented as a {@link String} to an object according to the type.
+     *
+     * @param value The value to convert.
+     * @return An object representing the value or a null if something went wrong during conversion.
+     */
     public Object toObject(String value) {
         if (value == null) {
             return null;
@@ -72,6 +100,12 @@ public enum ObjectType {
         }
     }
 
+    /**
+     * Converts a value represented as a {@link String} to an array of bytes according to the type.
+     *
+     * @param value The value to convert.
+     * @return A byte array representing the value or a null if something went wrong during conversion.
+     */
     public byte[] fromString(String value) {
         if (value == null) {
             return null;
@@ -102,6 +136,12 @@ public enum ObjectType {
         }
     }
 
+    /**
+     * Converts a value represented as a {@link byte[]} to an object according to the type.
+     *
+     * @param value The value to convert.
+     * @return An object representing the value or a null if something went wrong during conversion.
+     */
     public Object fromByteArray(byte[] value) {
         if (value == null) {
             return null;
@@ -138,6 +178,12 @@ public enum ObjectType {
         }
     }
 
+    /**
+     * Converts a value represented as an {@link Object} to an array of bytes according to the type.
+     *
+     * @param value The value to convert.
+     * @return A byte array representing the value or a null if something went wrong during conversion.
+     */
     public byte[] fromObject(Object value) {
         if (value == null) {
             return null;
@@ -173,4 +219,5 @@ public enum ObjectType {
                 return Bytes.toBytes((String)value);
         }
     }
+    //endregion
 }

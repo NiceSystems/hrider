@@ -37,8 +37,8 @@ public class AddRowDialog extends JDialog {
         this.tableModel.addColumn("Value");
         this.rowsTable.setRowHeight(this.rowsTable.getFont().getSize() + 8);
         this.rowsTable.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
-        this.rowsTable.getColumn("Use").setCellRenderer(new JCheckBoxRenderer(new RequiredRow(1, "key")));
-        this.rowsTable.getColumn("Use").setCellEditor(new JCheckBoxRenderer(new RequiredRow(1, "key")));
+        this.rowsTable.getColumn("Use").setCellRenderer(new JCheckBoxRenderer(new CheckedRow(1, "key")));
+        this.rowsTable.getColumn("Use").setCellEditor(new JCheckBoxRenderer(new CheckedRow(1, "key")));
         this.rowsTable.getColumn("Use").setPreferredWidth(20);
 
         JComboBox comboBox = new JComboBox();

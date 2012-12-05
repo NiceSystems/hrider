@@ -15,45 +15,69 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Created with IntelliJ IDEA.
- * User: igorc
- * Date: 9/5/12
- * Time: 4:52 PM
+ * Copyright (C) 2012 NICE Systems ltd.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author Igor Cher
+ * @version %I%, %G%
+ *          <p/>
+ *          This class represents a scanner over the hbase tables.
  */
 public class Scanner {
 
-    private class Marker {
-
-        private TypedObject         key;
-        private Collection<DataRow> rows;
-
-        private Marker(TypedObject key, Collection<DataRow> rows) {
-            this.key = key;
-            this.rows = rows;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return obj instanceof Marker && ((Marker)obj).key.equals(this.key);
-        }
-
-        @Override
-        public int hashCode() {
-            return this.key.hashCode();
-        }
-    }
-
     //region Variables
+    /**
+     * The table factory that is used to access hbase tables.
+     */
     private TableFactory            factory;
+    /**
+     * The name of the hbase table the scanner is going to be executed on.
+     */
     private String                  tableName;
+    /**
+     * Holds a total number of rows in the table. This parameter is calculated by scanning over the whole table.
+     * This operation is time consuming and its result should be cached.
+     */
     private long                    rowsCount;
+    /**
+     * The map of column types. The key is the name of the column and the value is the type of the objects within the column.
+     */
     private Map<String, ObjectType> columnTypes;
+    /**
+     * A list of markers. The marker is used for pagination to mark where the previous scan has stopped.
+     */
     private Stack<Marker>           markers;
+    /**
+     * A list of loaded rows.
+     */
     private Collection<DataRow>     current;
+    /**
+     * A list of columns. The hbase doesn't really has columns it is more key/value pairs where key can be seen as a column. In order
+     * to retrieve a list of columns the scan over the whole table should be performed and keys of each row should be collected. This operation
+     * might be very expensive so the list of columns is filled on demand. Each time a new row is loaded its keys are added to the list.
+     */
     private Collection<String>      columns;
     //endregion
 
     //region Constructor
+
+    /**
+     * Initializes a new instance of the {@link Scanner} class.
+     *
+     * @param factory   The reference to the table factory.
+     * @param tableName The name of the table to be scanned.
+     */
     public Scanner(TableFactory factory, String tableName) {
         this.factory = factory;
         this.tableName = tableName;
@@ -64,10 +88,23 @@ public class Scanner {
     //endregion
 
     //region Public Properties
+
+    /**
+     * Gets the name of the table.
+     *
+     * @return The table name.
+     */
     public String getTableName() {
         return this.tableName;
     }
 
+    /**
+     * Gets a list of columns. If there is no columns at this moment they will be loaded according to the provided rows number. In other words only columns
+     * of loaded rows will be returned.
+     *
+     * @param rowsNumber The number of rows to look for the columns in case there is no columns loaded at this moment.
+     * @return A list of columns.
+     */
     public Collection<String> getColumns(int rowsNumber) {
         if (this.columns.isEmpty()) {
             try {
@@ -80,14 +117,33 @@ public class Scanner {
         return this.columns;
     }
 
+    /**
+     * Gets a mapping of column names to column types.
+     *
+     * @return A map of column types.
+     */
     public Map<String, ObjectType> getColumnTypes() {
         return this.columnTypes;
     }
 
+    /**
+     * Sets a mapping of column names to column types.
+     *
+     * @param columnTypes A new map of column types.
+     */
     public void setColumnTypes(Map<String, ObjectType> columnTypes) {
         this.columnTypes = columnTypes;
     }
+    //endregion
 
+    //region Public Methods
+
+    /**
+     * Updates a column type of all cells in the specified column.
+     *
+     * @param columnName The name of the column.
+     * @param columnType The new column type.
+     */
     public void updateColumnType(String columnName, ObjectType columnType) {
         Collection<DataRow> rows = this.current;
         if (rows != null) {
@@ -96,9 +152,12 @@ public class Scanner {
             }
         }
     }
-    //endregion
 
-    //region Public Methods
+    /**
+     * Resets the cache.
+     *
+     * @param startKey The key the scan should start from. This parameter can be null.
+     */
     public void resetCurrent(TypedObject startKey) {
         this.current = null;
         this.rowsCount = 0;
@@ -109,6 +168,13 @@ public class Scanner {
         }
     }
 
+    /**
+     * Gets a list of rows loaded starting from the beginning.
+     *
+     * @param rowsNumber The number of rows to load.
+     * @return A list of rows.
+     * @throws IOException Error accessing hbase.
+     */
     public Collection<DataRow> current(int rowsNumber) throws IOException {
         if (this.current == null || this.current.size() != rowsNumber) {
             this.current = next(0, rowsNumber);
@@ -116,11 +182,24 @@ public class Scanner {
         return this.current;
     }
 
+    /**
+     * Gets a list of rows loaded starting from the previous position.
+     *
+     * @param rowsNumber The number of rows to load.
+     * @return A list of rows.
+     * @throws IOException Error accessing hbase.
+     */
     public Collection<DataRow> next(int rowsNumber) throws IOException {
         this.current = next(this.markers.isEmpty() ? 0 : 1, rowsNumber);
         return this.current;
     }
 
+    /**
+     * Gets a list of previously loaded rows.
+     *
+     * @return A list of rows.
+     * @throws IOException Error accessing hbase.
+     */
     public Collection<DataRow> prev() throws IOException {
         if (!this.markers.isEmpty()) {
             if (this.markers.size() > 1) {
@@ -131,13 +210,20 @@ public class Scanner {
         return this.current;
     }
 
+    /**
+     * Gets the total number of rows in the table. This value is calculated by scanning throughout the whole table to count the rows. This value is then cached
+     * for future uses.
+     *
+     * @return A total number of rows in the table.
+     * @throws IOException Error accessing hbase.
+     */
     public long getRowsCount() throws IOException {
         if (this.rowsCount == 0) {
             Scan scan = getScanner();
             scan.setCaching(1000);
             scan.setBatch(1000);
 
-            HTable table = this.factory.create(this.tableName);
+            HTable table = this.factory.get(this.tableName);
             ResultScanner scanner = table.getScanner(scan);
 
             int count = 0;
@@ -154,16 +240,40 @@ public class Scanner {
     //endregion
 
     //region Protected Methods
+
+    /**
+     * Gets the hbase scanner.
+     *
+     * @return A hbase scanner
+     * @throws IOException Error accessing hbase.
+     */
     protected Scan getScanner() throws IOException {
         return new Scan();
     }
 
-    protected boolean isValidRow(Result result) {
+    /**
+     * Checks if the row is valid. The default implementation is return 'True'. This method should be overridden by the derived classes.
+     *
+     * @param row A row to check.
+     * @return True if the row is valid and False otherwise.
+     */
+    protected boolean isValidRow(Result row) {
         return true;
     }
     //endregion
 
     //region Private Methods
+
+    /**
+     * Loads a specified number of rows from the hbase.
+     *
+     * @param scanner    The hbase scanner to retrieve the data.
+     * @param offset     The offset to start from.
+     * @param rowsNumber The number of rows to load.
+     * @param rows       The loaded rows. This is the output parameter.
+     * @return A key of the last loaded row. Used to mark the current position for the next scan.
+     * @throws IOException Error accessing hbase.
+     */
     protected TypedObject loadRows(ResultScanner scanner, int offset, int rowsNumber, Map<TypedObject, DataRow> rows) throws IOException {
         ObjectType keyType = this.columnTypes.get("key");
 
@@ -213,8 +323,14 @@ public class Scanner {
         return key;
     }
 
+    /**
+     * Loads column names.
+     *
+     * @param rowsNumber The number of rows to look for the column names. The column name is a key from key/value pairs in hbase row.
+     * @throws IOException Error accessing hbase.
+     */
     private void loadColumns(int rowsNumber) throws IOException {
-        HTable table = this.factory.create(this.tableName);
+        HTable table = this.factory.get(this.tableName);
 
         ResultScanner scanner = table.getScanner(new Scan());
         Result row;
@@ -240,6 +356,14 @@ public class Scanner {
         while (row != null && counter < rowsNumber);
     }
 
+    /**
+     * Loads the following rows.
+     *
+     * @param offset     The offset to start from.
+     * @param rowsNumber The number of rows to load.
+     * @return A list of loaded rows.
+     * @throws IOException Error accessing hbase.
+     */
     private Collection<DataRow> next(int offset, int rowsNumber) throws IOException {
         Map<TypedObject, DataRow> rows = new HashMap<TypedObject, DataRow>();
 
@@ -253,7 +377,7 @@ public class Scanner {
             scan.setStartRow(peekMarker().key.toByteArray());
         }
 
-        HTable table = this.factory.create(this.tableName);
+        HTable table = this.factory.get(this.tableName);
         ResultScanner scanner = table.getScanner(scan);
 
         TypedObject lastKey = loadRows(scanner, offset, rowsNumber, rows);
@@ -264,6 +388,11 @@ public class Scanner {
         return rows.values();
     }
 
+    /**
+     * Removes a marker from the stack.
+     *
+     * @return A marker.
+     */
     private Marker popMarker() {
         if (!this.markers.isEmpty()) {
             return this.markers.pop();
@@ -271,6 +400,11 @@ public class Scanner {
         return null;
     }
 
+    /**
+     * Peeks the marker from the stack.
+     *
+     * @return A marker.
+     */
     private Marker peekMarker() {
         if (!this.markers.isEmpty()) {
             return this.markers.peek();
@@ -278,4 +412,48 @@ public class Scanner {
         return null;
     }
     //endregion
+
+    /**
+     * Represents a marking point between the batches of loaded rows. Each time a new batch of rows is loaded this class holds the last key to
+     * start loading the next batch.
+     */
+    private static class Marker {
+
+        //region Variables
+        /**
+         * The last key loaded from the previous batch of rows.
+         */
+        private TypedObject         key;
+        /**
+         * A list of previously loaded rows.
+         */
+        private Collection<DataRow> rows;
+        //endregion
+
+        //region Constructor
+
+        /**
+         * Initializes a new instance of the {@link Marker} class.
+         *
+         * @param key  The last loaded key.
+         * @param rows A list of laoded rows.
+         */
+        private Marker(TypedObject key, Collection<DataRow> rows) {
+            this.key = key;
+            this.rows = rows;
+        }
+        //endregion
+
+        //region Public Methods
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof Marker && ((Marker)obj).key.equals(this.key);
+        }
+
+        @Override
+        public int hashCode() {
+            return this.key.hashCode();
+        }
+        //endregion
+    }
 }

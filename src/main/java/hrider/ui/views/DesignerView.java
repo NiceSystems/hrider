@@ -624,8 +624,8 @@ public class DesignerView {
         this.columnsTable.setRowHeight(this.columnsTable.getFont().getSize() + 8);
         this.columnsTable.setModel(this.columnsTableModel);
         this.columnsTable.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
-        this.columnsTable.getColumn("Is Shown").setCellRenderer(new JCheckBoxRenderer(new RequiredRow(1, "key")));
-        this.columnsTable.getColumn("Is Shown").setCellEditor(new JCheckBoxRenderer(new RequiredRow(1, "key")));
+        this.columnsTable.getColumn("Is Shown").setCellRenderer(new JCheckBoxRenderer(new CheckedRow(1, "key")));
+        this.columnsTable.getColumn("Is Shown").setCellEditor(new JCheckBoxRenderer(new CheckedRow(1, "key")));
         this.columnsTable.getColumn("Is Shown").setPreferredWidth(55);
         this.columnsTable.getColumn("Column Name").setPreferredWidth(110);
 

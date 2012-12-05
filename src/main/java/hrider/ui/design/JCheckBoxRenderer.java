@@ -1,6 +1,6 @@
 package hrider.ui.design;
 
-import hrider.data.RequiredRow;
+import hrider.data.CheckedRow;
 
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
@@ -20,13 +20,13 @@ import java.util.EventObject;
  */
 public class JCheckBoxRenderer extends AbstractCellEditor implements TableCellRenderer, TableCellEditor {
 
-    private Collection<RequiredRow> requiredRows;
+    private Collection<CheckedRow> checkedRows;
     private JCheckBox component;
     private boolean isRepresentedAsString;
 
-    public JCheckBoxRenderer(RequiredRow... requiredRows) {
+    public JCheckBoxRenderer(CheckedRow... checkedRows) {
         this.isRepresentedAsString = false;
-        this.requiredRows = Arrays.asList(requiredRows);
+        this.checkedRows = Arrays.asList(checkedRows);
         this.component = new JCheckBox();
         this.component.setHorizontalAlignment(SwingConstants.CENTER);
     }
@@ -74,9 +74,9 @@ public class JCheckBoxRenderer extends AbstractCellEditor implements TableCellRe
     }
 
     private boolean isEditable(JTable table, int row) {
-        for (RequiredRow requiredRow : this.requiredRows) {
-            Object obj = table.getValueAt(row, requiredRow.getColumnIndex());
-            if (requiredRow.getExpectedValue().equals(obj)) {
+        for (CheckedRow checkedRow : this.checkedRows) {
+            Object obj = table.getValueAt(row, checkedRow.getColumnIndex());
+            if (checkedRow.getExpectedValue().equals(obj)) {
                 return false;
             }
         }
