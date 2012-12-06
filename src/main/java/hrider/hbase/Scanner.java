@@ -62,12 +62,6 @@ public class Scanner {
      * A list of loaded rows.
      */
     private Collection<DataRow>     current;
-    /**
-     * A list of columns. The hbase doesn't really has columns it is more key/value pairs where key can be seen as a column. In order
-     * to retrieve a list of columns the scan over the whole table should be performed and keys of each row should be collected. This operation
-     * might be very expensive so the list of columns is filled on demand. Each time a new row is loaded its keys are added to the list.
-     */
-    private Collection<String>      columns;
     //endregion
 
     //region Constructor
@@ -83,7 +77,6 @@ public class Scanner {
         this.tableName = tableName;
         this.rowsCount = 0;
         this.markers = new Stack<Marker>();
-        this.columns = new ArrayList<String>();
     }
     //endregion
 
@@ -106,15 +99,18 @@ public class Scanner {
      * @return A list of columns.
      */
     public Collection<String> getColumns(int rowsNumber) {
-        if (this.columns.isEmpty()) {
+        if (this.markers.isEmpty()) {
             try {
-                loadColumns(rowsNumber);
+                return loadColumns(rowsNumber);
             }
             catch (IOException e) {
                 MessageHandler.addError(String.format("Failed to load columns for table %s.", this.tableName), e);
+                return new ArrayList<String>();
             }
         }
-        return this.columns;
+        else {
+            return peekMarker().columns;
+        }
     }
 
     /**
@@ -162,11 +158,18 @@ public class Scanner {
         this.current = null;
         this.rowsCount = 0;
         this.markers.clear();
-        this.columns.clear();
 
         if (startKey != null) {
-            this.markers.push(new Marker(startKey, new ArrayList<DataRow>()));
+            this.markers.push(new Marker(startKey, new ArrayList<DataRow>(), new ArrayList<String>()));
         }
+    }
+
+    /**
+     * Gets a list of already loaded rows.
+     * @return A list of rows.
+     */
+    public Collection<DataRow> current() {
+        return this.current;
     }
 
     /**
@@ -178,6 +181,7 @@ public class Scanner {
      */
     public Collection<DataRow> current(int rowsNumber) throws IOException {
         if (this.current == null || this.current.size() != rowsNumber) {
+            this.markers.clear();
             this.current = next(0, rowsNumber);
         }
         return this.current;
@@ -218,7 +222,7 @@ public class Scanner {
      * @return A total number of rows in the table.
      * @throws IOException Error accessing hbase.
      */
-    public long getRowsCount() throws IOException {
+    public synchronized long getRowsCount() throws IOException {
         if (this.rowsCount == 0) {
             Scan scan = getScanner();
             scan.setCaching(1000);
@@ -272,10 +276,12 @@ public class Scanner {
      * @param offset     The offset to start from.
      * @param rowsNumber The number of rows to load.
      * @param rows       The loaded rows. This is the output parameter.
+     * @param columns    The columns loaded from rows. This is the output parameter.
      * @return A key of the last loaded row. Used to mark the current position for the next scan.
      * @throws IOException Error accessing hbase.
      */
-    protected TypedObject loadRows(ResultScanner scanner, int offset, int rowsNumber, Map<TypedObject, DataRow> rows) throws IOException {
+    protected TypedObject loadRows(ResultScanner scanner, int offset, int rowsNumber, Map<TypedObject, DataRow> rows, Collection<String> columns) throws
+        IOException {
         ObjectType keyType = this.columnTypes.get("key");
 
         int index = 0;
@@ -312,8 +318,8 @@ public class Scanner {
                                 row.addCell(new DataCell(row, columnName, new TypedObject(columnType, cell.getValue())));
                             }
 
-                            if (!this.columns.contains(columnName)) {
-                                this.columns.add(columnName);
+                            if (!columns.contains(columnName)) {
+                                columns.add(columnName);
                             }
                         }
                     }
@@ -333,7 +339,8 @@ public class Scanner {
      * @param rowsNumber The number of rows to look for the column names. The column name is a key from key/value pairs in hbase row.
      * @throws IOException Error accessing hbase.
      */
-    private void loadColumns(int rowsNumber) throws IOException {
+    private Collection<String> loadColumns(int rowsNumber) throws IOException {
+        Collection<String> columnNames = new ArrayList<String>();
         HTable table = this.factory.get(this.tableName);
 
         ResultScanner scanner = table.getScanner(new Scan());
@@ -346,10 +353,10 @@ public class Scanner {
             if (row != null) {
                 NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> familyMap = row.getMap();
                 for (NavigableMap.Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> entry : familyMap.entrySet()) {
-                    for (byte[] qunitifer : entry.getValue().keySet()) {
-                        String columnName = String.format("%s:%s", Bytes.toString(entry.getKey()), Bytes.toString(qunitifer));
-                        if (!this.columns.contains(columnName)) {
-                            this.columns.add(columnName);
+                    for (byte[] quantifier : entry.getValue().keySet()) {
+                        String columnName = String.format("%s:%s", Bytes.toString(entry.getKey()), Bytes.toString(quantifier));
+                        if (!columnNames.contains(columnName)) {
+                            columnNames.add(columnName);
                         }
                     }
                 }
@@ -358,6 +365,8 @@ public class Scanner {
             counter++;
         }
         while (row != null && counter < rowsNumber);
+
+        return columnNames;
     }
 
     /**
@@ -384,9 +393,11 @@ public class Scanner {
         HTable table = this.factory.get(this.tableName);
         ResultScanner scanner = table.getScanner(scan);
 
-        TypedObject lastKey = loadRows(scanner, offset, rowsNumber, rows);
+        Collection<String> columns = new ArrayList<String>();
+
+        TypedObject lastKey = loadRows(scanner, offset, rowsNumber, rows, columns);
         if (lastKey != null) {
-            this.markers.push(new Marker(lastKey, rows.values()));
+            this.markers.push(new Marker(lastKey, rows.values(), columns));
         }
 
         return rows.values();
@@ -432,6 +443,10 @@ public class Scanner {
          * A list of previously loaded rows.
          */
         private Collection<DataRow> rows;
+        /**
+         * A list of columns loaded from the rows.
+         */
+        private Collection<String>  columns;
         //endregion
 
         //region Constructor
@@ -439,12 +454,14 @@ public class Scanner {
         /**
          * Initializes a new instance of the {@link Marker} class.
          *
-         * @param key  The last loaded key.
-         * @param rows A list of laoded rows.
+         * @param key     The last loaded key.
+         * @param rows    A list of loaded rows.
+         * @param columns A list of columns loaded from the rows.
          */
-        private Marker(TypedObject key, Collection<DataRow> rows) {
+        private Marker(TypedObject key, Collection<DataRow> rows, Collection<String> columns) {
             this.key = key;
             this.rows = rows;
+            this.columns = columns;
         }
         //endregion
 

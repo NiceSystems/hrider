@@ -6,6 +6,8 @@ import javax.swing.*;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,6 +50,12 @@ public class JCheckBoxRenderer extends AbstractCellEditor implements TableCellRe
         this.checkedRows = Arrays.asList(checkedRows);
         this.component = new JCheckBox();
         this.component.setHorizontalAlignment(SwingConstants.CENTER);
+        this.component.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                stopCellEditing();
+            }
+        });
     }
     //endregion
 
@@ -111,10 +119,12 @@ public class JCheckBoxRenderer extends AbstractCellEditor implements TableCellRe
             this.isRepresentedAsString = false;
             return (Boolean)value;
         }
+
         if (value instanceof String) {
             this.isRepresentedAsString = true;
             return Boolean.parseBoolean((String)value);
         }
+
         return false;
     }
     //endregion
