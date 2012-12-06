@@ -10,18 +10,39 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Copyright (C) 2012 NICE Systems ltd.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author Igor Cher
+ * @version %I%, %G%
+ */
 public class AddTableDialog extends JDialog {
 
+    //region Variables
     private JPanel           contentPane;
     private JButton          buttonOK;
     private JButton          buttonCancel;
-    private JTextField tableNameTextField;
+    private JTextField       tableNameTextField;
     private JButton          removeFamilyButton;
     private JButton          addFamilyButton;
     private JList            familiesList;
     private DefaultListModel familiesListModel;
     private boolean          okPressed;
+    //endregion
 
+    //region Constructor
     public AddTableDialog() {
         setContentPane(this.contentPane);
         setModal(true);
@@ -115,7 +136,9 @@ public class AddTableDialog extends JDialog {
                 }
             });
     }
+    //endregion
 
+    //region Public Methods
     public void showDialog(Component owner) {
         this.setComponentOrientation(owner.getComponentOrientation());
         this.pack();
@@ -133,13 +156,15 @@ public class AddTableDialog extends JDialog {
     public List<String> getColumnFamilies() {
         List<String> columnFamilies = new ArrayList<String>();
         if (this.okPressed) {
-            for (int i = 0; i < AddTableDialog.this.familiesListModel.getSize(); i++) {
+            for (int i = 0 ; i < AddTableDialog.this.familiesListModel.getSize() ; i++) {
                 columnFamilies.add((String)AddTableDialog.this.familiesListModel.getElementAt(i));
             }
         }
         return columnFamilies;
     }
+    //endregion
 
+    //region Private Methods
     private void onOK() {
         if (this.tableNameTextField.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "The table name is required.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -154,4 +179,5 @@ public class AddTableDialog extends JDialog {
         // add your code here if necessary
         dispose();
     }
+    //endregion
 }

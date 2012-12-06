@@ -21,18 +21,19 @@ import java.awt.event.*;
  *
  * @author Igor Cher
  * @version %I%, %G%
- *          <p/>
- *
  */
 public class AddColumnDialog extends JDialog {
 
-    private JPanel  contentPane;
-    private JButton buttonOK;
-    private JButton buttonCancel;
-    private JComboBox comboBoxColumnFamilies;
+    //region Variables
+    private JPanel     contentPane;
+    private JButton    buttonOK;
+    private JButton    buttonCancel;
+    private JComboBox  comboBoxColumnFamilies;
     private JTextField columnNameTextField;
-    private boolean           okPressed;
+    private boolean    okPressed;
+    //endregion
 
+    //region Constructor
     public AddColumnDialog(Iterable<String> columnFamilies) {
         setContentPane(this.contentPane);
         setModal(true);
@@ -78,7 +79,9 @@ public class AddColumnDialog extends JDialog {
                 }
             }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     }
+    //endregion
 
+    //region Public Methods
     public void showDialog(Component owner) {
         this.setComponentOrientation(owner.getComponentOrientation());
         this.pack();
@@ -92,8 +95,9 @@ public class AddColumnDialog extends JDialog {
         }
         return null;
     }
+    //endregion
 
-
+    //region Private Methods
     private void onOK() {
         if (this.columnNameTextField.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "The column name is required.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -108,4 +112,5 @@ public class AddColumnDialog extends JDialog {
         // add your code here if necessary
         dispose();
     }
+    //endregion
 }

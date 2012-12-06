@@ -11,8 +11,27 @@ import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.awt.event.*;
 
+/**
+ * Copyright (C) 2012 NICE Systems ltd.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author Igor Cher
+ * @version %I%, %G%
+ */
 public class AddRowDialog extends JDialog {
 
+    //region Variables
     private static final long serialVersionUID = 3548012990232068349L;
     private JPanel            contentPane;
     private JButton           buttonAdd;
@@ -21,7 +40,9 @@ public class AddRowDialog extends JDialog {
     private JButton           buttonAddColumn;
     private DefaultTableModel tableModel;
     private boolean           okPressed;
+    //endregion
 
+    //region Constructor
     public AddRowDialog(ChangeTracker changeTracker, Iterable<TypedColumn> columns, final Iterable<String> columnFamilies) {
         setContentPane(this.contentPane);
         setModal(true);
@@ -115,7 +136,9 @@ public class AddRowDialog extends JDialog {
                 }
             });
     }
+    //endregion
 
+    //region Public Methods
     public void showDialog(Component owner) {
         this.setComponentOrientation(owner.getComponentOrientation());
         this.pack();
@@ -144,7 +167,9 @@ public class AddRowDialog extends JDialog {
         }
         return null;
     }
+    //endregion
 
+    //region Private Methods
     private static void stopCellEditing(JTable table) {
         TableCellEditor editor = table.getCellEditor();
         if (editor != null) {
@@ -207,4 +232,5 @@ public class AddRowDialog extends JDialog {
         // add your code here if necessary
         dispose();
     }
+    //endregion
 }

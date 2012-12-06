@@ -62,7 +62,7 @@ public class JCloseButton extends JPanel {
                         pane.removeTabAt(pane.indexOfTab(title));
 
                         for (TabClosedListener listener : JCloseButton.this.listeners) {
-                            listener.onTabeClosed(JCloseButton.this);
+                            listener.onTabClosed(JCloseButton.this);
                         }
                     }
                 }

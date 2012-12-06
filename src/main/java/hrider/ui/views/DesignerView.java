@@ -38,14 +38,28 @@ import java.util.*;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
- * User: igorc
- * Date: 10/15/12
- * Time: 6:25 PM
+ * Copyright (C) 2012 NICE Systems ltd.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author Igor Cher
+ * @version %I%, %G%
+ *          <p/>
+ *          This class is a main view.
  */
-@SuppressWarnings({"OverlyComplexAnonymousInnerClass", "OverlyComplexClass", "ClassWithTooManyFields", "ClassWithTooManyMethods", "OverlyCoupledClass"})
 public class DesignerView {
 
+    //region Variables
     private JPanel                   topPanel;
     private JList                    tablesList;
     private DefaultListModel         tablesListModel;
@@ -79,7 +93,7 @@ public class DesignerView {
     private JTextField               tablesFilter;
     private JTextField               columnsFilter;
     private DefaultTableModel        columnsTableModel;
-    private DefaultTableModel rowsTableModel;
+    private DefaultTableModel        rowsTableModel;
     private JPopupMenu               columnsMenu;
     private Map<String, TableColumn> removedColumns;
     private Query                    lastQuery;
@@ -88,7 +102,9 @@ public class DesignerView {
     private JPanel                   owner;
     private HbaseHelper              hbaseHelper;
     private ChangeTracker            changeTracker;
+    //endregion
 
+    //region Constructor
     public DesignerView(JPanel owner, HbaseHelper hbaseHelper) {
 
         this.owner = owner;
@@ -100,7 +116,7 @@ public class DesignerView {
                 @Override
                 public void onChanged(ClipboardData data) {
                     DesignerView.this.pasteTableButton.setEnabled(hasTableInClipboard());
-                    DesignerView.this.pasteRowButton.setEnabled(hasRawsInClipboard());
+                    DesignerView.this.pasteRowButton.setEnabled(hasRowsInClipboard());
                 }
             });
 
@@ -199,7 +215,7 @@ public class DesignerView {
                 public void actionPerformed(ActionEvent e) {
                     clearError();
 
-                    ScanDialog dialog = new ScanDialog(DesignerView.this.lastQuery, getVisibleColumns());
+                    ScanDialog dialog = new ScanDialog(DesignerView.this.lastQuery, getCheckedColumns());
                     dialog.showDialog(DesignerView.this.topPanel);
 
                     DesignerView.this.lastQuery = dialog.getQuery();
@@ -219,16 +235,16 @@ public class DesignerView {
                     stopCellEditing(DesignerView.this.rowsTable);
 
                     try {
-                        Collection<String> columnFamilies = DesignerView.this.hbaseHelper.getColumnFamilies(getTableName());
+                        Collection<String> columnFamilies = DesignerView.this.hbaseHelper.getColumnFamilies(getSelectedTableName());
 
-                        AddRowDialog dialog = new AddRowDialog(DesignerView.this.changeTracker, getVisibleColumns(), columnFamilies);
+                        AddRowDialog dialog = new AddRowDialog(DesignerView.this.changeTracker, getCheckedColumns(), columnFamilies);
                         dialog.showDialog(DesignerView.this.topPanel);
 
                         DataRow row = dialog.getRow();
                         if (row != null) {
                             DesignerView.this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                             try {
-                                DesignerView.this.hbaseHelper.setRow(getTableName(), row);
+                                DesignerView.this.hbaseHelper.setRow(getSelectedTableName(), row);
 
                                 if (DesignerView.this.scanner != null) {
                                     DesignerView.this.scanner.resetCurrent(row.getKey());
@@ -238,7 +254,7 @@ public class DesignerView {
                                 for (DataCell cell : row.getCells()) {
                                     Configurator.set(
                                         String.format(
-                                            "table.%s.%s", getTableName(), cell.getColumnName()), cell.getTypedValue().getType().toString());
+                                            "table.%s.%s", getSelectedTableName(), cell.getColumnName()), cell.getTypedValue().getType().toString());
                                 }
                                 Configurator.save();
 
@@ -254,7 +270,7 @@ public class DesignerView {
                         }
                     }
                     catch (Exception ex) {
-                        setError(String.format("Failed to get column families for table '%s'.", getTableName()), ex);
+                        setError(String.format("Failed to get column families for table '%s'.", getSelectedTableName()), ex);
                     }
                 }
             });
@@ -277,7 +293,7 @@ public class DesignerView {
                             for (int selectedRow : selectedRows) {
                                 try {
                                     DataCell key = (DataCell)DesignerView.this.rowsTable.getValueAt(selectedRow, 0);
-                                    DesignerView.this.hbaseHelper.deleteRow(getTableName(), key.getRow());
+                                    DesignerView.this.hbaseHelper.deleteRow(getSelectedTableName(), key.getRow());
                                 }
                                 catch (Exception ex) {
                                     setError("Failed to delete row in HBase: ", ex);
@@ -341,7 +357,7 @@ public class DesignerView {
                         try {
                             for (DataRow row : DesignerView.this.changeTracker.getChanges()) {
                                 try {
-                                    DesignerView.this.hbaseHelper.setRow(getTableName(), row);
+                                    DesignerView.this.hbaseHelper.setRow(getSelectedTableName(), row);
                                 }
                                 catch (Exception ex) {
                                     setError("Failed to update rows in HBase: ", ex);
@@ -513,7 +529,7 @@ public class DesignerView {
                 public void actionPerformed(ActionEvent e) {
                     clearError();
 
-                    load();
+                    populate();
                 }
             });
 
@@ -537,19 +553,80 @@ public class DesignerView {
                 }
             });
     }
+    //endregion
 
-    public void load() {
+    //region Public Methods
+
+    /**
+     * Populates the view with the data.
+     */
+    public void populate() {
         loadTables();
     }
 
+    /**
+     * Gets the reference to the view.
+     *
+     * @return A {@link JPanel} that contains the controls.
+     */
     public JPanel getView() {
         return this.topPanel;
     }
 
+    /**
+     * Gets a reference to the class used to access the hbase.
+     *
+     * @return A reference to the {@link HbaseHelper} class.
+     */
     public HbaseHelper getHbaseHelper() {
         return this.hbaseHelper;
     }
+    //endregion
 
+    //region Private Methods
+
+    /**
+     * Loads the table names.
+     */
+    private void loadTables() {
+        Object selectedTable = this.tablesList.getSelectedValue();
+
+        clearError();
+
+        this.refreshButton.setEnabled(false);
+        this.addTableButton.setEnabled(false);
+        this.deleteTableButton.setEnabled(false);
+        this.truncateTableButton.setEnabled(false);
+        this.copyTableButton.setEnabled(false);
+
+        this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        try {
+            this.tablesListModel.clear();
+
+            String filter = this.tablesFilter.getText().trim().toLowerCase();
+            for (String table : this.hbaseHelper.getTables()) {
+                if (filter.isEmpty() || table.toLowerCase().contains(filter)) {
+                    this.tablesListModel.addElement(table);
+                }
+            }
+
+            this.addTableButton.setEnabled(true);
+            this.tablesNumber.setText(String.valueOf(this.tablesListModel.getSize()));
+            this.tablesList.setSelectedValue(selectedTable, true);
+        }
+        catch (Exception ex) {
+            setError("Failed to connect to hadoop: ", ex);
+        }
+        finally {
+            this.refreshButton.setEnabled(true);
+            this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        }
+    }
+
+    /**
+     * Initializes a table list used to present all available tables in the hbase cluster.
+     */
     private void initializeTablesList() {
         this.pasteTableButton.setEnabled(hasTableInClipboard());
 
@@ -615,7 +692,9 @@ public class DesignerView {
             });
     }
 
-    @SuppressWarnings("MagicNumber")
+    /**
+     * Initializes a columns table used to present the columns of the selected table.
+     */
     private void initializeColumnsTable() {
         this.columnsTableModel = new DefaultTableModel();
         this.columnsTableModel.addColumn("Is Shown");
@@ -652,7 +731,8 @@ public class DesignerView {
                     if ("Is Shown".equals(columnName)) {
                         Configurator.set(
                             String.format(
-                                "table.%s.%s.isShown", getTableName(), model.getValueAt(e.getFirstRow(), 1)), model.getValueAt(e.getFirstRow(), 0).toString());
+                                "table.%s.%s.isShown", getSelectedTableName(), model.getValueAt(e.getFirstRow(), 1)),
+                            model.getValueAt(e.getFirstRow(), 0).toString());
 
                         Configurator.save();
 
@@ -670,7 +750,7 @@ public class DesignerView {
                         String name = (String)model.getValueAt(e.getFirstRow(), 1);
                         ObjectType type = (ObjectType)model.getValueAt(e.getFirstRow(), column);
 
-                        Configurator.set(String.format("table.%s.%s", getTableName(), name), type.toString());
+                        Configurator.set(String.format("table.%s.%s", getSelectedTableName(), name), type.toString());
                         Configurator.save();
 
                         if (DesignerView.this.scanner != null) {
@@ -701,6 +781,9 @@ public class DesignerView {
             });
     }
 
+    /**
+     * Initializes a rows table used to present the content of the selected table.
+     */
     private void initializeRowsTable() {
         this.rowsTableModel = new DefaultTableModel();
         this.rowsTable.setModel(this.rowsTableModel);
@@ -796,7 +879,7 @@ public class DesignerView {
                 public void columnMarginChanged(ChangeEvent e) {
                     TableColumn column = DesignerView.this.rowsTable.getTableHeader().getResizingColumn();
                     if (column != null) {
-                        Configurator.set(String.format("table.%s.%s.size", getTableName(), column.getHeaderValue()), String.valueOf(column.getWidth()));
+                        Configurator.set(String.format("table.%s.%s.size", getSelectedTableName(), column.getHeaderValue()), String.valueOf(column.getWidth()));
                     }
                 }
 
@@ -816,191 +899,20 @@ public class DesignerView {
             });
     }
 
-    private void addColumnsToRowsTable() {
-        for (int i = 0 ; i < DesignerView.this.columnsTable.getRowCount() ; i++) {
-            String columnName = (String)DesignerView.this.columnsTableModel.getValueAt(i, 1);
-
-            boolean isShown = (Boolean)DesignerView.this.columnsTableModel.getValueAt(i, 0);
-            if (isShown) {
-                if (!this.removedColumns.containsKey(columnName)) {
-                    this.rowsTableModel.addColumn(columnName);
-                }
-            }
-        }
-    }
-
-    private Map<String, ObjectType> getColumnTypes() {
-        Map<String, ObjectType> columnTypes = new HashMap<String, ObjectType>();
-        for (int i = 0 ; i < DesignerView.this.columnsTable.getRowCount() ; i++) {
-            String columnName = (String)DesignerView.this.columnsTableModel.getValueAt(i, 1);
-            columnTypes.put(columnName, (ObjectType)DesignerView.this.columnsTableModel.getValueAt(i, 2));
-        }
-        return columnTypes;
-    }
-
-    private void updateColumnsTable() {
-        if (this.scanner != null) {
-            List<String> columns = new ArrayList<String>(this.scanner.getColumns(getPageSize()));
-            if (!columns.isEmpty()) {
-                for (int i = 0 ; i < DesignerView.this.columnsTable.getRowCount() ; i++) {
-                    String columnName = (String)DesignerView.this.columnsTableModel.getValueAt(i, 1);
-                    columns.remove(columnName);
-                }
-
-                String tableName = getTableName();
-
-                while (!columns.isEmpty()) {
-                    addColumnToColumnsTable(tableName, columns.get(0), null);
-                    columns.remove(0);
-                }
-            }
-        }
-    }
-
-    private void addRowsToRowsTable(Iterable<DataRow> rows) {
-        for (DataRow row : rows) {
-            Collection<Object> values = new ArrayList<Object>(DesignerView.this.rowsTable.getColumnCount());
-            for (int i = 0 ; i < DesignerView.this.rowsTable.getColumnCount() ; i++) {
-                String columnName = DesignerView.this.rowsTable.getColumnName(i);
-                DataCell cell = row.getCell(columnName);
-                if (cell == null) {
-                    cell = new DataCell(row, columnName, new TypedObject(getColumnType(getTableName(), columnName), null));
-                }
-                values.add(cell);
-            }
-            this.rowsTableModel.addRow(values.toArray());
-        }
-    }
-
-    private void loadTables() {
-        Object selectedTable = this.tablesList.getSelectedValue();
-
-        clearError();
-
-        this.refreshButton.setEnabled(false);
-        this.addTableButton.setEnabled(false);
-        this.deleteTableButton.setEnabled(false);
-        this.truncateTableButton.setEnabled(false);
-        this.copyTableButton.setEnabled(false);
-
-        this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-        try {
-            this.tablesListModel.clear();
-
-            String filter = this.tablesFilter.getText().trim().toLowerCase();
-            for (String table : this.hbaseHelper.getTables()) {
-                if (filter.isEmpty() || table.toLowerCase().contains(filter)) {
-                    this.tablesListModel.addElement(table);
-                }
-            }
-
-            this.addTableButton.setEnabled(true);
-            this.tablesNumber.setText(String.valueOf(this.tablesListModel.getSize()));
-            this.tablesList.setSelectedValue(selectedTable, true);
-        }
-        catch (Exception ex) {
-            setError("Failed to connect to hadoop: ", ex);
-        }
-        finally {
-            this.refreshButton.setEnabled(true);
-            this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-        }
-    }
-
-    private void populateRowsTable(Direction direction, boolean reloadColumns) {
-
-        this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        try {
-            stopCellEditing(DesignerView.this.columnsTable);
-
-            this.rowsNumberLabel.setText("?");
-            this.visibleRowsLabel.setText("?");
-            this.rowsNumberSpinner.setEnabled(true);
-
-            String tableName = getTableName();
-            if (tableName != null) {
-                int rowsCount = this.rowsTable.getRowCount();
-
-                clearTable(DesignerView.this.rowsTable);
-
-                Map<String, ObjectType> columnTypes = getColumnTypes();
-
-                this.scanner.setColumnTypes(columnTypes);
-                this.scanner.setQuery(this.lastQuery);
-
-                Collection<DataRow> rows;
-
-                if (direction == Direction.Current) {
-                    rows = this.scanner.current(getPageSize());
-                    this.lastRow = rows.size();
-                }
-                else if (direction == Direction.Forward) {
-                    rows = this.scanner.next(getPageSize());
-                    this.lastRow += rows.size();
-                }
-                else {
-                    rows = this.scanner.prev();
-                    this.lastRow -= rowsCount;
-                }
-
-                if (reloadColumns) {
-                    updateColumnsTable();
-                }
-
-                this.columnsMenu = createColumnsPopupMenu();
-
-                // Replace the cell editor to support custom objects as cell values.
-                for (int i = 0 ; i < this.rowsTable.getColumnCount() ; i++) {
-                    TableColumn column = this.rowsTable.getColumnModel().getColumn(i);
-                    column.setCellEditor(new JCellEditor(this.changeTracker, !"key".equals(column.getIdentifier())));
-
-                    try {
-                        String width = Configurator.get(String.format("table.%s.%s.size", getTableName(), column.getHeaderValue()));
-                        if (width != null) {
-                            column.setPreferredWidth(Integer.parseInt(width));
-                        }
-                    }
-                    catch (NumberFormatException ignore) {
-                    }
-                }
-
-                addColumnsToRowsTable();
-                addRowsToRowsTable(rows);
-
-                this.enableDisablePagingButtons();
-
-                this.visibleRowsLabel.setText(String.format("%s - %s", this.lastRow - rows.size() + 1, this.lastRow));
-                this.rowsNumberSpinner.setEnabled(this.lastRow <= getPageSize());
-
-                // To get the number of rows can take the time.
-                Thread thread = new Thread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                DesignerView.this.rowsNumberLabel.setText(String.valueOf(DesignerView.this.scanner.getRowsCount()));
-                            }
-                            catch (Exception e) {
-                                setError("Failed to get the number of rows in the table.", e);
-                            }
-                        }
-                    });
-                thread.start();
-            }
-        }
-        catch (Exception ex) {
-            setError("Failed to fill rows: ", ex);
-        }
-        finally {
-            this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-        }
-    }
-
+    /**
+     * Populates a columns table with the list of the columns from the selected table.
+     */
     private void populateColumnsTable() {
         populateColumnsTable(null);
     }
 
+    /**
+     * Populates a columns table with the list of the columns from the selected table.
+     *
+     * @param row If this parameter is not null it will be used to start the columns population from. The columns are the collection of keys extracted
+     *            from the hbase rows. Hbase doesn't have a list of columns so in order to present them to the user the tool must go over a number of rows
+     *            to collect their keys. Each row can have different keys.
+     */
     private void populateColumnsTable(DataRow row) {
         this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
@@ -1012,13 +924,13 @@ public class DesignerView {
             this.rowsNumberLabel.setText("?");
             this.visibleRowsLabel.setText("?");
             this.rowsNumberSpinner.setEnabled(true);
-            this.pasteRowButton.setEnabled(hasRawsInClipboard());
+            this.pasteRowButton.setEnabled(hasRowsInClipboard());
 
-            String tableName = getTableName();
+            String tableName = getSelectedTableName();
             if (tableName != null) {
                 try {
                     if (this.scanner == null) {
-                        this.scanner = DesignerView.this.hbaseHelper.getScanner(getTableName(), null);
+                        this.scanner = DesignerView.this.hbaseHelper.getScanner(getSelectedTableName(), null);
                     }
 
                     ObjectType keyType = getColumnType(tableName, "key");
@@ -1063,12 +975,197 @@ public class DesignerView {
         }
     }
 
+    /**
+     * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
+     * in the {@link DesignerView#rowsNumberSpinner} control.
+     *
+     * @param direction     Defines what rows should be presented to the user. {@link Direction#Current}, {@link Direction#Forward} or {@link Direction#Backward}.
+     * @param reloadColumns Indicates if the columns in columns table should be reloaded. This might be required mostly in two cases:
+     *                      1. When the next rows should be loaded and they might contain additional keys that were not loaded until now.
+     *                      2. When the rows should be loaded as a result of scan.
+     */
+    private void populateRowsTable(Direction direction, boolean reloadColumns) {
+
+        this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        try {
+            stopCellEditing(DesignerView.this.columnsTable);
+
+            this.rowsNumberLabel.setText("?");
+            this.visibleRowsLabel.setText("?");
+            this.rowsNumberSpinner.setEnabled(true);
+
+            String tableName = getSelectedTableName();
+            if (tableName != null) {
+                int rowsCount = this.rowsTable.getRowCount();
+
+                clearTable(DesignerView.this.rowsTable);
+
+                Map<String, ObjectType> columnTypes = getColumnTypes();
+
+                this.scanner.setColumnTypes(columnTypes);
+                this.scanner.setQuery(this.lastQuery);
+
+                Collection<DataRow> rows;
+
+                if (direction == Direction.Current) {
+                    rows = this.scanner.current(getPageSize());
+                    this.lastRow = rows.size();
+                }
+                else if (direction == Direction.Forward) {
+                    rows = this.scanner.next(getPageSize());
+                    this.lastRow += rows.size();
+                }
+                else {
+                    rows = this.scanner.prev();
+                    this.lastRow -= rowsCount;
+                }
+
+                if (reloadColumns) {
+                    reloadColumnsTable();
+                }
+
+                this.columnsMenu = createColumnsPopupMenu();
+
+                // Replace the cell editor to support custom objects as cell values.
+                for (int i = 0 ; i < this.rowsTable.getColumnCount() ; i++) {
+                    TableColumn column = this.rowsTable.getColumnModel().getColumn(i);
+                    column.setCellEditor(new JCellEditor(this.changeTracker, !"key".equals(column.getIdentifier())));
+
+                    try {
+                        String width = Configurator.get(String.format("table.%s.%s.size", getSelectedTableName(), column.getHeaderValue()));
+                        if (width != null) {
+                            column.setPreferredWidth(Integer.parseInt(width));
+                        }
+                    }
+                    catch (NumberFormatException ignore) {
+                    }
+                }
+
+                addColumnsToRowsTable();
+                addRowsToRowsTable(rows);
+
+                this.enableDisablePagingButtons();
+
+                this.visibleRowsLabel.setText(String.format("%s - %s", this.lastRow - rows.size() + 1, this.lastRow));
+                this.rowsNumberSpinner.setEnabled(this.lastRow <= getPageSize());
+
+                // To get the number of rows can take the time.
+                Thread thread = new Thread(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                DesignerView.this.rowsNumberLabel.setText(String.valueOf(DesignerView.this.scanner.getRowsCount()));
+                            }
+                            catch (Exception e) {
+                                setError("Failed to get the number of rows in the table.", e);
+                            }
+                        }
+                    });
+                thread.start();
+            }
+        }
+        catch (Exception ex) {
+            setError("Failed to fill rows: ", ex);
+        }
+        finally {
+            this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        }
+    }
+
+    /**
+     * Reloads columns in the columns table according to the currently loaded rows.
+     */
+    private void reloadColumnsTable() {
+        if (this.scanner != null) {
+            List<String> columns = new ArrayList<String>(this.scanner.getColumns(getPageSize()));
+            if (!columns.isEmpty()) {
+                clearTable(DesignerView.this.columnsTable);
+
+                for (int i = 0 ; i < DesignerView.this.columnsTable.getRowCount() ; i++) {
+                    String columnName = (String)DesignerView.this.columnsTableModel.getValueAt(i, 1);
+                    columns.remove(columnName);
+                }
+
+                String tableName = getSelectedTableName();
+
+                while (!columns.isEmpty()) {
+                    addColumnToColumnsTable(tableName, columns.get(0), null);
+                    columns.remove(0);
+                }
+            }
+        }
+    }
+
+    /**
+     * Adds a column to the columns table.
+     *
+     * @param tableName The name of the table the column belongs to. Used to look for the column type in the saved configuration.
+     * @param column    The name of the column to add.
+     * @param row       The row that might contain column type information.
+     */
+    private void addColumnToColumnsTable(String tableName, String column, DataRow row) {
+        ObjectType columnType = getColumnType(tableName, column);
+        if (columnType == null && row != null) {
+            DataCell cell = row.getCell(column);
+            if (cell != null) {
+                columnType = cell.getTypedValue().getType();
+            }
+        }
+
+        if (columnType == null) {
+            columnType = ObjectType.fromColumn(column);
+        }
+
+        boolean isShown = isShown(tableName, column);
+        this.columnsTableModel.addRow(new Object[]{isShown, column, columnType});
+    }
+
+    /**
+     * Adds columns defined in the columns table to the rows table.
+     */
+    private void addColumnsToRowsTable() {
+        for (int i = 0 ; i < DesignerView.this.columnsTable.getRowCount() ; i++) {
+            String columnName = (String)DesignerView.this.columnsTableModel.getValueAt(i, 1);
+
+            boolean isShown = (Boolean)DesignerView.this.columnsTableModel.getValueAt(i, 0);
+            if (isShown) {
+                if (!this.removedColumns.containsKey(columnName)) {
+                    this.rowsTableModel.addColumn(columnName);
+                }
+            }
+        }
+    }
+
+    /**
+     * Adds rows to the rows table.
+     *
+     * @param rows A list of rows to add.
+     */
+    private void addRowsToRowsTable(Iterable<DataRow> rows) {
+        for (DataRow row : rows) {
+            Collection<Object> values = new ArrayList<Object>(DesignerView.this.rowsTable.getColumnCount());
+            for (int i = 0 ; i < DesignerView.this.rowsTable.getColumnCount() ; i++) {
+                String columnName = DesignerView.this.rowsTable.getColumnName(i);
+                DataCell cell = row.getCell(columnName);
+                if (cell == null) {
+                    cell = new DataCell(row, columnName, new TypedObject(getColumnType(getSelectedTableName(), columnName), null));
+                }
+                values.add(cell);
+            }
+            this.rowsTableModel.addRow(values.toArray());
+        }
+    }
+
+    /**
+     * Copies selected rows from the rows table to the clipboard.
+     */
     private void copySelectedRowsToClipboard() {
         this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
             int[] selectedRows = this.rowsTable.getSelectedRows();
             if (selectedRows.length > 0) {
-                DataTable table = new DataTable(getTableName());
+                DataTable table = new DataTable(getSelectedTableName());
                 for (int selectedRow : selectedRows) {
                     DataCell cell = (DataCell)DesignerView.this.rowsTable.getValueAt(selectedRow, 0);
                     table.addRow(cell.getRow());
@@ -1085,8 +1182,11 @@ public class DesignerView {
         }
     }
 
+    /**
+     * Copies selected table to the clipboard.
+     */
     private void copyTableToClipboard() {
-        String tableName = getTableName();
+        String tableName = getSelectedTableName();
         if (tableName != null) {
             InMemoryClipboard.setData(new ClipboardData<DataTable>(new DataTable(tableName, this.hbaseHelper)));
         }
@@ -1095,7 +1195,9 @@ public class DesignerView {
         }
     }
 
-    @SuppressWarnings("OverlyNestedMethod")
+    /**
+     * Pastes rows from the clipboard into the rows table and into the hbase table that the rows table represents.
+     */
     private void pasteRowsFromClipboard() {
         this.pasteRowButton.setEnabled(false);
 
@@ -1112,13 +1214,13 @@ public class DesignerView {
                     if (updatedRows != null) {
                         for (DataRow row : updatedRows) {
                             try {
-                                DesignerView.this.hbaseHelper.setRow(getTableName(), row);
+                                DesignerView.this.hbaseHelper.setRow(getSelectedTableName(), row);
 
                                 // Update the column types according to the added row.
                                 for (DataCell cell : row.getCells()) {
                                     Configurator.set(
                                         String.format(
-                                            "table.%s.%s", getTableName(), cell.getColumnName()), cell.getTypedValue().getType().toString());
+                                            "table.%s.%s", getSelectedTableName(), cell.getColumnName()), cell.getTypedValue().getType().toString());
                                 }
                                 Configurator.save();
 
@@ -1167,7 +1269,9 @@ public class DesignerView {
         }
     }
 
-    @SuppressWarnings("OverlyNestedMethod")
+    /**
+     * Pastes a table from the clipboard into the application and an hbase cluster.
+     */
     private void pasteTableFromClipboard() {
         this.pasteTableButton.setEnabled(false);
 
@@ -1178,7 +1282,7 @@ public class DesignerView {
 
             this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             try {
-                String targetTable = getTableName();
+                String targetTable = getSelectedTableName();
                 String sourceTable = table.getTableName();
 
                 boolean proceed = true;
@@ -1234,24 +1338,26 @@ public class DesignerView {
         }
     }
 
-    private void addColumnToColumnsTable(String tableName, String column, DataRow row) {
-        ObjectType columnType = getColumnType(tableName, column);
-        if (columnType == null && row != null) {
-            DataCell cell = row.getCell(column);
-            if (cell != null) {
-                columnType = cell.getTypedValue().getType();
-            }
+    /**
+     * Gets a mapping of column names to column types.
+     *
+     * @return A column names to column types map.
+     */
+    private Map<String, ObjectType> getColumnTypes() {
+        Map<String, ObjectType> columnTypes = new HashMap<String, ObjectType>();
+        for (int i = 0 ; i < DesignerView.this.columnsTable.getRowCount() ; i++) {
+            String columnName = (String)DesignerView.this.columnsTableModel.getValueAt(i, 1);
+            columnTypes.put(columnName, (ObjectType)DesignerView.this.columnsTableModel.getValueAt(i, 2));
         }
-
-        if (columnType == null) {
-            columnType = ObjectType.fromColumn(column);
-        }
-
-        boolean isShown = isShown(tableName, column);
-        this.columnsTableModel.addRow(new Object[]{isShown, column, columnType});
+        return columnTypes;
     }
 
-    private Collection<TypedColumn> getVisibleColumns() {
+    /**
+     * Gets a list of columns that are checked. Checked columns are the columns to be shown in the rows table.
+     *
+     * @return A list of checked columns from the columns table.
+     */
+    private Collection<TypedColumn> getCheckedColumns() {
         Collection<TypedColumn> typedColumns = new ArrayList<TypedColumn>();
         for (int i = 0 ; i < this.columnsTable.getRowCount() ; i++) {
             boolean isShown = (Boolean)this.columnsTableModel.getValueAt(i, 0);
@@ -1264,6 +1370,11 @@ public class DesignerView {
         return typedColumns;
     }
 
+    /**
+     * Creates a popup menu with the list of columns. This popup menu allows to the user to filter column already presented in the rows table.
+     *
+     * @return An instance of the {@link JPopupMenu} class.
+     */
     private JPopupMenu createColumnsPopupMenu() {
         JPopupMenu menu = new JPopupMenu("Columns to show");
 
@@ -1308,23 +1419,43 @@ public class DesignerView {
         return menu;
     }
 
+    /**
+     * Clears all rows from the specified table model.
+     *
+     * @param model The model to clear the rows from.
+     */
     private static void clearRows(DefaultTableModel model) {
         if (model != null) {
             model.setRowCount(0);
         }
     }
 
+    /**
+     * Clears all columns from the specified table model.
+     *
+     * @param model The model to clear the columns from.
+     */
     private static void clearColumns(DefaultTableModel model) {
         if (model != null) {
             model.setColumnCount(0);
         }
     }
 
+    /**
+     * Clear all data from the table.
+     *
+     * @param table The table to clear the data from.
+     */
     private static void clearTable(JTable table) {
         clearRows((DefaultTableModel)table.getModel());
         clearColumns((DefaultTableModel)table.getModel());
     }
 
+    /**
+     * Stops editing of the cell if there is any.
+     *
+     * @param table The table that contains the cell.
+     */
     private static void stopCellEditing(JTable table) {
         TableCellEditor editor = table.getCellEditor();
         if (editor != null) {
@@ -1332,14 +1463,29 @@ public class DesignerView {
         }
     }
 
+    /**
+     * Gets the page size. The page size is the number of rows to be loaded in a batch.
+     *
+     * @return The size of the page.
+     */
     private int getPageSize() {
         return (Integer)this.rowsNumberSpinner.getValue();
     }
 
-    private String getTableName() {
+    /**
+     * Gets the currently selected table name.
+     *
+     * @return The name of the selected table from the list of the tables.
+     */
+    private String getSelectedTableName() {
         return (String)this.tablesList.getSelectedValue();
     }
 
+    /**
+     * Gets a list of the selected tables.
+     *
+     * @return A list of the selected tables.
+     */
     private List<String> getSelectedTables() {
         List<String> tables = new ArrayList<String>();
         for (Object table : this.tablesList.getSelectedValues()) {
@@ -1348,6 +1494,13 @@ public class DesignerView {
         return tables;
     }
 
+    /**
+     * Gets the type of the column from the configuration.
+     *
+     * @param tableName  The name of the table that contains the column.
+     * @param columnName The name of the column.
+     * @return The column type.
+     */
     private static ObjectType getColumnType(String tableName, String columnName) {
         String type = Configurator.get(String.format("table.%s.%s", tableName, columnName));
         if (type != null) {
@@ -1356,21 +1509,41 @@ public class DesignerView {
         return ObjectType.fromColumn(columnName);
     }
 
+    /**
+     * Checks in the configuration whether the specified column is checked.
+     *
+     * @param tableName  The name of the table that contains the column.
+     * @param columnName The name of the column.
+     * @return True if the specified column is checked or False otherwise.
+     */
     private static boolean isShown(String tableName, String columnName) {
         String value = Configurator.get(String.format("table.%s.%s.isShown", tableName, columnName));
         return value == null || Boolean.parseBoolean(value);
     }
 
-    private static boolean hasRawsInClipboard() {
+    /**
+     * Checks if the clipboard has rows to paste.
+     *
+     * @return True if the clipboard has rows to paste or False otherwise.
+     */
+    private static boolean hasRowsInClipboard() {
         ClipboardData<DataTable> data = InMemoryClipboard.getData();
         return data != null && data.getData().getRowsCount() > 0;
     }
 
+    /**
+     * Checks if the clipboard has table to paste.
+     *
+     * @return True if the clipboard has table to paste or False otherwise.
+     */
     private static boolean hasTableInClipboard() {
         ClipboardData<DataTable> data = InMemoryClipboard.getData();
         return data != null && data.getData().getRowsCount() == 0;
     }
 
+    /**
+     * Enables or disables the paging buttons.
+     */
     private void enableDisablePagingButtons() {
         try {
             this.showPrevPageButton.setEnabled(this.lastRow > getPageSize());
@@ -1381,21 +1554,48 @@ public class DesignerView {
         }
     }
 
+    /**
+     * Clears the previously set error messages.
+     */
     private static void clearError() {
         MessageHandler.addError("", null);
     }
 
+    /**
+     * Sets the error message.
+     *
+     * @param message The error message to set.
+     * @param ex      An exception.
+     */
     private static void setError(String message, Exception ex) {
         MessageHandler.addError(message, ex);
     }
 
+    /**
+     * Sets the info message.
+     *
+     * @param message The info message to set.
+     */
     private static void setInfo(String message) {
         MessageHandler.addInfo(message);
     }
+    //endregion
 
+    /**
+     * Represents the direction of the loading operation.
+     */
     private enum Direction {
+        /**
+         * Reload current data.
+         */
         Current,
+        /**
+         * Load next data.
+         */
         Forward,
+        /**
+         * Load previous data.
+         */
         Backward
     }
 }

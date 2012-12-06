@@ -12,8 +12,27 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
 
+/**
+ * Copyright (C) 2012 NICE Systems ltd.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author Igor Cher
+ * @version %I%, %G%
+ */
 public class ConnectionDetailsDialog extends JDialog {
 
+    //region Variables
     private JPanel      contentPane;
     private JButton     buttonConnect;
     private JButton     buttonCancel;
@@ -23,7 +42,9 @@ public class ConnectionDetailsDialog extends JDialog {
     private JSpinner    hbasePort;
     private boolean     okPressed;
     private HbaseHelper hbaseHelper;
+    //endregion
 
+    //region Constructor
     public ConnectionDetailsDialog() {
         setContentPane(this.contentPane);
         setModal(true);
@@ -89,7 +110,9 @@ public class ConnectionDetailsDialog extends JDialog {
                 }
             });
     }
+    //endregion
 
+    //region Public Methods
     public void showDialog(Component owner) {
         this.setComponentOrientation(owner.getComponentOrientation());
         this.pack();
@@ -117,7 +140,9 @@ public class ConnectionDetailsDialog extends JDialog {
         }
         return null;
     }
+    //endregion
 
+    //region Private Methods
     private void onOK() {
         Configuration config = HBaseConfiguration.create();
         config.set("hbase.zookeeper.quorum", this.zooKeeperServer.getText());
@@ -151,4 +176,5 @@ public class ConnectionDetailsDialog extends JDialog {
     private void onCancel() {
         dispose();
     }
+    //endregion
 }

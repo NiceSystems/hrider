@@ -14,8 +14,27 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Copyright (C) 2012 NICE Systems ltd.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @author Igor Cher
+ * @version %I%, %G%
+ */
 public class PasteDialog extends JDialog {
 
+    //region Variables
     private static final long serialVersionUID = 1459899796815018087L;
 
     private JPanel                    contentPane;
@@ -24,7 +43,9 @@ public class PasteDialog extends JDialog {
     private JTable                    table;
     private boolean                   okPressed;
     private Map<TypedObject, DataRow> rows;
+    //endregion
 
+    //region Constructor
     public PasteDialog(ChangeTracker changeTracker, Iterable<DataRow> rows) {
         this.rows = new HashMap<TypedObject, DataRow>();
 
@@ -85,7 +106,9 @@ public class PasteDialog extends JDialog {
                 }
             }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     }
+    //endregion
 
+    //region Public Methods
     public void showDialog(Component owner) {
         this.setComponentOrientation(owner.getComponentOrientation());
         this.pack();
@@ -99,7 +122,9 @@ public class PasteDialog extends JDialog {
         }
         return null;
     }
+    //endregion
 
+    //region Private Methods
     private void onOK() {
         boolean isValid = true;
 
@@ -116,8 +141,8 @@ public class PasteDialog extends JDialog {
                 catch (Exception e) {
                     JOptionPane.showMessageDialog(
                         this.contentPane, String.format(
-                        "The new key for '%s' is in a wrong format; expected %s type.%sError: %s", key.getValue(), key.getType(), "\n", e.getMessage()), "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                        "The new key for '%s' is in a wrong format; expected %s type.%sError: %s", key.getValue(), key.getType(), "\n", e.getMessage()),
+                        "Error", JOptionPane.ERROR_MESSAGE);
 
                     isValid = false;
                     break;
@@ -146,4 +171,5 @@ public class PasteDialog extends JDialog {
             editor.stopCellEditing();
         }
     }
+    //endregion
 }
