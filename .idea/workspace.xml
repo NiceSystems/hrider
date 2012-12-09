@@ -75,8 +75,8 @@
       <property name="field_breakpoints_groupByClasses" value="true" />
       <property name="method_breakpoints_groupByClasses" value="true" />
       <property name="exception_breakpoints_viewId" value="TABLE" />
-      <property name="field_breakpoints_viewId" value="TABLE" />
       <property name="exception_breakpoints_groupByClasses" value="true" />
+      <property name="field_breakpoints_viewId" value="TABLE" />
       <property name="method_breakpoints_groupByMethods" value="false" />
     </ui_properties>
   </component>
@@ -84,7 +84,17 @@
     <favorites_list name="HBaseReader" />
   </component>
   <component name="FileEditorManager">
-    <leaf />
+    <leaf>
+      <file leaf-file-name=".gitignore" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="88" column="79" selection-start="1091" selection-end="1091" vertical-scroll-proportion="0.85532993">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FindManager">
     <FindUsagesManager>
@@ -226,16 +236,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope">
-        <subPane subId="Project Files">
-          <PATH>
-            <PATH_ELEMENT USER_OBJECT="Root">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
-      </pane>
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -274,18 +274,28 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope">
+        <subPane subId="Project Files">
+          <PATH>
+            <PATH_ELEMENT USER_OBJECT="Root">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="GenerateAntBuildDialog.generateIdeaHomeProperty" value="false" />
     <property name="project.structure.last.edited" value="Libraries" />
-    <property name="OverrideImplement.combined" value="true" />
     <property name="project.structure.proportion" value="0.15" />
+    <property name="OverrideImplement.combined" value="true" />
     <property name="options.splitter.main.proportions" value="0.15852742" />
     <property name="Repository.Attach.JavaDocs" value="false" />
-    <property name="GenerateAntBuildDialog.generateSingleFile" value="false" />
-    <property name="MemberChooser.sorted" value="false" />
     <property name="recentsLimit" value="5" />
+    <property name="MemberChooser.sorted" value="false" />
+    <property name="GenerateAntBuildDialog.generateSingleFile" value="false" />
     <property name="GenerateAntBuildDialog.inclineRuntiemClasspath" value="false" />
     <property name="GenerateAntBuildDialog.outputFileNameProperty" value="hbasereader" />
     <property name="GenerateAntBuildDialog.enableUiFormCompile" value="true" />
@@ -302,8 +312,8 @@
     <property name="GenerateAntBuildDialog.forceTargetJdk" value="true" />
     <property name="MemberChooser.copyJavadoc" value="false" />
     <property name="GenerateAntBuildDialog.backupFiles" value="true" />
-    <property name="options.searchVisible" value="true" />
     <property name="dynamic.classpath" value="false" />
+    <property name="options.searchVisible" value="true" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -360,6 +370,24 @@
         <option name="Maven.BeforeRunTask" enabled="false" />
       </method>
     </configuration>
+    <configuration default="true" type="Applet" factoryName="Applet">
+      <module name="" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="HTML_FILE_NAME" />
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <option name="VM_PARAMETERS" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <method>
+        <option name="AntTarget" enabled="false" />
+        <option name="BuildArtifacts" enabled="false" />
+        <option name="Make" enabled="true" />
+        <option name="Maven.BeforeRunTask" enabled="false" />
+      </method>
+    </configuration>
     <configuration default="true" type="TestNG" factoryName="TestNG">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <module name="" />
@@ -386,24 +414,6 @@
       <envs />
       <properties />
       <listeners />
-      <method>
-        <option name="AntTarget" enabled="false" />
-        <option name="BuildArtifacts" enabled="false" />
-        <option name="Make" enabled="true" />
-        <option name="Maven.BeforeRunTask" enabled="false" />
-      </method>
-    </configuration>
-    <configuration default="true" type="Applet" factoryName="Applet">
-      <module name="" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="HTML_FILE_NAME" />
-      <option name="HTML_USED" value="false" />
-      <option name="WIDTH" value="400" />
-      <option name="HEIGHT" value="300" />
-      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
-      <option name="VM_PARAMETERS" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
       <method>
         <option name="AntTarget" enabled="false" />
         <option name="BuildArtifacts" enabled="false" />
@@ -541,15 +551,13 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1696" height="1026" extended-state="7" />
+    <frame x="-8" y="-8" width="1696" height="1026" extended-state="6" />
     <editor active="false" />
     <layout>
-      <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.1621787" sideWeight="0.4399538" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32986537" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.124235004" sideWeight="0.4399538" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.53810626" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5600462" sideWeight="0.9889706" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3290993" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -557,18 +565,20 @@
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32678983" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3290993" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
-      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.20220588" sideWeight="0.46189377" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.20465687" sideWeight="0.48383373" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39950982" sideWeight="0.6293303" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21139705" sideWeight="0.4399538" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.51616627" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21139705" sideWeight="0.48383373" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.51616627" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.1621787" sideWeight="0.4399538" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="REST Client" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.53810626" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="IntelliJad Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3290993" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32678983" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Analysis" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
     </layout>
@@ -666,287 +676,85 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/javax/swing/event/ChangeListener.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="18" column="17" selection-start="354" selection-end="354" vertical-scroll-proportion="0.21640904">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/javax/swing/JCheckBox.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="60" column="38" selection-start="2242" selection-end="2242" vertical-scroll-proportion="0.46611178">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/javax/swing/JToggleButton.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="61" column="43" selection-start="2200" selection-end="2200" vertical-scroll-proportion="0.33293697">
-          <folding />
-        </state>
+        <state line="61" column="43" selection-start="2200" selection-end="2200" vertical-scroll-proportion="0.33293697" />
       </provider>
     </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/javax/swing/AbstractButton.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="2105" column="0" selection-start="74580" selection-end="74701" vertical-scroll-proportion="0.44946492">
-          <folding />
-        </state>
+        <state line="2105" column="0" selection-start="74580" selection-end="74701" vertical-scroll-proportion="0.44946492" />
       </provider>
     </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/javax/swing/AbstractCellEditor.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="65" column="78" selection-start="1839" selection-end="1839" vertical-scroll-proportion="-0.5315101">
-          <folding />
-        </state>
+        <state line="65" column="78" selection-start="1839" selection-end="1839" vertical-scroll-proportion="-0.5315101" />
       </provider>
     </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/javax/swing/table/TableCellRenderer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="20" column="17" selection-start="446" selection-end="446" vertical-scroll-proportion="-0.048751485">
-          <folding />
-        </state>
+        <state line="20" column="17" selection-start="446" selection-end="446" vertical-scroll-proportion="-0.048751485" />
       </provider>
     </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/java/util/Vector.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="570" column="29" selection-start="21484" selection-end="21484" vertical-scroll-proportion="0.33293697">
-          <folding />
-        </state>
+        <state line="570" column="29" selection-start="21484" selection-end="21484" vertical-scroll-proportion="0.33293697" />
       </provider>
     </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/javax/swing/table/TableColumnModel.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="24" column="17" selection-start="545" selection-end="545" vertical-scroll-proportion="0.26634958">
-          <folding />
-        </state>
+        <state line="24" column="17" selection-start="545" selection-end="545" vertical-scroll-proportion="0.26634958" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/hrider/data/DataCell.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="93" column="23" selection-start="2435" selection-end="2435" vertical-scroll-proportion="-0.048751485">
-          <folding />
-        </state>
+        <state line="93" column="23" selection-start="2435" selection-end="2435" vertical-scroll-proportion="-0.048751485" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/design/JCheckBoxRenderer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="41" column="38" selection-start="1634" selection-end="1634" vertical-scroll-proportion="-0.5980975">
-          <folding>
-            <element signature="e#2098#2255#0" expanded="true" />
-            <element signature="e#2244#2245#0" expanded="true" />
-          </folding>
-        </state>
+        <state line="41" column="38" selection-start="1634" selection-end="1634" vertical-scroll-proportion="-0.5980975" />
       </provider>
     </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/javax/swing/table/TableColumn.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="186" column="11" selection-start="6627" selection-end="6627" vertical-scroll-proportion="0.4827586">
-          <folding />
-        </state>
+        <state line="186" column="11" selection-start="6627" selection-end="6627" vertical-scroll-proportion="0.4827586" />
       </provider>
     </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/javax/swing/table/DefaultTableColumnModel.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="161" column="0" selection-start="5143" selection-end="5143" vertical-scroll-proportion="0.14030915">
-          <folding />
-        </state>
+        <state line="161" column="0" selection-start="5143" selection-end="5143" vertical-scroll-proportion="0.14030915" />
       </provider>
     </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/javax/swing/JTable.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="1279" column="16" selection-start="48090" selection-end="48090" vertical-scroll-proportion="0.23305589">
-          <folding>
-            <element signature="class#DropLocation#0;class#JTable#0" expanded="false" />
-          </folding>
-        </state>
+        <state line="1279" column="16" selection-start="48090" selection-end="48090" vertical-scroll-proportion="0.23305589" />
       </provider>
     </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.6.0_32/src.zip!/javax/swing/table/DefaultTableModel.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="239" column="17" selection-start="8526" selection-end="8526" vertical-scroll-proportion="0.33293697">
-          <folding />
-        </state>
+        <state line="239" column="17" selection-start="8526" selection-end="8526" vertical-scroll-proportion="0.33293697" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/hrider/ui/views/DesignerView.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="581" column="4" selection-start="23840" selection-end="23840" vertical-scroll-proportion="0.21640904">
-          <folding>
-            <element signature="docComment;class#DesignerView#0" expanded="false" />
-            <element signature="n#!!doc;n#topPanel#0;n#DesignerView#0" expanded="false" />
-            <element signature="n#!!doc;n#DesignerView#0;n#DesignerView#0" expanded="false" />
-            <element signature="method#DesignerView#0;class#DesignerView#0" expanded="false" />
-            <element signature="class#5695:6112" expanded="false" />
-            <element signature="method#insertUpdate#0;class#5695:6112" expanded="false" />
-            <element signature="method#removeUpdate#0;class#5695:6112" expanded="false" />
-            <element signature="method#changedUpdate#0;class#5695:6112" expanded="false" />
-            <element signature="class#6194:6631" expanded="false" />
-            <element signature="method#insertUpdate#0;class#6194:6631" expanded="false" />
-            <element signature="method#removeUpdate#0;class#6194:6631" expanded="false" />
-            <element signature="method#changedUpdate#0;class#6194:6631" expanded="false" />
-            <element signature="class#6689:7958" expanded="false" />
-            <element signature="method#copyOperation#0;class#6689:7958" expanded="false" />
-            <element signature="method#tableOperation#0;class#6689:7958" expanded="false" />
-            <element signature="method#rowOperation#0;class#6689:7958" expanded="false" />
-            <element signature="method#columnOperation#0;class#6689:7958" expanded="false" />
-            <element signature="e#23262#23285#0" expanded="false" />
-            <element signature="docComment;method#populate#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#populate#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#getView#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getView#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#getHbaseHelper#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getHbaseHelper#0;class#DesignerView#0" expanded="false" />
-            <element signature="e#23840#23864#0" expanded="false" />
-            <element signature="docComment;method#loadTables#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#loadTables#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#initializeTablesList#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#initializeTablesList#0;class#DesignerView#0" expanded="false" />
-            <element signature="class#27316:28114" expanded="false" />
-            <element signature="method#keyReleased#0;class#27316:28114" expanded="false" />
-            <element signature="docComment;method#initializeColumnsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#initializeColumnsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="class#33108:33663" expanded="false" />
-            <element signature="method#mouseMoved#0;class#33108:33663" expanded="false" />
-            <element signature="docComment;method#initializeRowsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#initializeRowsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="class#34633:35176" expanded="false" />
-            <element signature="method#mouseMoved#0;class#34633:35176" expanded="false" />
-            <element signature="class#35235:36193" expanded="false" />
-            <element signature="method#keyReleased#0;class#35235:36193" expanded="false" />
-            <element signature="class#36921:37862" expanded="false" />
-            <element signature="method#columnAdded#0;class#36921:37862" expanded="false" />
-            <element signature="method#columnRemoved#0;class#36921:37862" expanded="false" />
-            <element signature="method#columnMoved#0;class#36921:37862" expanded="false" />
-            <element signature="method#columnMarginChanged#0;class#36921:37862" expanded="false" />
-            <element signature="method#columnSelectionChanged#0;class#36921:37862" expanded="false" />
-            <element signature="docComment;method#populateColumnsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#populateColumnsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#populateColumnsTable#1;class#DesignerView#0" expanded="false" />
-            <element signature="method#populateColumnsTable#1;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#populateRowsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#populateRowsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#populateColumnOnRowsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#populateColumnOnRowsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#loadColumns#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#loadColumns#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#addColumnToColumnsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#addColumnToColumnsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#loadRowsTableColumns#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#loadRowsTableColumns#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#addColumnToRowsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#addColumnToRowsTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#loadRows#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#loadRows#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#copySelectedRowsToClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#copySelectedRowsToClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#copyTableToClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#copyTableToClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#pasteRowsFromClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#pasteRowsFromClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#pasteTableFromClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#pasteTableFromClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#getColumnTypes#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getColumnTypes#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#getCheckedColumns#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getCheckedColumns#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#clearRows#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#clearRows#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#clearColumns#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#clearColumns#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#clearTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#clearTable#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#stopCellEditing#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#stopCellEditing#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#getPageSize#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getPageSize#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#getColumnIndex#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getColumnIndex#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#getSelectedTableName#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getSelectedTableName#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#getSelectedTables#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getSelectedTables#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#getColumnType#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#getColumnType#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#isShown#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#isShown#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#hasRowsInClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#hasRowsInClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#hasTableInClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#hasTableInClipboard#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#enableDisablePagingButtons#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#enableDisablePagingButtons#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#clearError#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#clearError#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#setError#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#setError#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;method#setInfo#0;class#DesignerView#0" expanded="false" />
-            <element signature="method#setInfo#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;class#Direction#0;class#DesignerView#0" expanded="false" />
-            <element signature="class#Direction#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;field#Current#0;class#Direction#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;field#Forward#0;class#Direction#0;class#DesignerView#0" expanded="false" />
-            <element signature="docComment;field#Backward#0;class#Direction#0;class#DesignerView#0" expanded="false" />
-          </folding>
-        </state>
+        <state line="581" column="4" selection-start="23840" selection-end="23840" vertical-scroll-proportion="0.21640904" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/hrider/hbase/Scanner.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="226" column="44" selection-start="7074" selection-end="7074" vertical-scroll-proportion="0.36623067">
-          <folding>
-            <element signature="docComment;class#Scanner#0" expanded="false" />
-            <element signature="e#1232#1250#0" expanded="false" />
-            <element signature="docComment;field#factory#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#tableName#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#rowsCount#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#columnTypes#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#markers#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#current#0;class#Scanner#0" expanded="false" />
-            <element signature="e#2230#2250#0" expanded="false" />
-            <element signature="docComment;method#Scanner#0;class#Scanner#0" expanded="false" />
-            <element signature="method#Scanner#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#getTableName#0;class#Scanner#0" expanded="false" />
-            <element signature="method#getTableName#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#getColumns#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#getColumnTypes#0;class#Scanner#0" expanded="false" />
-            <element signature="method#getColumnTypes#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#setColumnTypes#0;class#Scanner#0" expanded="false" />
-            <element signature="method#setColumnTypes#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#updateColumnType#0;class#Scanner#0" expanded="false" />
-            <element signature="method#updateColumnType#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#resetCurrent#0;class#Scanner#0" expanded="false" />
-            <element signature="method#resetCurrent#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#next#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#prev#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#getRowsCount#0;class#Scanner#0" expanded="false" />
-            <element signature="e#7579#7605#0" expanded="false" />
-            <element signature="docComment;method#getScanner#0;class#Scanner#0" expanded="false" />
-            <element signature="method#getScanner#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#isValidRow#0;class#Scanner#0" expanded="false" />
-            <element signature="method#isValidRow#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#loadRows#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#loadColumns#0;class#Scanner#0" expanded="false" />
-            <element signature="method#loadColumns#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#next#1;class#Scanner#0" expanded="false" />
-            <element signature="e#12775#12797#0" expanded="true" />
-            <element signature="docComment;method#popMarker#0;class#Scanner#0" expanded="false" />
-            <element signature="method#popMarker#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;method#peekMarker#0;class#Scanner#0" expanded="false" />
-            <element signature="method#peekMarker#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="e#14237#14255#0" expanded="false" />
-            <element signature="docComment;field#key#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#rows#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="docComment;field#columns#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="e#14645#14665#0" expanded="false" />
-            <element signature="docComment;method#Marker#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="method#Marker#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="n#!!doc;n#equals#0;n#Marker#0;n#Scanner#0" expanded="false" />
-            <element signature="method#equals#0;class#Marker#0;class#Scanner#0" expanded="false" />
-            <element signature="method#hashCode#0;class#Marker#0;class#Scanner#0" expanded="false" />
-          </folding>
+        <state line="226" column="44" selection-start="7074" selection-end="7074" vertical-scroll-proportion="0.36623067" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pom.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="12" column="20" selection-start="501" selection-end="502" vertical-scroll-proportion="0.44094488" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="88" column="79" selection-start="1091" selection-end="1091" vertical-scroll-proportion="0.85532993">
+          <folding />
         </state>
       </provider>
     </entry>
