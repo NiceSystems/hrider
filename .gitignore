@@ -32,7 +32,10 @@ local.properties
 ## Intellij IDEA
 #################
 
-target/
+target/classes/
+target/maven-archiver/
+target/surefire/
+target/*.xml
 
 #################
 ## Visual Studio
