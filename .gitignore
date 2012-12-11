@@ -33,6 +33,7 @@ local.properties
 #################
 
 target/
+.idea/
 
 #################
 ## Visual Studio
