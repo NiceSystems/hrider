@@ -759,6 +759,8 @@ public class DesignerView {
                                 DesignerView.this.rowsTable.addColumn(tableColumn);
                                 DesignerView.this.rowsTableAddedColumns.put(name, tableColumn);
                                 DesignerView.this.rowsTableRemovedColumns.remove(name);
+
+                                DesignerView.this.rowsTable.moveColumn(DesignerView.this.rowsTable.getColumnCount() - 1, getColumnIndex(name));
                             }
                             else {
                                 if (DesignerView.this.rowsTable.getRowCount() > 0) {
@@ -767,10 +769,10 @@ public class DesignerView {
                                     if (DesignerView.this.scanner != null) {
                                         populateColumnOnRowsTable(getSelectedTableName(), name, DesignerView.this.scanner.current());
                                     }
+
+                                    DesignerView.this.rowsTable.moveColumn(DesignerView.this.rowsTable.getColumnCount() - 1, getColumnIndex(name));
                                 }
                             }
-
-                            DesignerView.this.rowsTable.moveColumn(DesignerView.this.rowsTable.getColumnCount() - 1, getColumnIndex(name));
                         }
                         else {
                             TableColumn tableColumn = DesignerView.this.rowsTableAddedColumns.get(name);
