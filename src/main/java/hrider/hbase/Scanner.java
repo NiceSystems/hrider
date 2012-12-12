@@ -51,6 +51,10 @@ public class Scanner {
      */
     private long                    rowsCount;
     /**
+     * The number of the last loaded row.
+     */
+    private long                    lastRow;
+    /**
      * The map of column types. The key is the name of the column and the value is the type of the objects within the column.
      */
     private Map<String, ObjectType> columnTypes;
@@ -76,6 +80,7 @@ public class Scanner {
         this.factory = factory;
         this.tableName = tableName;
         this.rowsCount = 0;
+        this.lastRow = 0;
         this.markers = new Stack<Marker>();
     }
     //endregion
@@ -130,6 +135,33 @@ public class Scanner {
     public void setColumnTypes(Map<String, ObjectType> columnTypes) {
         this.columnTypes = columnTypes;
     }
+
+    /**
+     * Gets the last loaded row number.
+     *
+     * @return The number of the last loaded row.
+     */
+    public long getLastRow() {
+        return this.lastRow;
+    }
+
+    /**
+     * Indicates if there is more rows to show.
+     *
+     * @return True if there is more rows to show or False otherwise.
+     */
+    public boolean hasNext() {
+        return this.lastRow < this.rowsCount;
+    }
+
+    /**
+     * Indicates if the backward navigation is possible.
+     *
+     * @return True if there are previously loaded rows or False otherwise.
+     */
+    public boolean hasPrev() {
+        return this.markers.size() > 1;
+    }
     //endregion
 
     //region Public Methods
@@ -157,6 +189,7 @@ public class Scanner {
     public void resetCurrent(TypedObject startKey) {
         this.current = null;
         this.rowsCount = 0;
+        this.lastRow = 0;
         this.markers.clear();
 
         if (startKey != null) {
@@ -166,6 +199,7 @@ public class Scanner {
 
     /**
      * Gets a list of already loaded rows.
+     *
      * @return A list of rows.
      */
     public Collection<DataRow> current() {
@@ -180,9 +214,25 @@ public class Scanner {
      * @throws IOException Error accessing hbase.
      */
     public Collection<DataRow> current(int rowsNumber) throws IOException {
-        if (this.current == null || this.current.size() != rowsNumber) {
+        return current(0, rowsNumber);
+    }
+
+    /**
+     * Gets a list of rows loaded starting from the offset.
+     *
+     * @param offset     The first row to start loading from.
+     * @param rowsNumber The number of rows to load.
+     * @return A list of rows.
+     * @throws IOException Error accessing hbase.
+     */
+    public Collection<DataRow> current(long offset, int rowsNumber) throws IOException {
+        if (this.current == null ||
+            this.current.size() != rowsNumber ||
+            this.current.size() + offset != this.lastRow) {
+
             this.markers.clear();
-            this.current = next(0, rowsNumber);
+            this.current = next(offset - 1, rowsNumber);
+            this.lastRow = offset + this.current.size();
         }
         return this.current;
     }
@@ -196,6 +246,8 @@ public class Scanner {
      */
     public Collection<DataRow> next(int rowsNumber) throws IOException {
         this.current = next(this.markers.isEmpty() ? 0 : 1, rowsNumber);
+        this.lastRow += this.current.size();
+
         return this.current;
     }
 
@@ -210,6 +262,8 @@ public class Scanner {
             if (this.markers.size() > 1) {
                 popMarker();
             }
+
+            this.lastRow -= this.current.size();
             this.current = peekMarker().rows;
         }
         return this.current;
@@ -280,7 +334,7 @@ public class Scanner {
      * @return A key of the last loaded row. Used to mark the current position for the next scan.
      * @throws IOException Error accessing hbase.
      */
-    protected TypedObject loadRows(ResultScanner scanner, int offset, int rowsNumber, Map<TypedObject, DataRow> rows, Collection<String> columns) throws
+    protected TypedObject loadRows(ResultScanner scanner, long offset, int rowsNumber, Collection<DataRow> rows, Collection<String> columns) throws
         IOException {
         ObjectType keyType = this.columnTypes.get("key");
 
@@ -296,13 +350,8 @@ public class Scanner {
                 if (index >= offset) {
                     key = new TypedObject(keyType, result.getRow());
 
-                    DataRow row = rows.get(key);
-                    if (row == null) {
-                        row = new DataRow(key);
-                        row.addCell(new DataCell(row, "key", key));
-
-                        rows.put(key, row);
-                    }
+                    DataRow row = new DataRow(key);
+                    row.addCell(new DataCell(row, "key", key));
 
                     NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> familyMap = result.getMap();
                     for (NavigableMap.Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> family : familyMap.entrySet()) {
@@ -323,6 +372,8 @@ public class Scanner {
                             }
                         }
                     }
+
+                    rows.add(row);
                 }
 
                 index++;
@@ -377,9 +428,7 @@ public class Scanner {
      * @return A list of loaded rows.
      * @throws IOException Error accessing hbase.
      */
-    private Collection<DataRow> next(int offset, int rowsNumber) throws IOException {
-        Map<TypedObject, DataRow> rows = new HashMap<TypedObject, DataRow>();
-
+    private Collection<DataRow> next(long offset, int rowsNumber) throws IOException {
         int itemsNumber = rowsNumber <= 1000 ? rowsNumber : 1000;
 
         Scan scan = getScanner();
@@ -393,14 +442,15 @@ public class Scanner {
         HTable table = this.factory.get(this.tableName);
         ResultScanner scanner = table.getScanner(scan);
 
+        Collection<DataRow> rows = new ArrayList<DataRow>();
         Collection<String> columns = new ArrayList<String>();
 
         TypedObject lastKey = loadRows(scanner, offset, rowsNumber, rows, columns);
         if (lastKey != null) {
-            this.markers.push(new Marker(lastKey, rows.values(), columns));
+            this.markers.push(new Marker(lastKey, rows, columns));
         }
 
-        return rows.values();
+        return rows;
     }
 
     /**

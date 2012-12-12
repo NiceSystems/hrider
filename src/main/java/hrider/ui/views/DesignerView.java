@@ -88,11 +88,10 @@ public class DesignerView {
     private JLabel                   tablesNumber;
     private JTextField               tablesFilter;
     private JTextField               columnsFilter;
+    private JButton                  jumpButton;
     private DefaultTableModel        columnsTableModel;
     private DefaultTableModel        rowsTableModel;
     private Query                    lastQuery;
-    private int                      lastRow;
-    private long                     totalNumberOfRows;
     private QueryScanner             scanner;
     private JPanel                   owner;
     private HbaseHelper              hbaseHelper;
@@ -192,6 +191,28 @@ public class DesignerView {
                     setInfo(
                         String.format(
                             "The %s column has been %s %s the %s table", column, operation, operation.equals("added") ? "to" : "from", tableName));
+                }
+            });
+
+        this.jumpButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    clearError();
+
+                    String rowNumber = JOptionPane.showInputDialog(
+                        DesignerView.this.topPanel, "Row number:", "Jump to specific row", JOptionPane.PLAIN_MESSAGE);
+
+                    try {
+                        long offset = Long.parseLong(rowNumber);
+
+                        DesignerView.this.lastQuery = null;
+
+                        populateRowsTable(offset, Direction.Current);
+                    }
+                    catch (NumberFormatException ignore) {
+                        JOptionPane.showMessageDialog(DesignerView.this.topPanel, "Row number must be a number.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             });
 
@@ -640,8 +661,6 @@ public class DesignerView {
 
                     if (selectedIndices == 1) {
                         DesignerView.this.copyTableButton.setEnabled(true);
-
-                        DesignerView.this.lastRow = 0;
                         DesignerView.this.scanner = null;
 
                         populateColumnsTable();
@@ -657,6 +676,7 @@ public class DesignerView {
                         DesignerView.this.visibleRowsLabel.setText("?");
                         DesignerView.this.pasteRowButton.setEnabled(false);
                         DesignerView.this.populateButton.setEnabled(false);
+                        DesignerView.this.jumpButton.setEnabled(false);
                         DesignerView.this.scanButton.setEnabled(false);
                         DesignerView.this.addRowButton.setEnabled(false);
                         DesignerView.this.checkAllButton.setEnabled(false);
@@ -938,6 +958,7 @@ public class DesignerView {
 
             if (this.columnsTableModel.getRowCount() > 0) {
                 this.populateButton.setEnabled(true);
+                this.jumpButton.setEnabled(true);
                 this.scanButton.setEnabled(true);
                 this.addRowButton.setEnabled(true);
                 this.checkAllButton.setEnabled(true);
@@ -945,6 +966,7 @@ public class DesignerView {
             }
             else {
                 this.populateButton.setEnabled(false);
+                this.jumpButton.setEnabled(false);
                 this.scanButton.setEnabled(false);
                 this.addRowButton.setEnabled(false);
                 this.checkAllButton.setEnabled(false);
@@ -964,6 +986,18 @@ public class DesignerView {
      *                  {@link Direction#Forward} or {@link Direction#Backward}.
      */
     private void populateRowsTable(Direction direction) {
+        populateRowsTable(0, direction);
+    }
+
+    /**
+     * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
+     * in the {@link DesignerView#rowsNumberSpinner} control.
+     *
+     * @param offset    The first row to start loading from.
+     * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
+     *                  {@link Direction#Forward} or {@link Direction#Backward}.
+     */
+    private void populateRowsTable(long offset, Direction direction) {
 
         this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
@@ -973,8 +1007,6 @@ public class DesignerView {
 
             String tableName = getSelectedTableName();
             if (tableName != null) {
-                int rowsCount = this.rowsTable.getRowCount();
-
                 clearTable(DesignerView.this.rowsTable);
 
                 Map<String, ObjectType> columnTypes = getColumnTypes();
@@ -985,16 +1017,13 @@ public class DesignerView {
                 Collection<DataRow> rows;
 
                 if (direction == Direction.Current) {
-                    rows = this.scanner.current(getPageSize());
-                    this.lastRow = rows.size();
+                    rows = this.scanner.current(offset, getPageSize());
                 }
                 else if (direction == Direction.Forward) {
                     rows = this.scanner.next(getPageSize());
-                    this.lastRow += rows.size();
                 }
                 else {
                     rows = this.scanner.prev();
-                    this.lastRow -= rowsCount;
                 }
 
                 loadColumns(tableName, null);
@@ -1003,8 +1032,8 @@ public class DesignerView {
 
                 this.enableDisablePagingButtons();
 
-                this.visibleRowsLabel.setText(String.format("%s - %s", this.lastRow - rows.size() + 1, this.lastRow));
-                this.rowsNumberSpinner.setEnabled(this.lastRow <= getPageSize());
+                this.visibleRowsLabel.setText(String.format("%s - %s", this.scanner.getLastRow() - rows.size() + 1, this.scanner.getLastRow()));
+                this.rowsNumberSpinner.setEnabled(this.scanner.getLastRow() <= getPageSize());
 
                 // To get the number of rows can take the time.
                 Thread thread = new Thread(
@@ -1012,8 +1041,10 @@ public class DesignerView {
                         @Override
                         public void run() {
                             try {
-                                DesignerView.this.totalNumberOfRows = DesignerView.this.scanner.getRowsCount();
-                                DesignerView.this.rowsNumberLabel.setText(String.valueOf(DesignerView.this.totalNumberOfRows));
+                                long totalNumberOfRows = DesignerView.this.scanner.getRowsCount();
+                                DesignerView.this.rowsNumberLabel.setText(String.valueOf(totalNumberOfRows));
+
+                                enableDisablePagingButtons();
                             }
                             catch (Exception e) {
                                 setError("Failed to get the number of rows in the table.", e);
@@ -1143,8 +1174,9 @@ public class DesignerView {
 
     /**
      * Adds a single column to the rows table.
-     * @param tableName The name of the table the column belongs to.
-     * @param columnName The name of the column to add.
+     *
+     * @param tableName   The name of the table the column belongs to.
+     * @param columnName  The name of the column to add.
      * @param columnIndex The index the column should be added at.
      */
     private void addColumnToRowsTable(String tableName, String columnName, int columnIndex) {
@@ -1551,10 +1583,8 @@ public class DesignerView {
      * Enables or disables the paging buttons.
      */
     private void enableDisablePagingButtons() {
-        int pageSize = getPageSize();
-
-        this.showPrevPageButton.setEnabled(this.lastRow > pageSize);
-        this.showNextPageButton.setEnabled(this.rowsTable.getRowCount() == pageSize || this.lastRow < this.totalNumberOfRows);
+        this.showPrevPageButton.setEnabled(this.scanner != null && this.scanner.hasPrev());
+        this.showNextPageButton.setEnabled(this.scanner != null && this.scanner.hasNext());
     }
 
     /**

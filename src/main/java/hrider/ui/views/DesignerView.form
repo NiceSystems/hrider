@@ -367,6 +367,21 @@
                               <toolTipText value="Perform an advanced scan..."/>
                             </properties>
                           </component>
+                          <component id="8aa7e" class="javax.swing.JToolBar$Separator">
+                            <constraints/>
+                            <properties/>
+                          </component>
+                          <component id="83a5f" class="javax.swing.JButton" binding="jumpButton">
+                            <constraints/>
+                            <properties>
+                              <enabled value="false"/>
+                              <icon value="images/jump.png"/>
+                              <minimumSize width="24" height="24"/>
+                              <preferredSize width="24" height="24"/>
+                              <text value=""/>
+                              <toolTipText value="Jump to a specific row number"/>
+                            </properties>
+                          </component>
                           <component id="f67dd" class="javax.swing.JButton" binding="populateButton">
                             <constraints/>
                             <properties>
