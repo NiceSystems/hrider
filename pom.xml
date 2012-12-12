@@ -73,7 +73,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.ccih.categories.services.ServiceLauncher</mainClass>
+                            <mainClass>hrider.ui.forms.Window</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -101,6 +101,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>ideauidesigner-maven-plugin</artifactId>
+                <version>1.0-beta-1</version>
                 <executions>
                     <execution>
                         <goals>
