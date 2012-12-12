@@ -171,7 +171,7 @@ public class DesignerView {
             new HbaseActionListener() {
                 @Override
                 public void copyOperation(String source, String target, String table, Result result) {
-                    setInfo(String.format("Copying row '%s' from '%s.%s' to '%s.%s'", Bytes.toString(result.getRow()), source, table, target, table));
+                    setInfo(String.format("Copying row '%s' from '%s.%s' to '%s.%s'", Bytes.toStringBinary(result.getRow()), source, table, target, table));
                 }
 
                 @Override
@@ -1352,6 +1352,10 @@ public class DesignerView {
             try {
                 String targetTable = getSelectedTableName();
                 String sourceTable = table.getTableName();
+
+                if (targetTable == null) {
+                    targetTable = sourceTable;
+                }
 
                 boolean proceed = true;
 

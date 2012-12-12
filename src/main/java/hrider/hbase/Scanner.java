@@ -360,7 +360,7 @@ public class Scanner {
                     NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> familyMap = result.getMap();
                     for (NavigableMap.Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> family : familyMap.entrySet()) {
                         for (NavigableMap.Entry<byte[], NavigableMap<Long, byte[]>> quantifier : family.getValue().entrySet()) {
-                            String columnName = String.format("%s:%s", Bytes.toString(family.getKey()), Bytes.toString(quantifier.getKey()));
+                            String columnName = String.format("%s:%s", Bytes.toStringBinary(family.getKey()), Bytes.toStringBinary(quantifier.getKey()));
 
                             ObjectType columnType = ObjectType.String;
                             if (this.columnTypes.containsKey(columnName)) {
@@ -409,7 +409,7 @@ public class Scanner {
                 NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> familyMap = row.getMap();
                 for (NavigableMap.Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> entry : familyMap.entrySet()) {
                     for (byte[] quantifier : entry.getValue().keySet()) {
-                        String columnName = String.format("%s:%s", Bytes.toString(entry.getKey()), Bytes.toString(quantifier));
+                        String columnName = String.format("%s:%s", Bytes.toStringBinary(entry.getKey()), Bytes.toStringBinary(quantifier));
                         if (!columnNames.contains(columnName)) {
                             columnNames.add(columnName);
                         }

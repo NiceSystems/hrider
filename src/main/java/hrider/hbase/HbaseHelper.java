@@ -126,7 +126,7 @@ public class HbaseHelper {
      */
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     public boolean tableExists(String tableName) throws IOException {
-        return this.hbaseAdmin.tableExists(tableName);
+        return tableName != null && this.hbaseAdmin.tableExists(tableName);
     }
 
     /**
@@ -242,7 +242,7 @@ public class HbaseHelper {
                 for (KeyValue keyValue : result.list()) {
                     put.add(keyValue);
 
-                    String columnFamily = Bytes.toString(keyValue.getFamily());
+                    String columnFamily = Bytes.toStringBinary(keyValue.getFamily());
                     if (!families.contains(columnFamily)) {
                         familiesToCreate.add(columnFamily);
                     }
@@ -289,8 +289,8 @@ public class HbaseHelper {
                     familiesToCreate.add(parts[0]);
                 }
 
-                byte[] family = Bytes.toBytes(parts[0]);
-                byte[] column = Bytes.toBytes(parts[1]);
+                byte[] family = Bytes.toBytesBinary(parts[0]);
+                byte[] column = Bytes.toBytesBinary(parts[1]);
                 byte[] value = cell.getTypedValue().toByteArray();
 
                 put.add(family, column, value);

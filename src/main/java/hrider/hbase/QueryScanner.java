@@ -137,7 +137,10 @@ public class QueryScanner extends Scanner {
 
                 scan.setFilter(
                     new SingleColumnValueFilter(
-                        Bytes.toBytes(this.query.getFamily()), Bytes.toBytes(this.query.getColumn()), this.query.getOperator().toFilter(), comparator));
+                        Bytes.toBytesBinary(this.query.getFamily()),
+                        Bytes.toBytesBinary(this.query.getColumn()),
+                        this.query.getOperator().toFilter(),
+                        comparator));
             }
         }
 
@@ -155,7 +158,7 @@ public class QueryScanner extends Scanner {
     protected boolean isValidRow(Result row) {
         Query localQuery = this.query;
         if (localQuery != null && localQuery.getFamily() != null && localQuery.getColumn() != null) {
-            return row.containsColumn(Bytes.toBytes(localQuery.getFamily()), Bytes.toBytes(localQuery.getColumn()));
+            return row.containsColumn(Bytes.toBytesBinary(localQuery.getFamily()), Bytes.toBytesBinary(localQuery.getColumn()));
         }
         return true;
     }

@@ -113,7 +113,7 @@ public enum ObjectType {
 
         switch (this) {
             case String:
-                return Bytes.toBytes(value);
+                return Bytes.toBytesBinary(value);
             case Integer:
                 return Bytes.toBytes(java.lang.Integer.parseInt(value));
             case Long:
@@ -127,12 +127,12 @@ public enum ObjectType {
             case Short:
                 return Bytes.toBytes(java.lang.Short.parseShort(value));
             case DateTime:
-                return Bytes.toBytes(value);
+                return Bytes.toBytesBinary(value);
             case Xml:
             case Json:
-                return Bytes.toBytes(value);
+                return Bytes.toBytesBinary(value);
             default:
-                return Bytes.toBytes(value);
+                return Bytes.toBytesBinary(value);
         }
     }
 
@@ -149,7 +149,7 @@ public enum ObjectType {
 
         switch (this) {
             case String:
-                return Bytes.toString(value);
+                return Bytes.toStringBinary(value);
             case Integer:
                 return Bytes.toInt(value);
             case Long:
@@ -165,16 +165,16 @@ public enum ObjectType {
             case DateTime:
                 DateFormat df = new SimpleDateFormat(Configurator.getDateFormat(), Locale.ENGLISH);
                 try {
-                    return df.parse(Bytes.toString(value));
+                    return df.parse(Bytes.toStringBinary(value));
                 }
                 catch (ParseException ignored) {
                     return null;
                 }
             case Xml:
             case Json:
-                return Bytes.toString(value);
+                return Bytes.toStringBinary(value);
             default:
-                return Bytes.toString(value);
+                return Bytes.toStringBinary(value);
         }
     }
 
@@ -191,7 +191,7 @@ public enum ObjectType {
 
         switch (this) {
             case String:
-                return Bytes.toBytes((String)value);
+                return Bytes.toBytesBinary((String)value);
             case Integer:
                 return Bytes.toBytes((java.lang.Integer)value);
             case Long:
@@ -207,16 +207,16 @@ public enum ObjectType {
             case DateTime:
                 if (value instanceof Date) {
                     DateFormat df = new SimpleDateFormat(Configurator.getDateFormat(), Locale.ENGLISH);
-                    return Bytes.toBytes(df.format((Date)value));
+                    return Bytes.toBytesBinary(df.format((Date)value));
                 }
                 else {
-                    return Bytes.toBytes((String)value);
+                    return Bytes.toBytesBinary((String)value);
                 }
             case Xml:
             case Json:
-                return Bytes.toBytes((String)value);
+                return Bytes.toBytesBinary((String)value);
             default:
-                return Bytes.toBytes((String)value);
+                return Bytes.toBytesBinary((String)value);
         }
     }
     //endregion
