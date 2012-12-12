@@ -230,9 +230,14 @@ public class Scanner {
             this.current.size() != rowsNumber ||
             this.current.size() + offset != this.lastRow) {
 
+            // offset should start from 1.
+            if (offset == 0) {
+                offset++;
+            }
+
             this.markers.clear();
             this.current = next(offset - 1, rowsNumber);
-            this.lastRow = offset + this.current.size();
+            this.lastRow = offset + this.current.size() - 1;
         }
         return this.current;
     }
@@ -334,8 +339,7 @@ public class Scanner {
      * @return A key of the last loaded row. Used to mark the current position for the next scan.
      * @throws IOException Error accessing hbase.
      */
-    protected TypedObject loadRows(ResultScanner scanner, long offset, int rowsNumber, Collection<DataRow> rows, Collection<String> columns) throws
-        IOException {
+    protected TypedObject loadRows(ResultScanner scanner, long offset, int rowsNumber, Collection<DataRow> rows, Collection<String> columns) throws IOException {
         ObjectType keyType = this.columnTypes.get("key");
 
         int index = 0;
@@ -433,7 +437,6 @@ public class Scanner {
 
         Scan scan = getScanner();
         scan.setCaching(itemsNumber);
-        scan.setBatch(itemsNumber);
 
         if (!this.markers.isEmpty()) {
             scan.setStartRow(peekMarker().key.toByteArray());

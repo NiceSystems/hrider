@@ -36,6 +36,9 @@ target/
 .idea/
 *.iml
 
+# project specific
+config.properties
+
 #################
 ## Visual Studio
 #################

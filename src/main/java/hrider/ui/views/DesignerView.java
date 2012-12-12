@@ -203,15 +203,17 @@ public class DesignerView {
                     String rowNumber = JOptionPane.showInputDialog(
                         DesignerView.this.topPanel, "Row number:", "Jump to specific row", JOptionPane.PLAIN_MESSAGE);
 
-                    try {
-                        long offset = Long.parseLong(rowNumber);
+                    if (rowNumber != null) {
+                        try {
+                            long offset = Long.parseLong(rowNumber);
 
-                        DesignerView.this.lastQuery = null;
+                            DesignerView.this.lastQuery = null;
 
-                        populateRowsTable(offset, Direction.Current);
-                    }
-                    catch (NumberFormatException ignore) {
-                        JOptionPane.showMessageDialog(DesignerView.this.topPanel, "Row number must be a number.", "Error", JOptionPane.ERROR_MESSAGE);
+                            populateRowsTable(offset, Direction.Current);
+                        }
+                        catch (NumberFormatException ignore) {
+                            JOptionPane.showMessageDialog(DesignerView.this.topPanel, "Row number must be a number.", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
                     }
                 }
             });

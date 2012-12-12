@@ -10,7 +10,7 @@
     <description>hbase viewer and editor</description>
 
     <packaging>jar</packaging>
-    <version>1.0.0.0</version>
+    <version>1.0.0.1</version>
     <properties>
         <hbase.version>0.90.4</hbase.version>
     </properties>
@@ -23,22 +23,22 @@
         </repository>
     </repositories>
 
-   <profiles>
-     <profile>
-       <id>cdh4</id>
-       <properties>
-         <hadoop.version>2.0.0-cdh4.1.2</hadoop.version>
-         <hbase.version>0.92.1-cdh4.1.2</hbase.version>
-       </properties>
-       <dependencies>
-         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
-            <version>${hadoop.version}</version>
-         </dependency>
-       </dependencies>
-     </profile>
-   </profiles>
+   <!--<profiles>-->
+     <!--<profile>-->
+       <!--<id>cdh4</id>-->
+       <!--<properties>-->
+         <!--<hadoop.version>2.0.0-cdh4.1.2</hadoop.version>-->
+         <!--<hbase.version>0.92.1-cdh4.1.2</hbase.version>-->
+       <!--</properties>-->
+       <!--<dependencies>-->
+         <!--<dependency>-->
+            <!--<groupId>org.apache.hadoop</groupId>-->
+            <!--<artifactId>hadoop-client</artifactId>-->
+            <!--<version>${hadoop.version}</version>-->
+         <!--</dependency>-->
+       <!--</dependencies>-->
+     <!--</profile>-->
+   <!--</profiles>-->
 
     <dependencies>
         <dependency>
@@ -69,23 +69,34 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>1.5</version>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.ccih.categories.services.ServiceLauncher</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.5.1</version>
                 <executions>
                     <execution>
-                        <id>exec-shade</id>
+                        <id>copy-dependencies</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>shade</goal>
+                            <goal>copy-dependencies</goal>
                         </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <transformers>
-                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">                                 <!-- Main class -->
-                        </transformer>
-                    </transformers>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -124,8 +135,8 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
+                    <source>1.6</source>
+                    <target>1.6</target>
                 </configuration>
             </plugin>
         </plugins>
