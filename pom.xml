@@ -11,6 +11,7 @@
 
     <packaging>jar</packaging>
     <version>1.0.0.1</version>
+
     <properties>
         <hbase.version>0.90.4</hbase.version>
     </properties>
@@ -20,6 +21,10 @@
         <repository>
             <id>repo</id>
             <url>file://${project.basedir}/repo</url>
+        </repository>
+        <repository>
+            <id>CDH4</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos</url>
         </repository>
     </repositories>
 
