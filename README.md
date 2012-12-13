@@ -13,12 +13,12 @@ To get started, begin here:
 ## Download
 Please head to the [releases] (https://github.com/NiceSystems/hrider/wiki/The-hrider-releases) page to download a release of h-rider.
 ## News
-### 9 December, 2012: Release 1.0.0.0 available
-The initial release of the h-rider is now available at [releases] (https://github.com/NiceSystems/hrider/wiki/The-hrider-releases) page.
-### 12 December, 2012: Release 1.0.0.1 available
-Issues fixed: [#1](https://github.com/NiceSystems/hrider/issues/1), [#6](https://github.com/NiceSystems/hrider/issues/6). Available at [releases] (https://github.com/NiceSystems/hrider/wiki/The-hrider-releases) page. 
 ### 13 December, 2012: Release 1.0.0.2 available
 Issues fixed: [#5](https://github.com/NiceSystems/hrider/issues/5), [#8](https://github.com/NiceSystems/hrider/issues/8), [#9](https://github.com/NiceSystems/hrider/issues/9). Available at [releases] (https://github.com/NiceSystems/hrider/wiki/The-hrider-releases) page. 
+### 12 December, 2012: Release 1.0.0.1 available
+Issues fixed: [#1](https://github.com/NiceSystems/hrider/issues/1), [#6](https://github.com/NiceSystems/hrider/issues/6). Available at [releases] (https://github.com/NiceSystems/hrider/wiki/The-hrider-releases) page. 
+### 9 December, 2012: Release 1.0.0.0 available
+The initial release of the h-rider is now available at [releases] (https://github.com/NiceSystems/hrider/wiki/The-hrider-releases) page.
 ## Sponsors
 ![NICE](http://www.nice.com/sites/all/themes/nice/logo.png) 
 
