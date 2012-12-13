@@ -43,6 +43,10 @@ public enum ObjectType {
     Xml,
     Json;
 
+    //region Constants
+    private static final byte[] EMPTY_BYTES_ARRAY = new byte[0];
+    //endregion
+
     //region Public Methods
 
     /**
@@ -108,7 +112,7 @@ public enum ObjectType {
      */
     public byte[] fromString(String value) {
         if (value == null) {
-            return null;
+            return EMPTY_BYTES_ARRAY;
         }
 
         switch (this) {
@@ -186,7 +190,7 @@ public enum ObjectType {
      */
     public byte[] fromObject(Object value) {
         if (value == null) {
-            return null;
+            return EMPTY_BYTES_ARRAY;
         }
 
         switch (this) {

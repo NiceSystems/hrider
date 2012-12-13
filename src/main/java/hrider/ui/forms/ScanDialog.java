@@ -142,17 +142,15 @@ public class ScanDialog extends JDialog {
                 query.setEndDate(this.endTimeDatePicker.getDate());
             }
 
-            if (!this.textFieldWord.getText().trim().isEmpty()) {
-                String column = (String)this.comboBoxColumns.getSelectedItem();
+            String column = (String)this.comboBoxColumns.getSelectedItem();
 
-                String[] parts = column.split(":");
-                query.setFamily(parts[0]);
-                query.setColumn(parts[1]);
+            String[] parts = column.split(":");
+            query.setFamily(parts[0]);
+            query.setColumn(parts[1]);
 
-                query.setOperator((Operator)this.comboBoxOperator.getSelectedItem());
-                query.setWord(this.textFieldWord.getText().trim());
-                query.setWordType((ObjectType)this.comboBoxWordType.getSelectedItem());
-            }
+            query.setOperator((Operator)this.comboBoxOperator.getSelectedItem());
+            query.setWord(this.textFieldWord.getText().trim());
+            query.setWordType((ObjectType)this.comboBoxWordType.getSelectedItem());
 
             return query;
         }

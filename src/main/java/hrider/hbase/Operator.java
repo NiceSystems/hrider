@@ -31,9 +31,20 @@ public enum Operator {
     Equal,
     NotEqual,
     GreaterOrEqual,
-    Greater;
+    Greater,
+    IsNull,
+    IsNotNull;
 
     //region Public Methods
+
+    /**
+     * Indicates if the operator is an unary operator.
+     *
+     * @return True if the operator represents an unary operator or False otherwise.
+     */
+    public boolean isUnary() {
+        return this == IsNull || this == IsNotNull;
+    }
 
     /**
      * Gets a filter according to the operator type.
@@ -57,6 +68,10 @@ public enum Operator {
                 return CompareFilter.CompareOp.GREATER_OR_EQUAL;
             case Greater:
                 return CompareFilter.CompareOp.GREATER;
+            case IsNull:
+                return CompareFilter.CompareOp.EQUAL;
+            case IsNotNull:
+                return CompareFilter.CompareOp.NOT_EQUAL;
             default:
                 throw new IllegalArgumentException(String.format("The specified operator type '%s' is not supported.", this));
         }

@@ -324,7 +324,12 @@ public class Query {
      * @param value A new value to set.
      */
     public void setWord(String value) {
-        this.word = value;
+        if (value != null && !value.isEmpty()) {
+            this.word = value;
+        }
+        else {
+            this.word = null;
+        }
     }
 
     /**

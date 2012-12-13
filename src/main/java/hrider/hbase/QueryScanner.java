@@ -35,6 +35,7 @@ public class QueryScanner extends Scanner {
      * A constant representing a size of the unicode character.
      */
     private static final int UNICODE_CHAR_SIZE = 4;
+    private static final byte[] EMPTY_BYTES_ARRAY = new byte[0];
     //endregion
 
     //region Variables
@@ -110,7 +111,7 @@ public class QueryScanner extends Scanner {
                 scan.setTimeRange(this.query.getStartDate().getTime(), this.query.getEndDate().getTime());
             }
 
-            if (this.query.getWord() != null) {
+            if (this.query.getWord() != null || this.query.getOperator().isUnary()) {
                 WritableByteArrayComparable comparator;
 
                 switch (this.query.getOperator()) {
@@ -130,6 +131,10 @@ public class QueryScanner extends Scanner {
                     case GreaterOrEqual:
                     case Greater:
                         comparator = new BinaryComparator(this.query.getWordAsByteArray());
+                        break;
+                    case IsNull:
+                    case IsNotNull:
+                        comparator = new BinaryComparator(EMPTY_BYTES_ARRAY);
                         break;
                     default:
                         throw new IllegalArgumentException(String.format("The specified operator type '%s' is not supported.", this.query.getOperator()));
