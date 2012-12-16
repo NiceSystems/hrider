@@ -6,19 +6,19 @@ The h-rider is a UI application created to provide an easier way to view or mani
 ## Getting started
 To get started, begin here:
 
-1. [Learn about] (https://github.com/NiceSystems/hrider/wiki/The-hrider-manual) h-rider by reading the manual.
+1. [Learn about] (https://github.com/NiceSystems/hrider/wiki/Manual) h-rider by reading the manual.
 
-2. [Download] (https://github.com/NiceSystems/hrider/wiki/The-hrider-releases) h-rider from the release page.
+2. [Download] (https://github.com/NiceSystems/hrider/wiki/Releases) h-rider from the release page.
 
 ## Download
-Please head to the [releases] (https://github.com/NiceSystems/hrider/wiki/The-hrider-releases) page to download a release of h-rider.
+Please head to the [releases] (https://github.com/NiceSystems/hrider/wiki/Releases) page to download a release of h-rider.
 ## News
 ### 13 December, 2012: Release 1.0.0.2 available
-Issues fixed: [#5](https://github.com/NiceSystems/hrider/issues/5), [#8](https://github.com/NiceSystems/hrider/issues/8), [#9](https://github.com/NiceSystems/hrider/issues/9). Available at [releases] (https://github.com/NiceSystems/hrider/wiki/The-hrider-releases) page. 
+Issues fixed: [#5](https://github.com/NiceSystems/hrider/issues/5), [#8](https://github.com/NiceSystems/hrider/issues/8), [#9](https://github.com/NiceSystems/hrider/issues/9). Available at [releases] (https://github.com/NiceSystems/hrider/wiki/Releases) page. 
 ### 12 December, 2012: Release 1.0.0.1 available
-Issues fixed: [#1](https://github.com/NiceSystems/hrider/issues/1), [#6](https://github.com/NiceSystems/hrider/issues/6). Available at [releases] (https://github.com/NiceSystems/hrider/wiki/The-hrider-releases) page. 
+Issues fixed: [#1](https://github.com/NiceSystems/hrider/issues/1), [#6](https://github.com/NiceSystems/hrider/issues/6). Available at [releases] (https://github.com/NiceSystems/hrider/wiki/Releases) page. 
 ### 9 December, 2012: Release 1.0.0.0 available
-The initial release of the h-rider is now available at [releases] (https://github.com/NiceSystems/hrider/wiki/The-hrider-releases) page.
+The initial release of the h-rider is now available at [releases] (https://github.com/NiceSystems/hrider/wiki/Releases) page.
 ## Sponsors
 ![NICE](http://www.nice.com/sites/all/themes/nice/logo.png) 
 
