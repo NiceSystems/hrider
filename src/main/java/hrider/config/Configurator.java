@@ -31,6 +31,14 @@ import java.util.Properties;
  */
 public class Configurator {
 
+    private static final String KEY_DATE_FORMAT                    = "global.dateFormat";
+    private static final String KEY_EXTERNAL_VIEWER_FILE_EXTENSION = "global.externalViewerFileExtension";
+    private static final String KEY_EXTERNAL_VIEWER_DELIMETER      = "global.externalViewerDelimiter";
+
+    private static final String DEFAULT_DATE_FORMAT                    = "yyyy-MM-dd HH:mm:ss.SSS";
+    private static final String DEFAULT_EXTERNAL_VIEWER_FILE_EXTENSION = ".csv";
+    private static final String DEFAULT_EXTERNAL_VIEWER_DELIMETER      = ",";
+
     //region Variables
     /**
      * A list of properties.
@@ -40,6 +48,14 @@ public class Configurator {
      * The date time format used to convert strings to {@link Date}.
      */
     private static String     dateFormat;
+    /**
+     * The extension of the file to be created for the external viewer.
+     */
+    private static String     externalViewerFileExtension;
+    /**
+     * The character to be used as a data separator.
+     */
+    private static String     externalViewerDelimiter;
     //endregion
 
     //region Constructor
@@ -51,14 +67,26 @@ public class Configurator {
             File file = new File("./config.properties");
             if (!file.exists()) {
                 file.createNewFile();
+
+                writeDefaults();
             }
 
             stream = new FileInputStream(file);
             properties.load(stream);
 
-            dateFormat = properties.getProperty("global.dateFormat");
+            dateFormat = properties.getProperty(KEY_DATE_FORMAT);
             if (dateFormat == null) {
-                dateFormat = "yyyy-MM-dd HH:mm:ss.SSS";
+                dateFormat = DEFAULT_DATE_FORMAT;
+            }
+
+            externalViewerFileExtension = properties.getProperty(KEY_EXTERNAL_VIEWER_FILE_EXTENSION);
+            if (externalViewerFileExtension == null) {
+                externalViewerFileExtension = DEFAULT_EXTERNAL_VIEWER_FILE_EXTENSION;
+            }
+
+            externalViewerDelimiter = properties.getProperty(KEY_EXTERNAL_VIEWER_DELIMETER);
+            if (externalViewerDelimiter == null) {
+                externalViewerDelimiter = DEFAULT_EXTERNAL_VIEWER_DELIMETER;
             }
         }
         catch (Exception ignore) {
@@ -87,6 +115,24 @@ public class Configurator {
      */
     public static String getDateFormat() {
         return dateFormat;
+    }
+
+    /**
+     * Gets an extension to be used for a file to be created for the external viewer.
+     *
+     * @return A {@link String} representing a file extension.
+     */
+    public static String getExternalViewerFileExtension() {
+        return externalViewerFileExtension;
+    }
+
+    /**
+     * Gets a delimiter to be used in the file to separate the data.
+     *
+     * @return A character to be used as a delimiter to separate the data in the file.
+     */
+    public static char getExternalViewerDelimeter() {
+        return externalViewerDelimiter.charAt(0);
     }
 
     /**
@@ -148,4 +194,10 @@ public class Configurator {
         return values;
     }
     //endregion
+
+    private static void writeDefaults() {
+        set(KEY_DATE_FORMAT, DEFAULT_DATE_FORMAT);
+        set(KEY_EXTERNAL_VIEWER_DELIMETER, DEFAULT_EXTERNAL_VIEWER_DELIMETER);
+        set(KEY_EXTERNAL_VIEWER_FILE_EXTENSION, DEFAULT_EXTERNAL_VIEWER_FILE_EXTENSION);
+    }
 }

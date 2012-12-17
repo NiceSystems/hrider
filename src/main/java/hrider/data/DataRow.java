@@ -145,6 +145,19 @@ public class DataRow {
         }
     }
 
+    /**
+     * Gets the key/value representation of the row.
+     *
+     * @return A map containing a key/value mapping.
+     */
+    public Map<String, Object> toMap() {
+        Map<String, Object> values = new HashMap<String, Object>();
+        for (Map.Entry<String, DataCell> entry : this.cells.entrySet()) {
+            values.put(entry.getKey(), entry.getValue().getTypedValue().getValue());
+        }
+        return values;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof DataRow) {

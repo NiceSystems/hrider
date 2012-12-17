@@ -200,6 +200,30 @@
                           <toolTipText value="Paste table from the clipboard"/>
                         </properties>
                       </component>
+                      <component id="7b48a" class="javax.swing.JButton" binding="exportTableButton">
+                        <constraints/>
+                        <properties>
+                          <enabled value="false"/>
+                          <icon value="images/db-export.png"/>
+                          <maximumSize width="49" height="27"/>
+                          <minimumSize width="24" height="24"/>
+                          <preferredSize width="24" height="24"/>
+                          <text value=""/>
+                          <toolTipText value="Export table to the file"/>
+                        </properties>
+                      </component>
+                      <component id="4d46" class="javax.swing.JButton" binding="importTableButton">
+                        <constraints/>
+                        <properties>
+                          <enabled value="false"/>
+                          <icon value="images/db-import.png"/>
+                          <maximumSize width="49" height="27"/>
+                          <minimumSize width="24" height="24"/>
+                          <preferredSize width="24" height="24"/>
+                          <text value=""/>
+                          <toolTipText value="Import table from the file"/>
+                        </properties>
+                      </component>
                     </children>
                   </toolbar>
                 </children>
@@ -444,6 +468,17 @@
                         </properties>
                         <border type="none"/>
                         <children>
+                          <component id="f323f" class="javax.swing.JButton" binding="openInViewerButton">
+                            <constraints/>
+                            <properties>
+                              <enabled value="false"/>
+                              <icon value="images/viewer.png"/>
+                              <minimumSize width="24" height="24"/>
+                              <preferredSize width="24" height="24"/>
+                              <text value=""/>
+                              <toolTipText value="Open rows in external viewer"/>
+                            </properties>
+                          </component>
                           <component id="28107" class="javax.swing.JButton" binding="addRowButton">
                             <constraints/>
                             <properties>

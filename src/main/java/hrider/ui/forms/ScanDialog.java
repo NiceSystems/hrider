@@ -56,7 +56,7 @@ public class ScanDialog extends JDialog {
     public ScanDialog(Query query, Iterable<TypedColumn> columns) {
         setContentPane(this.contentPane);
         setModal(true);
-        setTitle("Search");
+        setTitle("Scan");
         getRootPane().setDefaultButton(this.buttonRun);
 
         this.startTimeDatePicker.setDateFormat(new SimpleDateFormat(Configurator.getDateFormat(), Locale.ENGLISH));

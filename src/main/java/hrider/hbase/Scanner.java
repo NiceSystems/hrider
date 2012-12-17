@@ -66,6 +66,10 @@ public class Scanner {
      * A list of loaded rows.
      */
     private Collection<DataRow>     current;
+    /**
+     * Indicates if this scanner should support only forward navigation.
+     */
+    private boolean                 forwardNavigateOnly;
     //endregion
 
     //region Constructor
@@ -86,6 +90,24 @@ public class Scanner {
     //endregion
 
     //region Public Properties
+
+    /**
+     * Gets the value indicating if this scanner supports only forward navigation.
+     *
+     * @return True if this instance of the scanner supports only forward navigation or False if both forward and backward navigation are supported.
+     */
+    public boolean getForwardNavigateOnly() {
+        return this.forwardNavigateOnly;
+    }
+
+    /**
+     * Sets the value indicating if this scanner should support forward navigate only.
+     *
+     * @param forwardNavigateOnly True if this instance of the scanner should support only forward navigation or False to support both forward and backward navigations.
+     */
+    public void setForwardNavigateOnly(boolean forwardNavigateOnly) {
+        this.forwardNavigateOnly = forwardNavigateOnly;
+    }
 
     /**
      * Gets the name of the table.
@@ -284,8 +306,7 @@ public class Scanner {
     public synchronized long getRowsCount() throws IOException {
         if (this.rowsCount == 0) {
             Scan scan = getScanner();
-            scan.setCaching(1000);
-            scan.setBatch(1000);
+            scan.setCaching(HbaseHelper.SCAN_CACHE_SIZE);
 
             HTable table = this.factory.get(this.tableName);
             ResultScanner scanner = table.getScanner(scan);
@@ -339,7 +360,8 @@ public class Scanner {
      * @return A key of the last loaded row. Used to mark the current position for the next scan.
      * @throws IOException Error accessing hbase.
      */
-    protected TypedObject loadRows(ResultScanner scanner, long offset, int rowsNumber, Collection<DataRow> rows, Collection<String> columns) throws IOException {
+    protected TypedObject loadRows(ResultScanner scanner, long offset, int rowsNumber, Collection<DataRow> rows, Collection<String> columns) throws
+        IOException {
         ObjectType keyType = this.columnTypes.get("key");
 
         int index = 0;
@@ -396,11 +418,17 @@ public class Scanner {
      */
     private Collection<String> loadColumns(int rowsNumber) throws IOException {
         Collection<String> columnNames = new ArrayList<String>();
+        columnNames.add("key");
+
+        int itemsNumber = rowsNumber <= HbaseHelper.SCAN_CACHE_SIZE ? rowsNumber : HbaseHelper.SCAN_CACHE_SIZE;
+
+        Scan scan = getScanner();
+        scan.setCaching(itemsNumber);
+
         HTable table = this.factory.get(this.tableName);
+        ResultScanner scanner = table.getScanner(scan);
 
-        ResultScanner scanner = table.getScanner(new Scan());
         Result row;
-
         int counter = 0;
 
         do {
@@ -433,7 +461,7 @@ public class Scanner {
      * @throws IOException Error accessing hbase.
      */
     private Collection<DataRow> next(long offset, int rowsNumber) throws IOException {
-        int itemsNumber = rowsNumber <= 1000 ? rowsNumber : 1000;
+        int itemsNumber = rowsNumber <= HbaseHelper.SCAN_CACHE_SIZE ? rowsNumber : HbaseHelper.SCAN_CACHE_SIZE;
 
         Scan scan = getScanner();
         scan.setCaching(itemsNumber);
@@ -442,11 +470,18 @@ public class Scanner {
             scan.setStartRow(peekMarker().key.toByteArray());
         }
 
+        if (this.forwardNavigateOnly) {
+            // Remove the current marker to reduce the memory load in case backward navigation should not be supported.
+            popMarker();
+        }
+
         HTable table = this.factory.get(this.tableName);
         ResultScanner scanner = table.getScanner(scan);
 
         Collection<DataRow> rows = new ArrayList<DataRow>();
         Collection<String> columns = new ArrayList<String>();
+
+        columns.add("key");
 
         TypedObject lastKey = loadRows(scanner, offset, rowsNumber, rows, columns);
         if (lastKey != null) {

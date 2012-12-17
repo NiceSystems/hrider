@@ -37,6 +37,10 @@ import java.util.List;
  */
 public class HbaseHelper {
 
+    //region Constants
+    public static final int SCAN_CACHE_SIZE = 1000;
+    //endregion
+
     //region Variables
     /**
      * The name of the muster server where the hbase is located.
@@ -201,7 +205,7 @@ public class HbaseHelper {
         }
         this.hbaseAdmin.deleteTable(tableName);
 
-        // Recreate your talbe
+        // Recreate your table
         this.hbaseAdmin.createTable(td);
 
         for (HbaseActionListener listener : this.listeners) {
@@ -228,7 +232,10 @@ public class HbaseHelper {
             families.add(column.getNameAsString());
         }
 
-        ResultScanner scanner = source.getScanner(new Scan());
+        Scan scan = new Scan();
+        scan.setCaching(SCAN_CACHE_SIZE);
+
+        ResultScanner scanner = source.getScanner(scan);
 
         boolean isValid;
         do {

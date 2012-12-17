@@ -2,10 +2,12 @@ package hrider.ui.views;
 
 import hrider.config.Configurator;
 import hrider.data.*;
+import hrider.export.FileExporter;
 import hrider.hbase.HbaseActionListener;
 import hrider.hbase.HbaseHelper;
 import hrider.hbase.Query;
 import hrider.hbase.QueryScanner;
+import hrider.hbase.Scanner;
 import hrider.system.ClipboardData;
 import hrider.system.ClipboardListener;
 import hrider.system.InMemoryClipboard;
@@ -15,10 +17,7 @@ import hrider.ui.MessageHandler;
 import hrider.ui.design.JCellEditor;
 import hrider.ui.design.JCheckBoxRenderer;
 import hrider.ui.design.ResizeableTableHeader;
-import hrider.ui.forms.AddRowDialog;
-import hrider.ui.forms.AddTableDialog;
-import hrider.ui.forms.PasteDialog;
-import hrider.ui.forms.ScanDialog;
+import hrider.ui.forms.*;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -30,6 +29,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
@@ -89,6 +90,9 @@ public class DesignerView {
     private JTextField               tablesFilter;
     private JTextField               columnsFilter;
     private JButton                  jumpButton;
+    private JButton                  openInViewerButton;
+    private JButton                  importTableButton;
+    private JButton                  exportTableButton;
     private DefaultTableModel        columnsTableModel;
     private DefaultTableModel        rowsTableModel;
     private Query                    lastQuery;
@@ -190,7 +194,7 @@ public class DesignerView {
                 public void columnOperation(String tableName, String column, String operation) {
                     setInfo(
                         String.format(
-                            "The %s column has been %s %s the %s table", column, operation, operation.equals("added") ? "to" : "from", tableName));
+                            "The %s column has been %s %s the %s table", column, operation, "added".equals(operation) ? "to" : "from", tableName));
                 }
             });
 
@@ -242,6 +246,48 @@ public class DesignerView {
                     DesignerView.this.lastQuery = dialog.getQuery();
                     if (DesignerView.this.lastQuery != null) {
                         populateRowsTable(Direction.Current);
+                    }
+                }
+            });
+
+        this.openInViewerButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    clearError();
+
+                    DesignerView.this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                    try {
+                        File tempFile = File.createTempFile("h-rider", Configurator.getExternalViewerFileExtension());
+                        FileOutputStream stream = null;
+
+                        try {
+                            stream = new FileOutputStream(tempFile);
+                            FileExporter exporter = new FileExporter(stream, Configurator.getExternalViewerDelimeter());
+
+                            List<String> columns = getShownColumnNames();
+
+                            for (int i = 0 ; i < DesignerView.this.rowsTable.getRowCount() ; i++) {
+                                exporter.write(((DataCell)DesignerView.this.rowsTable.getValueAt(i, 0)).getRow(), columns);
+                            }
+                        }
+                        finally {
+                            if (stream != null) {
+                                try {
+                                    stream.close();
+                                }
+                                catch (IOException ignore) {
+                                }
+                            }
+                        }
+
+                        Desktop.getDesktop().open(tempFile);
+                    }
+                    catch (Exception ex) {
+                        setError("Failed to open rows in external viewer: ", ex);
+                    }
+                    finally {
+                        DesignerView.this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                     }
                 }
             });
@@ -571,6 +617,40 @@ public class DesignerView {
                     pasteTableFromClipboard();
                 }
             });
+
+        this.exportTableButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    clearError();
+
+                    String tableName = getSelectedTableName();
+                    if (tableName != null) {
+                        DesignerView.this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        try {
+                            QueryScanner scanner = DesignerView.this.hbaseHelper.getScanner(tableName, null);
+                            scanner.setColumnTypes(getColumnTypes());
+
+                            ExportTableDialog dialog = new ExportTableDialog(scanner);
+                            dialog.showDialog(DesignerView.this.topPanel);
+                        }
+                        catch (Exception ex) {
+                            setError(String.format("Failed to export table %s: ", tableName), ex);
+                        }
+                        finally {
+                            DesignerView.this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                        }
+                    }
+                }
+            });
+
+        this.importTableButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    //To change body of implemented methods use File | Settings | File Templates.
+                }
+            });
     }
     //endregion
 
@@ -617,6 +697,8 @@ public class DesignerView {
         this.deleteTableButton.setEnabled(false);
         this.truncateTableButton.setEnabled(false);
         this.copyTableButton.setEnabled(false);
+        this.exportTableButton.setEnabled(false);
+        this.importTableButton.setEnabled(false);
 
         this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
@@ -631,6 +713,7 @@ public class DesignerView {
             }
 
             this.addTableButton.setEnabled(true);
+            this.importTableButton.setEnabled(true);
             this.tablesNumber.setText(String.valueOf(this.tablesListModel.getSize()));
             this.tablesList.setSelectedValue(selectedTable, true);
         }
@@ -663,6 +746,7 @@ public class DesignerView {
 
                     if (selectedIndices == 1) {
                         DesignerView.this.copyTableButton.setEnabled(true);
+                        DesignerView.this.exportTableButton.setEnabled(true);
                         DesignerView.this.scanner = null;
 
                         populateColumnsTable();
@@ -674,6 +758,7 @@ public class DesignerView {
                         enableDisablePagingButtons();
 
                         DesignerView.this.copyTableButton.setEnabled(false);
+                        DesignerView.this.exportTableButton.setEnabled(false);
                         DesignerView.this.rowsNumberLabel.setText("?");
                         DesignerView.this.visibleRowsLabel.setText("?");
                         DesignerView.this.pasteRowButton.setEnabled(false);
@@ -943,7 +1028,6 @@ public class DesignerView {
      */
     private void populateColumnsTable(DataRow row) {
         this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
         try {
             clearRows(DesignerView.this.columnsTable);
             clearTable(DesignerView.this.rowsTable);
@@ -1057,6 +1141,8 @@ public class DesignerView {
                     });
                 thread.start();
             }
+
+            this.openInViewerButton.setEnabled(this.rowsTable.getRowCount() > 0);
         }
         catch (Exception ex) {
             setError("Failed to fill rows: ", ex);
@@ -1111,13 +1197,6 @@ public class DesignerView {
             if (this.scanner == null) {
                 this.scanner = DesignerView.this.hbaseHelper.getScanner(tableName, null);
             }
-
-            ObjectType keyType = getColumnType(tableName, "key");
-            if (keyType == null) {
-                keyType = ObjectType.String;
-            }
-
-            DesignerView.this.columnsTableModel.addRow(new Object[]{Boolean.TRUE, "key", keyType});
 
             String filter = this.columnsFilter.getText().toLowerCase().trim();
             for (String column : DesignerView.this.scanner.getColumns(getPageSize())) {
@@ -1440,6 +1519,21 @@ public class DesignerView {
             }
         }
         return typedColumns;
+    }
+
+    /**
+     * Gets a list of column names from the rows table.
+     *
+     * @return A list of column names.
+     */
+    private List<String> getShownColumnNames() {
+        List<String> columnNames = new ArrayList<String>();
+        Enumeration<TableColumn> columns = this.rowsTable.getColumnModel().getColumns();
+        while (columns.hasMoreElements()) {
+            TableColumn column = columns.nextElement();
+            columnNames.add(column.getIdentifier().toString());
+        }
+        return columnNames;
     }
 
     /**
