@@ -10,40 +10,59 @@
     <description>hbase viewer and editor</description>
 
     <packaging>jar</packaging>
-    <version>1.0.0.2</version>
-
-    <properties>
-        <hbase.version>0.90.4</hbase.version>
-    </properties>
-
+    <version>1.0.1.0</version>
 
     <repositories>
         <repository>
-            <id>repo</id>
+            <id>local</id>
             <url>file://${project.basedir}/repo</url>
         </repository>
         <repository>
-            <id>CDH4</id>
+            <id>cloudera</id>
             <url>https://repository.cloudera.com/artifactory/cloudera-repos</url>
+        </repository>
+        <repository>
+            <id>mvnrepository</id>
+            <url>http://mvnrepository.com/artifact</url>
         </repository>
     </repositories>
 
-   <profiles>
-     <profile>
-       <id>cdh4</id>
-       <properties>
-         <hadoop.version>2.0.0-cdh4.1.2</hadoop.version>
-         <hbase.version>0.92.1-cdh4.1.2</hbase.version>
-       </properties>
-       <dependencies>
-         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
-            <version>${hadoop.version}</version>
-         </dependency>
-       </dependencies>
-     </profile>
-   </profiles>
+    <profiles>
+        <profile>
+            <id>cdh4</id>
+            <properties>
+                <hbase.version>0.92.1-cdh4.1.2</hbase.version>
+                <hadoop.version>2.0.0-cdh4.1.2</hadoop.version>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-client</artifactId>
+                    <version>${hadoop.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>0.94.1</id>
+            <properties>
+                <hbase.version>0.94.1</hbase.version>
+                <hadoop.version>1.0.3</hadoop.version>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-core</artifactId>
+                    <version>${hadoop.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>0.90.4</id>
+            <properties>
+                <hbase.version>0.90.4</hbase.version>
+            </properties>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
@@ -123,6 +142,7 @@
                         </manifest>
                         <manifestEntries>
                             <artifactId>${project.artifactId}</artifactId>
+                            <version>${project.version}</version>
                         </manifestEntries>
                     </archive>
                 </configuration>

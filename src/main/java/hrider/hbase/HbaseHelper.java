@@ -7,6 +7,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -136,7 +137,7 @@ public class HbaseHelper {
      * @param tableName The name of the table to create.
      * @throws IOException Error accessing hbase.
      */
-    public void createTable(String tableName) throws IOException {
+    public void createTable(String tableName) throws IOException, TableNotFoundException {
         createTable(tableName, new ArrayList<String>());
     }
 
@@ -147,7 +148,7 @@ public class HbaseHelper {
      * @param columnFamilies A list of column families to add to the table.
      * @throws IOException Error accessing hbase.
      */
-    public void createTable(String tableName, Collection<String> columnFamilies) throws IOException {
+    public void createTable(String tableName, Collection<String> columnFamilies) throws IOException, TableNotFoundException {
         if (!this.hbaseAdmin.tableExists(tableName)) {
             this.hbaseAdmin.createTable(new HTableDescriptor(tableName));
 
@@ -193,7 +194,7 @@ public class HbaseHelper {
      * @param tableName The name of the table to be truncated.
      * @throws IOException Error accessing hbase.
      */
-    public void truncateTable(String tableName) throws IOException {
+    public void truncateTable(String tableName) throws IOException, TableNotFoundException {
         HTableDescriptor td = this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(tableName));
 
         // Delete your table
@@ -218,7 +219,7 @@ public class HbaseHelper {
      * @param sourceCluster The source cluster where the source table is located.
      * @throws IOException Error accessing hbase on one of the clusters or on both clusters.
      */
-    public void copyTable(String targetTable, String sourceTable, HbaseHelper sourceCluster) throws IOException {
+    public void copyTable(String targetTable, String sourceTable, HbaseHelper sourceCluster) throws IOException, TableNotFoundException {
         HTable source = sourceCluster.factory.get(sourceTable);
         HTable target = this.factory.get(targetTable);
 
@@ -275,7 +276,7 @@ public class HbaseHelper {
      * @param rows      A list of rows to set/add.
      * @throws IOException Error accessing hbase.
      */
-    public void setRows(String tableName, Iterable<DataRow> rows) throws IOException {
+    public void setRows(String tableName, Iterable<DataRow> rows) throws IOException, TableNotFoundException {
         HTableDescriptor td = this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(tableName));
 
         Collection<String> families = new ArrayList<String>();
@@ -326,7 +327,7 @@ public class HbaseHelper {
      * @param row       The row to set/add.
      * @throws IOException Error accessing hbase.
      */
-    public void setRow(String tableName, DataRow row) throws IOException {
+    public void setRow(String tableName, DataRow row) throws IOException, TableNotFoundException {
         HTableDescriptor td = this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(tableName));
 
         Collection<String> families = new ArrayList<String>();
@@ -401,7 +402,7 @@ public class HbaseHelper {
      * @return A list of column family names.
      * @throws IOException Error accessing hbase.
      */
-    public Collection<String> getColumnFamilies(String tableName) throws IOException {
+    public Collection<String> getColumnFamilies(String tableName) throws IOException, TableNotFoundException {
         Collection<String> columnFamilies = new ArrayList<String>();
 
         HTableDescriptor td = this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(tableName));

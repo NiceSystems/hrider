@@ -15,8 +15,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -107,7 +110,7 @@ public class Window {
     private static void createAndShowGUI() {
         Window window = new Window();
         if (!window.canceled) {
-            JFrame frame = new JFrame("H-Rider");
+            JFrame frame = new JFrame("H-Rider - " + getVersion());
 
             frame.setContentPane(window.topPanel);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -165,6 +168,19 @@ public class Window {
         }
         else {
             this.canceled = true;
+        }
+    }
+
+    private static String getVersion() {
+        try {
+            String jarPath = Window.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+
+            JarFile file = new JarFile(jarPath);
+            return file.getManifest().getMainAttributes().get(new Attributes.Name("version")).toString();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            return "Unknown Version";
         }
     }
     //endregion
