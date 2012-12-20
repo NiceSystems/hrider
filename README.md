@@ -1,5 +1,5 @@
 ## What is h-rider?
-The h-rider is a UI application created to provide an easier way to view or manipulate the data saved in the distributed database - [HBase™](http://hbase.apache.org/) - that supports structured data storage for large tables.
+The h-rider is an hbase UI browser that provides an easier way to view or manipulate the data saved in the - [HBase™](http://hbase.apache.org/) - distributed database that supports structured data storage for large tables.
 
 ![Welcome](https://raw.github.com/NiceSystems/hrider/master/documentation/images/welcome.png)
 
@@ -8,9 +8,17 @@ To get started, begin here:
 
 1. [Learn about](https://github.com/NiceSystems/hrider/wiki/Manual) h-rider by reading the manual.
 
-2. [Download latest](http://bit.ly/SgSr7j) release of h-rider.
+2. Download h-rider release.
 
 ## News
+### 20 December, 2012: Release 1.0.1.0 available
+New features: [#3](https://github.com/NiceSystems/hrider/issues/3)
+
+[Download for hbase 0.90.4](http://bit.ly/R6IOGI).
+
+[Download for hbase 0.92.1-cdh4.1.2 and hadoop 2.0.0-cdh4.1.2](http://bit.ly/U0k28k).
+
+[Download for hbase 0.94.1 and hadoop 1.0.3](http://bit.ly/UTaMEc).
 ### 13 December, 2012: Release 1.0.0.2 available
 Issues fixed: [#5](https://github.com/NiceSystems/hrider/issues/5), [#8](https://github.com/NiceSystems/hrider/issues/8), [#9](https://github.com/NiceSystems/hrider/issues/9). [Download](http://bit.ly/SgSr7j). 
 ### 12 December, 2012: Release 1.0.0.1 available
