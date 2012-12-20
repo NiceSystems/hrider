@@ -43,7 +43,7 @@ public class AddRowDialog extends JDialog {
     //endregion
 
     //region Constructor
-    public AddRowDialog(ChangeTracker changeTracker, Iterable<TypedColumn> columns, final Iterable<String> columnFamilies) {
+    public AddRowDialog(Iterable<TypedColumn> columns, final Iterable<String> columnFamilies) {
         setContentPane(this.contentPane);
         setModal(true);
         setTitle("Add new row");
@@ -68,9 +68,9 @@ public class AddRowDialog extends JDialog {
             comboBox.addItem(objectType);
         }
 
-        this.rowsTable.getColumn("Column Name").setCellEditor(new JCellEditor(changeTracker, false));
+        this.rowsTable.getColumn("Column Name").setCellEditor(new JCellEditor(null, false));
         this.rowsTable.getColumn("Column Type").setCellEditor(new DefaultCellEditor(comboBox));
-        this.rowsTable.getColumn("Value").setCellEditor(new JCellEditor(changeTracker, 2, true));
+        this.rowsTable.getColumn("Value").setCellEditor(new JCellEditor(null, 2, true));
 
         for (TypedColumn typedColumn : columns) {
             this.tableModel.addRow(new Object[]{Boolean.TRUE, typedColumn.getColumn(), typedColumn.getType(), null});
@@ -171,9 +171,11 @@ public class AddRowDialog extends JDialog {
 
     //region Private Methods
     private static void stopCellEditing(JTable table) {
-        TableCellEditor editor = table.getCellEditor();
-        if (editor != null) {
-            editor.stopCellEditing();
+        if (table.getRowCount() > 0) {
+            TableCellEditor editor = table.getCellEditor();
+            if (editor != null) {
+                editor.stopCellEditing();
+            }
         }
     }
 

@@ -160,7 +160,10 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
             Object value = this.cell.toObject(text);
             if (value == null || !this.cell.contains(value)) {
                 this.cell.getTypedValue().setValue(value);
-                this.changeTracker.addChange(this.cell);
+
+                if (this.changeTracker != null) {
+                    this.changeTracker.addChange(this.cell);
+                }
             }
             return this.cell;
         }

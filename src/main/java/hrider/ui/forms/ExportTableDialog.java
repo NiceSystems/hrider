@@ -62,25 +62,15 @@ public class ExportTableDialog extends JDialog {
         setTitle("Export table to file");
         getRootPane().setDefaultButton(this.btExport);
 
+        this.tfFilePath.setText(String.format("%s.csv", scanner.getTableName()));
+
         this.btExport.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    String delimiter = ExportTableDialog.this.cmbDelimiter.getSelectedItem().toString().trim();
-                    if (delimiter == null || delimiter.isEmpty() || delimiter.length() != 1) {
-                        JOptionPane.showMessageDialog(
-                            ExportTableDialog.this.contentPane, "The delimiter field must contain exactly one character.", "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
+                    if (validateInput()) {
+                        onExport(scanner);
                     }
-
-                    String path = ExportTableDialog.this.tfFilePath.getText().trim();
-                    if (path.isEmpty()) {
-                        JOptionPane.showMessageDialog(
-                            ExportTableDialog.this.contentPane, "The file path must be provided.", "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-
-                    onExport(scanner);
                 }
             });
 
@@ -88,45 +78,33 @@ public class ExportTableDialog extends JDialog {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    String delimiter = ExportTableDialog.this.cmbDelimiter.getSelectedItem().toString().trim();
-                    if (delimiter == null || delimiter.isEmpty() || delimiter.length() != 1) {
-                        JOptionPane.showMessageDialog(
-                            ExportTableDialog.this.contentPane, "The delimiter field must contain exactly one character.", "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
+                    if (validateInput()) {
+                        ExportTableDialog.this.contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        try {
+                            Collection<TypedColumn> columns = new ArrayList<TypedColumn>();
+                            for (String columnName : scanner.getColumns(100)) {
+                                columns.add(new TypedColumn(columnName, ObjectType.String));
+                            }
 
-                    String path = ExportTableDialog.this.tfFilePath.getText().trim();
-                    if (path.isEmpty()) {
-                        JOptionPane.showMessageDialog(
-                            ExportTableDialog.this.contentPane, "The file path must be provided.", "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
+                            ScanDialog dialog = new ScanDialog(null, columns);
+                            dialog.showDialog(ExportTableDialog.this.contentPane);
 
-                    ExportTableDialog.this.contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                    try {
-                        Collection<TypedColumn> columns = new ArrayList<TypedColumn>();
-                        for (String columnName : scanner.getColumns(100)) {
-                            columns.add(new TypedColumn(columnName, ObjectType.String));
+                            Query query = dialog.getQuery();
+                            if (query != null) {
+                                scanner.setQuery(query);
+
+                                onExport(scanner);
+                            }
                         }
-
-                        ScanDialog dialog = new ScanDialog(null, columns);
-                        dialog.showDialog(ExportTableDialog.this.contentPane);
-
-                        Query query = dialog.getQuery();
-                        if (query != null) {
-                            scanner.setQuery(query);
-
-                            onExport(scanner);
+                        catch (Exception ex) {
+                            JOptionPane.showMessageDialog(
+                                ExportTableDialog.this.contentPane,
+                                String.format("Failed to load columns for '%s' table.\nError: %s", scanner.getTableName(), ex.getMessage()), "Error",
+                                JOptionPane.ERROR_MESSAGE);
                         }
-                    }
-                    catch (Exception ex) {
-                        JOptionPane.showMessageDialog(
-                            ExportTableDialog.this.contentPane,
-                            String.format("Failed to load columns for '%s' table.\nError: %s", scanner.getTableName(), ex.getMessage()), "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                    }
-                    finally {
-                        ExportTableDialog.this.contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                        finally {
+                            ExportTableDialog.this.contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                        }
                     }
                 }
             });
@@ -162,6 +140,9 @@ public class ExportTableDialog extends JDialog {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     JFileChooser dialog = new JFileChooser();
+                    dialog.setCurrentDirectory(new File("."));
+                    dialog.setSelectedFile(new File(ExportTableDialog.this.tfFilePath.getText()));
+
                     int returnVal = dialog.showSaveDialog(ExportTableDialog.this.contentPane);
 
                     if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -215,6 +196,7 @@ public class ExportTableDialog extends JDialog {
     public void showDialog(Component owner) {
         this.setComponentOrientation(owner.getComponentOrientation());
         this.pack();
+        this.setResizable(false);
         this.setLocationRelativeTo(owner);
         this.setVisible(true);
     }
@@ -222,84 +204,113 @@ public class ExportTableDialog extends JDialog {
 
     //region Private Methods
     private void onExport(final Scanner scanner) {
-        try {
-            final File file = new File(this.tfFilePath.getText());
-            if (!file.exists()) {
+        final File file = new File(this.tfFilePath.getText());
+        if (!file.exists()) {
+            try {
                 file.createNewFile();
             }
+            catch (IOException e) {
+                JOptionPane.showMessageDialog(
+                    this.contentPane,
+                    String.format("Failed to create file %s.\nError: %s", this.tfFilePath.getText(), e.getMessage()),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
 
-            new Thread(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        ExportTableDialog.this.tfFilePath.setEnabled(false);
-                        ExportTableDialog.this.cmbDelimiter.setEnabled(false);
-                        ExportTableDialog.this.btExport.setEnabled(false);
-                        ExportTableDialog.this.btExportWithQueryButton.setEnabled(false);
-                        ExportTableDialog.this.btCancel.setEnabled(true);
-                        ExportTableDialog.this.btOpen.setEnabled(false);
-                        ExportTableDialog.this.btClose.setEnabled(false);
-                        ExportTableDialog.this.btBrowse.setEnabled(false);
+                return;
+            }
+        }
 
-                        ExportTableDialog.this.canceled = false;
+        new Thread(
+            new Runnable() {
+                @Override
+                public void run() {
+                    ExportTableDialog.this.tfFilePath.setEnabled(false);
+                    ExportTableDialog.this.cmbDelimiter.setEnabled(false);
+                    ExportTableDialog.this.btExport.setEnabled(false);
+                    ExportTableDialog.this.btExportWithQueryButton.setEnabled(false);
+                    ExportTableDialog.this.btCancel.setEnabled(true);
+                    ExportTableDialog.this.btOpen.setEnabled(false);
+                    ExportTableDialog.this.btClose.setEnabled(false);
+                    ExportTableDialog.this.btBrowse.setEnabled(false);
 
-                        FileOutputStream stream = null;
-                        try {
-                            stream = new FileOutputStream(file);
-                            FileExporter exporter = new FileExporter(stream, Configurator.getExternalViewerDelimeter());
+                    ExportTableDialog.this.canceled = false;
 
-                            scanner.resetCurrent(null);
+                    FileOutputStream stream = null;
+                    try {
+                        stream = new FileOutputStream(file);
+                        FileExporter exporter = new FileExporter(stream, getDelimiter());
 
-                            Collection<DataRow> rows = scanner.next(1000);
-                            Collection<String> columnNames = scanner.getColumns(0);
+                        scanner.resetCurrent(null);
 
-                            int counter = 1;
+                        Collection<DataRow> rows = scanner.next(Configurator.getBatchSizeForRead());
+                        Collection<String> columnNames = scanner.getColumns(0);
 
-                            while (!rows.isEmpty() && !ExportTableDialog.this.canceled) {
-                                for (DataRow row : rows) {
-                                    exporter.write(row, columnNames);
+                        int counter = 1;
 
-                                    ExportTableDialog.this.writtenRowsCount.setText(Long.toString(counter++));
-                                    ExportTableDialog.this.writtenRowsCount.paintImmediately(ExportTableDialog.this.writtenRowsCount.getBounds());
-                                }
+                        while (!rows.isEmpty() && !ExportTableDialog.this.canceled) {
+                            for (DataRow row : rows) {
+                                exporter.write(row, columnNames);
 
-                                rows = scanner.next(1000);
+                                ExportTableDialog.this.writtenRowsCount.setText(Long.toString(counter++));
+                                ExportTableDialog.this.writtenRowsCount.paintImmediately(ExportTableDialog.this.writtenRowsCount.getBounds());
                             }
 
-                            ExportTableDialog.this.filePath = file.getAbsolutePath();
-                            ExportTableDialog.this.btOpen.setEnabled(true);
+                            rows = scanner.next(Configurator.getBatchSizeForRead());
                         }
-                        catch (Exception e) {
-                            JOptionPane.showMessageDialog(
-                                ExportTableDialog.this.contentPane,
-                                String.format("Failed to export to file %s.\nError: %s", ExportTableDialog.this.tfFilePath.getText(), e.getMessage()), "Error",
-                                JOptionPane.ERROR_MESSAGE);
-                        }
-                        finally {
-                            if (stream != null) {
-                                try {
-                                    stream.close();
-                                }
-                                catch (IOException ignore) {
-                                }
-                            }
 
-                            ExportTableDialog.this.tfFilePath.setEnabled(true);
-                            ExportTableDialog.this.cmbDelimiter.setEnabled(true);
-                            ExportTableDialog.this.btExport.setEnabled(true);
-                            ExportTableDialog.this.btExportWithQueryButton.setEnabled(true);
-                            ExportTableDialog.this.btCancel.setEnabled(false);
-                            ExportTableDialog.this.btClose.setEnabled(true);
-                            ExportTableDialog.this.btBrowse.setEnabled(true);
-                        }
+                        ExportTableDialog.this.filePath = file.getAbsolutePath();
+                        ExportTableDialog.this.btOpen.setEnabled(true);
                     }
-                }).start();
+                    catch (Exception e) {
+                        JOptionPane.showMessageDialog(
+                            ExportTableDialog.this.contentPane,
+                            String.format("Failed to export to file %s.\nError: %s", ExportTableDialog.this.tfFilePath.getText(), e.getMessage()),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                    finally {
+                        if (stream != null) {
+                            try {
+                                stream.close();
+                            }
+                            catch (IOException ignore) {
+                            }
+                        }
+
+                        ExportTableDialog.this.tfFilePath.setEnabled(true);
+                        ExportTableDialog.this.cmbDelimiter.setEnabled(true);
+                        ExportTableDialog.this.btExport.setEnabled(true);
+                        ExportTableDialog.this.btExportWithQueryButton.setEnabled(true);
+                        ExportTableDialog.this.btCancel.setEnabled(false);
+                        ExportTableDialog.this.btClose.setEnabled(true);
+                        ExportTableDialog.this.btBrowse.setEnabled(true);
+                    }
+                }
+            }).start();
+    }
+
+    private Character getDelimiter() {
+        String delimiter = this.cmbDelimiter.getSelectedItem().toString().trim();
+        if (delimiter != null && delimiter.length() == 1) {
+            return delimiter.charAt(0);
         }
-        catch (Exception e) {
-            JOptionPane.showMessageDialog(
-                this.contentPane, String.format("Failed to export to file %s.\nError: %s", this.tfFilePath.getText(), e.getMessage()), "Error",
-                JOptionPane.ERROR_MESSAGE);
+        return null;
+    }
+
+    private boolean validateInput() {
+        Character delimiter = getDelimiter();
+        if (delimiter == null) {
+            JOptionPane.showMessageDialog(this.contentPane, "The delimiter field must contain exactly one character.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
+
+        String path = this.tfFilePath.getText().trim();
+        if (path.isEmpty()) {
+            JOptionPane.showMessageDialog(this.contentPane, "The file path must be provided.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        return true;
     }
     //endregion
 }

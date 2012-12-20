@@ -166,9 +166,11 @@ public class PasteDialog extends JDialog {
     }
 
     private static void stopCellEditing(JTable table) {
-        TableCellEditor editor = table.getCellEditor();
-        if (editor != null) {
-            editor.stopCellEditing();
+        if (table.getRowCount() > 0) {
+            TableCellEditor editor = table.getCellEditor();
+            if (editor != null) {
+                editor.stopCellEditing();
+            }
         }
     }
     //endregion

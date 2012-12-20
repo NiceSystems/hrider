@@ -1,5 +1,6 @@
 package hrider.hbase;
 
+import hrider.config.Configurator;
 import hrider.data.DataCell;
 import hrider.data.DataRow;
 import org.apache.hadoop.conf.Configuration;
@@ -36,10 +37,6 @@ import java.util.List;
  *          This class represents a data access to the hbase tables.
  */
 public class HbaseHelper {
-
-    //region Constants
-    public static final int SCAN_CACHE_SIZE = 1000;
-    //endregion
 
     //region Variables
     /**
@@ -233,7 +230,7 @@ public class HbaseHelper {
         }
 
         Scan scan = new Scan();
-        scan.setCaching(SCAN_CACHE_SIZE);
+        scan.setCaching(Configurator.getBatchSizeForRead());
 
         ResultScanner scanner = source.getScanner(scan);
 
@@ -269,6 +266,57 @@ public class HbaseHelper {
             }
         }
         while (isValid);
+    }
+
+    /**
+     * Sets or adds a rows to the table.
+     *
+     * @param tableName The name of the table to update.
+     * @param rows      A list of rows to set/add.
+     * @throws IOException Error accessing hbase.
+     */
+    public void setRows(String tableName, Iterable<DataRow> rows) throws IOException {
+        HTableDescriptor td = this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(tableName));
+
+        Collection<String> families = new ArrayList<String>();
+        for (HColumnDescriptor column : td.getColumnFamilies()) {
+            families.add(column.getNameAsString());
+        }
+
+        Collection<String> familiesToCreate = new ArrayList<String>();
+        List<Put> puts = new ArrayList<Put>();
+
+        for (DataRow row : rows) {
+            Put put = new Put(row.getKey().toByteArray());
+
+            for (DataCell cell : row.getCells()) {
+                String[] parts = cell.getColumnName().split(":");
+                if (parts.length == 2) {
+                    if (!families.contains(parts[0])) {
+                        familiesToCreate.add(parts[0]);
+                    }
+
+                    byte[] family = Bytes.toBytesBinary(parts[0]);
+                    byte[] column = Bytes.toBytesBinary(parts[1]);
+                    byte[] value = cell.getTypedValue().toByteArray();
+
+                    put.add(family, column, value);
+                }
+            }
+
+            puts.add(put);
+
+            for (HbaseActionListener listener : this.listeners) {
+                listener.rowOperation(tableName, row, "added");
+            }
+        }
+
+        if (!familiesToCreate.isEmpty()) {
+            createFamilies(tableName, familiesToCreate);
+        }
+
+        HTable table = this.factory.get(tableName);
+        table.put(puts);
     }
 
     /**

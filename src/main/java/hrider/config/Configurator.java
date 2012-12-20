@@ -34,10 +34,14 @@ public class Configurator {
     private static final String KEY_DATE_FORMAT                    = "global.dateFormat";
     private static final String KEY_EXTERNAL_VIEWER_FILE_EXTENSION = "global.externalViewerFileExtension";
     private static final String KEY_EXTERNAL_VIEWER_DELIMETER      = "global.externalViewerDelimiter";
+    private static final String KEY_BATCH_READ_SIZE                = "global.batch.readSize";
+    private static final String KEY_BATCH_WRITE_SIZE               = "global.batch.writeSize";
 
     private static final String DEFAULT_DATE_FORMAT                    = "yyyy-MM-dd HH:mm:ss.SSS";
     private static final String DEFAULT_EXTERNAL_VIEWER_FILE_EXTENSION = ".csv";
     private static final String DEFAULT_EXTERNAL_VIEWER_DELIMETER      = ",";
+    private static final int    DEFAULT_KEY_BATCH_READ_SIZE            = 1000;
+    private static final int    DEFAULT_KEY_BATCH_WRITE_SIZE           = 100;
 
     //region Variables
     /**
@@ -56,6 +60,14 @@ public class Configurator {
      * The character to be used as a data separator.
      */
     private static String     externalViewerDelimiter;
+    /**
+     * The number of rows to be read in a batch operation.
+     */
+    private static int        batchSizeForRead;
+    /**
+     * The number of rows to be written as a batch.
+     */
+    private static int        batchSizeForWrite;
     //endregion
 
     //region Constructor
@@ -87,6 +99,16 @@ public class Configurator {
             externalViewerDelimiter = properties.getProperty(KEY_EXTERNAL_VIEWER_DELIMETER);
             if (externalViewerDelimiter == null) {
                 externalViewerDelimiter = DEFAULT_EXTERNAL_VIEWER_DELIMETER;
+            }
+
+            batchSizeForRead = parseInt(properties.getProperty(KEY_BATCH_READ_SIZE, "0"));
+            if (batchSizeForRead == 0) {
+                batchSizeForRead = DEFAULT_KEY_BATCH_READ_SIZE;
+            }
+
+            batchSizeForWrite = parseInt(properties.getProperty(KEY_BATCH_WRITE_SIZE, "0"));
+            if (batchSizeForWrite == 0) {
+                batchSizeForWrite = DEFAULT_KEY_BATCH_WRITE_SIZE;
             }
         }
         catch (Exception ignore) {
@@ -133,6 +155,14 @@ public class Configurator {
      */
     public static char getExternalViewerDelimeter() {
         return externalViewerDelimiter.charAt(0);
+    }
+
+    public static int getBatchSizeForRead() {
+        return batchSizeForRead;
+    }
+
+    public static int getBatchSizeForWrite() {
+        return batchSizeForWrite;
     }
 
     /**
@@ -195,9 +225,22 @@ public class Configurator {
     }
     //endregion
 
+    //region Private Methods
     private static void writeDefaults() {
         set(KEY_DATE_FORMAT, DEFAULT_DATE_FORMAT);
         set(KEY_EXTERNAL_VIEWER_DELIMETER, DEFAULT_EXTERNAL_VIEWER_DELIMETER);
         set(KEY_EXTERNAL_VIEWER_FILE_EXTENSION, DEFAULT_EXTERNAL_VIEWER_FILE_EXTENSION);
+        set(KEY_BATCH_READ_SIZE, Integer.toString(DEFAULT_KEY_BATCH_READ_SIZE));
+        set(KEY_BATCH_WRITE_SIZE, Integer.toString(DEFAULT_KEY_BATCH_WRITE_SIZE));
     }
+
+    private static int parseInt(String value) {
+        try {
+            return Integer.parseInt(value);
+        }
+        catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+    //endregion
 }

@@ -1,5 +1,6 @@
 package hrider.hbase;
 
+import hrider.config.Configurator;
 import hrider.data.DataCell;
 import hrider.data.DataRow;
 import hrider.data.ObjectType;
@@ -306,7 +307,7 @@ public class Scanner {
     public synchronized long getRowsCount() throws IOException {
         if (this.rowsCount == 0) {
             Scan scan = getScanner();
-            scan.setCaching(HbaseHelper.SCAN_CACHE_SIZE);
+            scan.setCaching(Configurator.getBatchSizeForRead());
 
             HTable table = this.factory.get(this.tableName);
             ResultScanner scanner = table.getScanner(scan);
@@ -420,7 +421,7 @@ public class Scanner {
         Collection<String> columnNames = new ArrayList<String>();
         columnNames.add("key");
 
-        int itemsNumber = rowsNumber <= HbaseHelper.SCAN_CACHE_SIZE ? rowsNumber : HbaseHelper.SCAN_CACHE_SIZE;
+        int itemsNumber = rowsNumber <= Configurator.getBatchSizeForRead() ? rowsNumber : Configurator.getBatchSizeForRead();
 
         Scan scan = getScanner();
         scan.setCaching(itemsNumber);
@@ -461,7 +462,7 @@ public class Scanner {
      * @throws IOException Error accessing hbase.
      */
     private Collection<DataRow> next(long offset, int rowsNumber) throws IOException {
-        int itemsNumber = rowsNumber <= HbaseHelper.SCAN_CACHE_SIZE ? rowsNumber : HbaseHelper.SCAN_CACHE_SIZE;
+        int itemsNumber = rowsNumber <= Configurator.getBatchSizeForRead() ? rowsNumber : Configurator.getBatchSizeForRead();
 
         Scan scan = getScanner();
         scan.setCaching(itemsNumber);

@@ -131,12 +131,12 @@ public enum ObjectType {
             case Short:
                 return Bytes.toBytes(java.lang.Short.parseShort(value));
             case DateTime:
-                return Bytes.toBytesBinary(value);
+                return Bytes.toBytes(value);
             case Xml:
             case Json:
-                return Bytes.toBytesBinary(value);
+                return Bytes.toBytes(value);
             default:
-                return Bytes.toBytesBinary(value);
+                return Bytes.toBytes(value);
         }
     }
 
@@ -169,16 +169,16 @@ public enum ObjectType {
             case DateTime:
                 DateFormat df = new SimpleDateFormat(Configurator.getDateFormat(), Locale.ENGLISH);
                 try {
-                    return df.parse(Bytes.toStringBinary(value));
+                    return df.parse(Bytes.toString(value));
                 }
                 catch (ParseException ignored) {
                     return null;
                 }
             case Xml:
             case Json:
-                return Bytes.toStringBinary(value);
+                return Bytes.toString(value);
             default:
-                return Bytes.toStringBinary(value);
+                return Bytes.toString(value);
         }
     }
 
@@ -211,16 +211,16 @@ public enum ObjectType {
             case DateTime:
                 if (value instanceof Date) {
                     DateFormat df = new SimpleDateFormat(Configurator.getDateFormat(), Locale.ENGLISH);
-                    return Bytes.toBytesBinary(df.format((Date)value));
+                    return Bytes.toBytes(df.format((Date)value));
                 }
                 else {
-                    return Bytes.toBytesBinary((String)value);
+                    return Bytes.toBytes((String)value);
                 }
             case Xml:
             case Json:
-                return Bytes.toBytesBinary((String)value);
+                return Bytes.toBytes((String)value);
             default:
-                return Bytes.toBytesBinary((String)value);
+                return Bytes.toBytes((String)value);
         }
     }
     //endregion

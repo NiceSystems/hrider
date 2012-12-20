@@ -85,6 +85,7 @@ public class AddColumnDialog extends JDialog {
     public void showDialog(Component owner) {
         this.setComponentOrientation(owner.getComponentOrientation());
         this.pack();
+        this.setResizable(false);
         this.setLocationRelativeTo(owner);
         this.setVisible(true);
     }

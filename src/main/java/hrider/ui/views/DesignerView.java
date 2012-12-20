@@ -7,7 +7,6 @@ import hrider.hbase.HbaseActionListener;
 import hrider.hbase.HbaseHelper;
 import hrider.hbase.Query;
 import hrider.hbase.QueryScanner;
-import hrider.hbase.Scanner;
 import hrider.system.ClipboardData;
 import hrider.system.ClipboardListener;
 import hrider.system.InMemoryClipboard;
@@ -304,7 +303,7 @@ public class DesignerView {
                     try {
                         Collection<String> columnFamilies = DesignerView.this.hbaseHelper.getColumnFamilies(getSelectedTableName());
 
-                        AddRowDialog dialog = new AddRowDialog(DesignerView.this.changeTracker, getCheckedColumns(), columnFamilies);
+                        AddRowDialog dialog = new AddRowDialog(getCheckedColumns(), columnFamilies);
                         dialog.showDialog(DesignerView.this.topPanel);
 
                         DataRow row = dialog.getRow();
@@ -648,7 +647,29 @@ public class DesignerView {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    //To change body of implemented methods use File | Settings | File Templates.
+                    clearError();
+
+                    DesignerView.this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                    try {
+                        String tableName = getSelectedTableName();
+
+                        Collection<String> columnFamilies;
+                        if (tableName != null) {
+                            columnFamilies = DesignerView.this.hbaseHelper.getColumnFamilies(tableName);
+                        }
+                        else {
+                            columnFamilies = new ArrayList<String>();
+                        }
+
+                        ImportTableDialog dialog = new ImportTableDialog(DesignerView.this.hbaseHelper, tableName, getCheckedColumns(), columnFamilies);
+                        dialog.showDialog(DesignerView.this.topPanel);
+                    }
+                    catch (Exception ex) {
+                        setError("Failed to import to table.", ex);
+                    }
+                    finally {
+                        DesignerView.this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                    }
                 }
             });
     }
@@ -1575,9 +1596,11 @@ public class DesignerView {
      * @param table The table that contains the cell.
      */
     private static void stopCellEditing(JTable table) {
-        TableCellEditor editor = table.getCellEditor();
-        if (editor != null) {
-            editor.stopCellEditing();
+        if (table.getRowCount() > 0) {
+            TableCellEditor editor = table.getCellEditor();
+            if (editor != null) {
+                editor.stopCellEditing();
+            }
         }
     }
 
