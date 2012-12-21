@@ -12,7 +12,9 @@ To get started, begin here:
 
 ## News
 ### 20 December, 2012: Release 1.0.1.0 available
-New features: [#3](https://github.com/NiceSystems/hrider/issues/3)
+New features: [#3](https://github.com/NiceSystems/hrider/issues/3), [#11](https://github.com/NiceSystems/hrider/issues/11)
+
+Issues fixed: [#12] (https://github.com/NiceSystems/hrider/issues/11)
 
 [Download for hbase 0.90.4](http://bit.ly/R6IOGI).
 
