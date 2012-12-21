@@ -10,6 +10,8 @@ To get started, begin here:
 
 2. Download h-rider release.
 
+3. If you have any problems first read the [FAQ](https://github.com/NiceSystems/hrider/wiki/FAQ).
+
 ## News
 ### 20 December, 2012: Release 1.0.1.0 available
 New features: [#3](https://github.com/NiceSystems/hrider/issues/3), [#11](https://github.com/NiceSystems/hrider/issues/11)
