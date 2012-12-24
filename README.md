@@ -1,5 +1,5 @@
 ## What is h-rider?
-The h-rider is an hbase UI browser that provides an easier way to view or manipulate the data saved in the - [HBase™](http://hbase.apache.org/) - distributed database that supports structured data storage for large tables.
+The h-rider is a UI application that provides an easier way to view or manipulate the data saved in the - [HBase™](http://hbase.apache.org/) - distributed database that supports structured data storage for large tables.
 
 ![Welcome](https://raw.github.com/NiceSystems/hrider/master/documentation/images/welcome.png)
 
