@@ -53,11 +53,13 @@ public class ConnectionDetailsDialog extends JDialog {
         setTitle("Connect to an Hbase server...");
         getRootPane().setDefaultButton(this.buttonConnect);
 
-        this.hbasePort.setValue(9000);
-        this.zooKeeperPort.setValue(2181);
+        this.hbasePort.setValue(Integer.parseInt(Configurator.get("connection.hbase.port", "9000")));
+        this.zooKeeperPort.setValue(Integer.parseInt(Configurator.get("connection.zookeeper.port", "2181")));
 
-        this.zooKeeperServer.setText(Configurator.get("connection.zookeeper.host"));
         this.hbaseServer.setText(Configurator.get("connection.hbase.host"));
+        this.zooKeeperServer.setText(Configurator.get("connection.zookeeper.host"));
+
+        this.hbaseServer.select(0, this.hbaseServer.getText().length());
 
         this.buttonConnect.addActionListener(
             new ActionListener() {
@@ -159,7 +161,9 @@ public class ConnectionDetailsDialog extends JDialog {
             this.hbaseHelper.getTables();
 
             Configurator.set("connection.zookeeper.host", this.zooKeeperServer.getText());
+            Configurator.set("connection.zookeeper.port", this.zooKeeperPort.getValue().toString());
             Configurator.set("connection.hbase.host", this.hbaseServer.getText());
+            Configurator.set("connection.hbase.port", this.hbasePort.getValue().toString());
             Configurator.save();
 
             this.okPressed = true;

@@ -102,7 +102,6 @@ public class DesignerView {
     private HbaseHelper              hbaseHelper;
     private ChangeTracker            changeTracker;
     private Map<String, TableColumn> rowsTableRemovedColumns;
-    private Map<String, TableColumn> rowsTableAddedColumns;
     //endregion
 
     //region Constructor
@@ -112,7 +111,6 @@ public class DesignerView {
         this.hbaseHelper = hbaseHelper;
         this.changeTracker = new ChangeTracker();
         this.rowsTableRemovedColumns = new HashMap<String, TableColumn>();
-        this.rowsTableAddedColumns = new HashMap<String, TableColumn>();
 
         InMemoryClipboard.addListener(
             new ClipboardListener() {
@@ -159,12 +157,12 @@ public class DesignerView {
             new DocumentListener() {
                 @Override
                 public void insertUpdate(DocumentEvent e) {
-                    populateColumnsTable();
+                    populateColumnsTable(false);
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent e) {
-                    populateColumnsTable();
+                    populateColumnsTable(false);
                 }
 
                 @Override
@@ -326,7 +324,7 @@ public class DesignerView {
                                 }
                                 Configurator.save();
 
-                                populateColumnsTable(row);
+                                populateColumnsTable(true, row);
                                 populateRowsTable(Direction.Current);
                             }
                             catch (Exception ex) {
@@ -372,7 +370,7 @@ public class DesignerView {
                                 DesignerView.this.scanner.resetCurrent(null);
                             }
 
-                            populateColumnsTable();
+                            populateColumnsTable(true);
                             populateRowsTable(Direction.Current);
                         }
                         finally {
@@ -523,7 +521,7 @@ public class DesignerView {
 
                                 DesignerView.this.scanner = null;
 
-                                populateColumnsTable();
+                                populateColumnsTable(true);
                             }
                         }
                         finally {
@@ -772,7 +770,7 @@ public class DesignerView {
                         DesignerView.this.exportTableButton.setEnabled(true);
                         DesignerView.this.scanner = null;
 
-                        populateColumnsTable();
+                        populateColumnsTable(true);
                     }
                     else {
                         clearRows(DesignerView.this.columnsTable);
@@ -861,35 +859,7 @@ public class DesignerView {
                         Configurator.set(String.format("table.%s.%s.isShown", getSelectedTableName(), name), Boolean.toString(isShown));
                         Configurator.save();
 
-                        if (isShown) {
-                            TableColumn tableColumn = DesignerView.this.rowsTableRemovedColumns.get(name);
-                            if (tableColumn != null) {
-                                DesignerView.this.rowsTable.addColumn(tableColumn);
-                                DesignerView.this.rowsTableAddedColumns.put(name, tableColumn);
-                                DesignerView.this.rowsTableRemovedColumns.remove(name);
-
-                                DesignerView.this.rowsTable.moveColumn(DesignerView.this.rowsTable.getColumnCount() - 1, getColumnIndex(name));
-                            }
-                            else {
-                                if (DesignerView.this.rowsTable.getRowCount() > 0) {
-                                    addColumnToRowsTable(getSelectedTableName(), name, DesignerView.this.rowsTable.getColumnCount());
-
-                                    if (DesignerView.this.scanner != null) {
-                                        populateColumnOnRowsTable(getSelectedTableName(), name, DesignerView.this.scanner.current());
-                                    }
-
-                                    DesignerView.this.rowsTable.moveColumn(DesignerView.this.rowsTable.getColumnCount() - 1, getColumnIndex(name));
-                                }
-                            }
-                        }
-                        else {
-                            TableColumn tableColumn = DesignerView.this.rowsTableAddedColumns.get(name);
-                            if (tableColumn != null) {
-                                DesignerView.this.rowsTable.removeColumn(tableColumn);
-                                DesignerView.this.rowsTableAddedColumns.remove(name);
-                                DesignerView.this.rowsTableRemovedColumns.put(name, tableColumn);
-                            }
-                        }
+                        setRowsTableColumnVisible(name, isShown);
                     }
                     else if ("Column Type".equals(columnName)) {
                         String name = (String)model.getValueAt(e.getFirstRow(), 1);
@@ -1037,30 +1007,36 @@ public class DesignerView {
 
     /**
      * Populates a columns table with the list of the columns from the selected table.
+     *
+     * @param clearRows Indicates whether the rows table should be cleared.
      */
-    private void populateColumnsTable() {
-        populateColumnsTable(null);
+    private void populateColumnsTable(boolean clearRows) {
+        populateColumnsTable(clearRows, null);
     }
 
     /**
      * Populates a columns table with the list of the columns from the selected table.
      *
-     * @param row If this parameter is not null it will be used to start the columns population from. The columns are the collection of keys extracted
-     *            from the hbase rows. Hbase doesn't have a list of columns so in order to present them to the user the tool must go over a number of rows
-     *            to collect their keys. Each row can have different keys.
+     * @param clearRows Indicates whether the rows table should be cleared.
+     * @param row       If this parameter is not null it will be used to start the columns population from. The columns are the collection of keys extracted
+     *                  from the hbase rows. Hbase doesn't have a list of columns so in order to present them to the user the tool must go over a number of rows
+     *                  to collect their keys. Each row can have different keys.
      */
-    private void populateColumnsTable(DataRow row) {
+    private void populateColumnsTable(boolean clearRows, DataRow row) {
         this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
             clearRows(DesignerView.this.columnsTable);
-            clearTable(DesignerView.this.rowsTable);
+
+            if (clearRows) {
+                clearTable(DesignerView.this.rowsTable);
+
+                this.rowsNumberLabel.setText("?");
+                this.visibleRowsLabel.setText("?");
+                this.rowsNumberSpinner.setEnabled(true);
+                this.pasteRowButton.setEnabled(hasRowsInClipboard());
+            }
 
             enableDisablePagingButtons();
-
-            this.rowsNumberLabel.setText("?");
-            this.visibleRowsLabel.setText("?");
-            this.rowsNumberSpinner.setEnabled(true);
-            this.pasteRowButton.setEnabled(hasRowsInClipboard());
 
             String tableName = getSelectedTableName();
             if (tableName != null) {
@@ -1223,9 +1199,12 @@ public class DesignerView {
 
             String filter = this.columnsFilter.getText().toLowerCase().trim();
             for (String column : DesignerView.this.scanner.getColumns(getPageSize())) {
-                if (filter.isEmpty() || column.toLowerCase().contains(filter)) {
+                boolean isColumnVisible = filter.isEmpty() || "key".equals(column) || column.toLowerCase().contains(filter);
+                if (isColumnVisible) {
                     addColumnToColumnsTable(tableName, column, row);
                 }
+
+                setRowsTableColumnVisible(column, isColumnVisible && isShown(tableName, column));
             }
 
             this.columnsNumber.setText(String.valueOf(this.columnsTableModel.getRowCount()));
@@ -1265,7 +1244,6 @@ public class DesignerView {
     private void loadRowsTableColumns(String tableName) {
         clearColumns(this.rowsTable);
 
-        this.rowsTableAddedColumns.clear();
         this.rowsTableRemovedColumns.clear();
 
         for (int i = 0, j = 0 ; i < this.columnsTable.getRowCount() ; i++) {
@@ -1274,6 +1252,44 @@ public class DesignerView {
             boolean isShown = (Boolean)this.columnsTableModel.getValueAt(i, 0);
             if (isShown) {
                 addColumnToRowsTable(tableName, columnName, j++);
+            }
+        }
+    }
+
+    /**
+     * Shows or hides a column in rows table.
+     *
+     * @param columnName The name of the column.
+     * @param isVisible  Indicates if the columns should be shown or hidden.
+     */
+    private void setRowsTableColumnVisible(String columnName, boolean isVisible) {
+        if (this.rowsTable.getRowCount() > 0) {
+            if (isVisible) {
+                TableColumn tableColumn = this.rowsTableRemovedColumns.get(columnName);
+                if (tableColumn != null) {
+                    this.rowsTable.addColumn(tableColumn);
+                    this.rowsTableRemovedColumns.remove(columnName);
+
+                    this.rowsTable.moveColumn(this.rowsTable.getColumnCount() - 1, getColumnIndex(columnName));
+                }
+                else {
+                    if (getColumn(columnName, this.rowsTable) == null) {
+                        addColumnToRowsTable(getSelectedTableName(), columnName, this.rowsTable.getColumnCount());
+
+                        if (this.scanner != null) {
+                            populateColumnOnRowsTable(getSelectedTableName(), columnName, this.scanner.current());
+                        }
+
+                        this.rowsTable.moveColumn(this.rowsTable.getColumnCount() - 1, getColumnIndex(columnName));
+                    }
+                }
+            }
+            else {
+                TableColumn tableColumn = getColumn(columnName, this.rowsTable);
+                if (tableColumn != null) {
+                    this.rowsTable.removeColumn(tableColumn);
+                    this.rowsTableRemovedColumns.put(columnName, tableColumn);
+                }
             }
         }
     }
@@ -1302,7 +1318,6 @@ public class DesignerView {
 
         this.rowsTable.addColumn(tableColumn);
         this.rowsTableModel.addColumn(columnName);
-        this.rowsTableAddedColumns.put(columnName, tableColumn);
     }
 
     /**
@@ -1394,7 +1409,7 @@ public class DesignerView {
                                 }
                                 Configurator.save();
 
-                                populateColumnsTable(row);
+                                populateColumnsTable(true, row);
                             }
                             catch (Exception ex) {
                                 setError("Failed to update rows in HBase: ", ex);
@@ -1704,6 +1719,22 @@ public class DesignerView {
     private static boolean hasTableInClipboard() {
         ClipboardData<DataTable> data = InMemoryClipboard.getData();
         return data != null && data.getData().getRowsCount() == 0;
+    }
+
+    /**
+     * Gets a column from the specified table.
+     *
+     * @param columnName The name of the column to look.
+     * @param table      The table that should contain column.
+     * @return A reference to {@link TableColumn} if found or {@code null} otherwise.
+     */
+    private static TableColumn getColumn(String columnName, JTable table) {
+        for (int i = 0 ; i < table.getColumnCount() ; i++) {
+            if (columnName.equals(table.getColumnName(i))) {
+                return table.getColumnModel().getColumn(i);
+            }
+        }
+        return null;
     }
 
     /**

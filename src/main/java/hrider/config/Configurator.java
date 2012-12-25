@@ -175,6 +175,16 @@ public class Configurator {
         return properties.getProperty(key);
     }
 
+    /**
+     * Gets a specific configuration property according to the provided key.
+     *
+     * @param key The key to look for.
+     * @param defaultValue The default value to be returned in case there is no such property.
+     * @return A property value if found or null otherwise.
+     */
+    public static String get(String key, String defaultValue) {
+        return properties.getProperty(key, defaultValue);
+    }
 
     /**
      * Sets a property associated with the provided key.
