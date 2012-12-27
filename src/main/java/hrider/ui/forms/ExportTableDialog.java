@@ -3,7 +3,7 @@ package hrider.ui.forms;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import hrider.config.Configurator;
+import hrider.config.GlobalConfig;
 import hrider.data.DataRow;
 import hrider.data.ObjectType;
 import hrider.data.TypedColumn;
@@ -243,7 +243,7 @@ public class ExportTableDialog extends JDialog {
 
                         scanner.resetCurrent(null);
 
-                        Collection<DataRow> rows = scanner.next(Configurator.getBatchSizeForRead());
+                        Collection<DataRow> rows = scanner.next(GlobalConfig.instance().getBatchSizeForRead());
                         Collection<String> columnNames = scanner.getColumns(0);
 
                         int counter = 1;
@@ -256,7 +256,7 @@ public class ExportTableDialog extends JDialog {
                                 ExportTableDialog.this.writtenRowsCount.paintImmediately(ExportTableDialog.this.writtenRowsCount.getBounds());
                             }
 
-                            rows = scanner.next(Configurator.getBatchSizeForRead());
+                            rows = scanner.next(GlobalConfig.instance().getBatchSizeForRead());
                         }
 
                         ExportTableDialog.this.filePath = file.getAbsolutePath();

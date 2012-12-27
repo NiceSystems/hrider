@@ -1,7 +1,7 @@
 package hrider.ui.design;
 
 import com.michaelbaranov.microba.calendar.DatePicker;
-import hrider.config.Configurator;
+import hrider.config.GlobalConfig;
 import hrider.data.DataCell;
 import hrider.data.ObjectType;
 import hrider.ui.ChangeTracker;
@@ -68,7 +68,7 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         this.textEditor.setEditable(canEdit);
         this.dateEditor = new DatePicker(null);
         this.dateEditor.setBorder(BorderFactory.createEmptyBorder());
-        this.dateEditor.setDateFormat(new SimpleDateFormat(Configurator.getDateFormat(), Locale.ENGLISH));
+        this.dateEditor.setDateFormat(new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH));
         this.dateEditor.setFieldEditable(canEdit);
         this.xmlEditor = new XmlEditor();
         this.xmlEditor.setEditable(canEdit);
@@ -137,7 +137,7 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
             case Date:
                 Date date = this.dateEditor.getDate();
                 if (date != null) {
-                    DateFormat df = new SimpleDateFormat(Configurator.getDateFormat(), Locale.ENGLISH);
+                    DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                     text = df.format(date);
                 }
                 break;

@@ -1,6 +1,6 @@
 package hrider.data;
 
-import hrider.config.Configurator;
+import hrider.config.GlobalConfig;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.text.DateFormat;
@@ -89,7 +89,7 @@ public enum ObjectType {
             case Short:
                 return java.lang.Short.parseShort(value);
             case DateTime:
-                DateFormat df = new SimpleDateFormat(Configurator.getDateFormat(), Locale.ENGLISH);
+                DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                 try {
                     return df.parse(value);
                 }
@@ -167,7 +167,7 @@ public enum ObjectType {
             case Short:
                 return Bytes.toShort(value);
             case DateTime:
-                DateFormat df = new SimpleDateFormat(Configurator.getDateFormat(), Locale.ENGLISH);
+                DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                 try {
                     return df.parse(Bytes.toString(value));
                 }
@@ -210,7 +210,7 @@ public enum ObjectType {
                 return Bytes.toBytes((java.lang.Short)value);
             case DateTime:
                 if (value instanceof Date) {
-                    DateFormat df = new SimpleDateFormat(Configurator.getDateFormat(), Locale.ENGLISH);
+                    DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                     return Bytes.toBytes(df.format((Date)value));
                 }
                 else {

@@ -3,7 +3,7 @@ package hrider.ui.forms;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import hrider.config.Configurator;
+import hrider.config.GlobalConfig;
 import hrider.data.*;
 import hrider.hbase.HbaseHelper;
 import hrider.ui.design.JCellEditor;
@@ -15,7 +15,10 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -42,18 +45,18 @@ public class ImportTableDialog extends JDialog {
 
     //region Variables
     private JPanel            contentPane;
-    private JButton btImport;
-    private JButton btClose;
+    private JButton           btImport;
+    private JButton           btClose;
     private JTextField        tfFilePath;
     private JButton           btBrowse;
     private JComboBox         cmbDelimiter;
     private JTable            rowsTable;
     private JTextField        tfTableName;
-    private JButton btAddColumn;
-    private JButton btRemoveColumn;
-    private JButton btCancel;
-    private JLabel  writtenRowsCount;
-    private JLabel  readRowsCount;
+    private JButton           btAddColumn;
+    private JButton           btRemoveColumn;
+    private JButton           btCancel;
+    private JLabel            writtenRowsCount;
+    private JLabel            readRowsCount;
     private DefaultTableModel tableModel;
     private boolean           canceled;
     //endregion
@@ -266,7 +269,7 @@ public class ImportTableDialog extends JDialog {
 
                             long readCount = 1;
                             long writtenCount = 1;
-                            int batch = Configurator.getBatchSizeForWrite();
+                            int batch = GlobalConfig.instance().getBatchSizeForWrite();
 
                             Collection<DataRow> rows = new ArrayList<DataRow>();
 

@@ -1,6 +1,6 @@
 package hrider.hbase;
 
-import hrider.config.Configurator;
+import hrider.config.GlobalConfig;
 import hrider.data.DataCell;
 import hrider.data.DataRow;
 import org.apache.hadoop.conf.Configuration;
@@ -231,7 +231,7 @@ public class HbaseHelper {
         }
 
         Scan scan = new Scan();
-        scan.setCaching(Configurator.getBatchSizeForRead());
+        scan.setCaching(GlobalConfig.instance().getBatchSizeForRead());
 
         ResultScanner scanner = source.getScanner(scan);
 

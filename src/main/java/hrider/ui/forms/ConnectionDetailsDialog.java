@@ -2,7 +2,7 @@ package hrider.ui.forms;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import hrider.config.Configurator;
+import hrider.config.GlobalConfig;
 import hrider.data.ServerDetails;
 import hrider.hbase.HbaseHelper;
 import org.apache.hadoop.conf.Configuration;
@@ -53,11 +53,11 @@ public class ConnectionDetailsDialog extends JDialog {
         setTitle("Connect to an Hbase server...");
         getRootPane().setDefaultButton(this.buttonConnect);
 
-        this.hbasePort.setValue(Integer.parseInt(Configurator.get("connection.hbase.port", "9000")));
-        this.zooKeeperPort.setValue(Integer.parseInt(Configurator.get("connection.zookeeper.port", "2181")));
+        this.hbasePort.setValue(GlobalConfig.instance().get(Integer.class, "connection.hbase.port", "9000"));
+        this.zooKeeperPort.setValue(GlobalConfig.instance().get(Integer.class, "connection.zookeeper.port", "2181"));
 
-        this.hbaseServer.setText(Configurator.get("connection.hbase.host"));
-        this.zooKeeperServer.setText(Configurator.get("connection.zookeeper.host"));
+        this.hbaseServer.setText(GlobalConfig.instance().get(String.class, "connection.hbase.host"));
+        this.zooKeeperServer.setText(GlobalConfig.instance().get(String.class, "connection.zookeeper.host"));
 
         this.hbaseServer.select(0, this.hbaseServer.getText().length());
 
@@ -160,11 +160,11 @@ public class ConnectionDetailsDialog extends JDialog {
             this.hbaseHelper = new HbaseHelper(config);
             this.hbaseHelper.getTables();
 
-            Configurator.set("connection.zookeeper.host", this.zooKeeperServer.getText());
-            Configurator.set("connection.zookeeper.port", this.zooKeeperPort.getValue().toString());
-            Configurator.set("connection.hbase.host", this.hbaseServer.getText());
-            Configurator.set("connection.hbase.port", this.hbasePort.getValue().toString());
-            Configurator.save();
+            GlobalConfig.instance().set("connection.zookeeper.host", this.zooKeeperServer.getText());
+            GlobalConfig.instance().set("connection.zookeeper.port", this.zooKeeperPort.getValue().toString());
+            GlobalConfig.instance().set("connection.hbase.host", this.hbaseServer.getText());
+            GlobalConfig.instance().set("connection.hbase.port", this.hbasePort.getValue().toString());
+            GlobalConfig.instance().save();
 
             this.okPressed = true;
             dispose();

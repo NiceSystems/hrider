@@ -2,7 +2,8 @@ package hrider.ui.views;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import hrider.config.Configurator;
+import hrider.config.ClusterConfig;
+import hrider.config.GlobalConfig;
 import hrider.data.*;
 import hrider.export.FileExporter;
 import hrider.hbase.HbaseActionListener;
@@ -102,6 +103,7 @@ public class DesignerView {
     private HbaseHelper              hbaseHelper;
     private ChangeTracker            changeTracker;
     private Map<String, TableColumn> rowsTableRemovedColumns;
+    private ClusterConfig            clusterConfig;
     //endregion
 
     //region Constructor
@@ -111,6 +113,7 @@ public class DesignerView {
         this.hbaseHelper = hbaseHelper;
         this.changeTracker = new ChangeTracker();
         this.rowsTableRemovedColumns = new HashMap<String, TableColumn>();
+        this.clusterConfig = new ClusterConfig(hbaseHelper.getServerName() + ".properties");
 
         InMemoryClipboard.addListener(
             new ClipboardListener() {
@@ -257,12 +260,12 @@ public class DesignerView {
 
                     DesignerView.this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                     try {
-                        File tempFile = File.createTempFile("h-rider", Configurator.getExternalViewerFileExtension());
+                        File tempFile = File.createTempFile("h-rider", GlobalConfig.instance().getExternalViewerFileExtension());
                         FileOutputStream stream = null;
 
                         try {
                             stream = new FileOutputStream(tempFile);
-                            FileExporter exporter = new FileExporter(stream, Configurator.getExternalViewerDelimeter());
+                            FileExporter exporter = new FileExporter(stream, GlobalConfig.instance().getExternalViewerDelimeter());
 
                             List<String> columns = getShownColumnNames();
 
@@ -318,11 +321,11 @@ public class DesignerView {
 
                                 // Update the column types according to the added row.
                                 for (DataCell cell : row.getCells()) {
-                                    Configurator.set(
+                                    DesignerView.this.clusterConfig.set(
                                         String.format(
                                             "table.%s.%s", getSelectedTableName(), cell.getColumnName()), cell.getTypedValue().getType().toString());
                                 }
-                                Configurator.save();
+                                DesignerView.this.clusterConfig.save();
 
                                 populateColumnsTable(true, row);
                                 populateRowsTable(Direction.Current);
@@ -856,8 +859,8 @@ public class DesignerView {
                         String name = (String)model.getValueAt(e.getFirstRow(), 1);
                         boolean isShown = (Boolean)model.getValueAt(e.getFirstRow(), 0);
 
-                        Configurator.set(String.format("table.%s.%s.isShown", getSelectedTableName(), name), Boolean.toString(isShown));
-                        Configurator.save();
+                        DesignerView.this.clusterConfig.set(String.format("table.%s.%s.isShown", getSelectedTableName(), name), Boolean.toString(isShown));
+                        DesignerView.this.clusterConfig.save();
 
                         setRowsTableColumnVisible(name, isShown);
                     }
@@ -865,8 +868,8 @@ public class DesignerView {
                         String name = (String)model.getValueAt(e.getFirstRow(), 1);
                         ObjectType type = (ObjectType)model.getValueAt(e.getFirstRow(), column);
 
-                        Configurator.set(String.format("table.%s.%s", getSelectedTableName(), name), type.toString());
-                        Configurator.save();
+                        DesignerView.this.clusterConfig.set(String.format("table.%s.%s", getSelectedTableName(), name), type.toString());
+                        DesignerView.this.clusterConfig.save();
 
                         if (DesignerView.this.scanner != null) {
                             try {
@@ -985,7 +988,8 @@ public class DesignerView {
                 public void columnMarginChanged(ChangeEvent e) {
                     TableColumn column = DesignerView.this.rowsTable.getTableHeader().getResizingColumn();
                     if (column != null) {
-                        Configurator.set(String.format("table.%s.%s.size", getSelectedTableName(), column.getHeaderValue()), String.valueOf(column.getWidth()));
+                        DesignerView.this.clusterConfig
+                            .set(String.format("table.%s.%s.size", getSelectedTableName(), column.getHeaderValue()), String.valueOf(column.getWidth()));
                     }
                 }
 
@@ -1308,9 +1312,9 @@ public class DesignerView {
         tableColumn.setCellEditor(new JCellEditor(this.changeTracker, !"key".equals(columnName)));
 
         try {
-            String width = Configurator.get(String.format("table.%s.%s.size", tableName, columnName));
+            Integer width = this.clusterConfig.get(Integer.class, String.format("table.%s.%s.size", tableName, columnName));
             if (width != null) {
-                tableColumn.setPreferredWidth(Integer.parseInt(width));
+                tableColumn.setPreferredWidth(width);
             }
         }
         catch (NumberFormatException ignore) {
@@ -1403,11 +1407,11 @@ public class DesignerView {
 
                                 // Update the column types according to the added row.
                                 for (DataCell cell : row.getCells()) {
-                                    Configurator.set(
+                                    this.clusterConfig.set(
                                         String.format(
                                             "table.%s.%s", getSelectedTableName(), cell.getColumnName()), cell.getTypedValue().getType().toString());
                                 }
-                                Configurator.save();
+                                this.clusterConfig.save();
 
                                 populateColumnsTable(true, row);
                             }
@@ -1509,8 +1513,8 @@ public class DesignerView {
                         String sourcePrefix = String.format("table.%s.", sourceTable);
                         String targetPrefix = String.format("table.%s.", targetTable);
 
-                        for (Map.Entry<String, String> keyValue : Configurator.getAll(sourcePrefix).entrySet()) {
-                            Configurator.set(keyValue.getKey().replace(sourcePrefix, targetPrefix), keyValue.getValue());
+                        for (Map.Entry<String, String> keyValue : this.clusterConfig.getAll(sourcePrefix).entrySet()) {
+                            this.clusterConfig.set(keyValue.getKey().replace(sourcePrefix, targetPrefix), keyValue.getValue());
                         }
                         this.tablesListModel.addElement(targetTable);
                     }
@@ -1681,10 +1685,10 @@ public class DesignerView {
      * @param columnName The name of the column.
      * @return The column type.
      */
-    private static ObjectType getColumnType(String tableName, String columnName) {
-        String type = Configurator.get(String.format("table.%s.%s", tableName, columnName));
+    private ObjectType getColumnType(String tableName, String columnName) {
+        ObjectType type = this.clusterConfig.get(ObjectType.class, String.format("table.%s.%s", tableName, columnName));
         if (type != null) {
-            return ObjectType.valueOf(type);
+            return type;
         }
         return ObjectType.fromColumn(columnName);
     }
@@ -1696,9 +1700,9 @@ public class DesignerView {
      * @param columnName The name of the column.
      * @return True if the specified column is checked or False otherwise.
      */
-    private static boolean isShown(String tableName, String columnName) {
-        String value = Configurator.get(String.format("table.%s.%s.isShown", tableName, columnName));
-        return value == null || Boolean.parseBoolean(value);
+    private boolean isShown(String tableName, String columnName) {
+        Boolean isShown = this.clusterConfig.get(Boolean.class, String.format("table.%s.%s.isShown", tableName, columnName));
+        return isShown == null || isShown;
     }
 
     /**

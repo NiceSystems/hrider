@@ -1,6 +1,6 @@
 package hrider.data;
 
-import hrider.config.Configurator;
+import hrider.config.GlobalConfig;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -131,7 +131,7 @@ public class TypedObject {
     public String toString() {
         if (this.value != null) {
             if (this.type == ObjectType.DateTime) {
-                DateFormat df = new SimpleDateFormat(Configurator.getDateFormat(), Locale.ENGLISH);
+                DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                 return df.format((Date)this.value);
             }
             return this.value.toString();
