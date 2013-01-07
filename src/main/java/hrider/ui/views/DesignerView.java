@@ -6,8 +6,8 @@ import hrider.config.ClusterConfig;
 import hrider.config.GlobalConfig;
 import hrider.data.*;
 import hrider.export.FileExporter;
+import hrider.hbase.Connection;
 import hrider.hbase.HbaseActionListener;
-import hrider.hbase.HbaseHelper;
 import hrider.hbase.Query;
 import hrider.hbase.QueryScanner;
 import hrider.system.ClipboardData;
@@ -100,20 +100,22 @@ public class DesignerView {
     private Query                    lastQuery;
     private QueryScanner             scanner;
     private JPanel                   owner;
-    private HbaseHelper              hbaseHelper;
+    private Connection               connection;
     private ChangeTracker            changeTracker;
     private Map<String, TableColumn> rowsTableRemovedColumns;
     private ClusterConfig            clusterConfig;
     //endregion
 
     //region Constructor
-    public DesignerView(JPanel owner, HbaseHelper hbaseHelper) {
+    public DesignerView(JPanel owner, Connection connection) {
 
         this.owner = owner;
-        this.hbaseHelper = hbaseHelper;
+        this.connection = connection;
         this.changeTracker = new ChangeTracker();
         this.rowsTableRemovedColumns = new HashMap<String, TableColumn>();
-        this.clusterConfig = new ClusterConfig(hbaseHelper.getServerName() + ".properties");
+        this.clusterConfig = new ClusterConfig(this.connection.getServerName());
+        this.clusterConfig.setConnection(connection.getConnectionDetails());
+        this.clusterConfig.save();
 
         InMemoryClipboard.addListener(
             new ClipboardListener() {
@@ -173,7 +175,7 @@ public class DesignerView {
                 }
             });
 
-        this.hbaseHelper.addListener(
+        this.connection.addListener(
             new HbaseActionListener() {
                 @Override
                 public void copyOperation(String source, String target, String table, Result result) {
@@ -304,7 +306,7 @@ public class DesignerView {
                     stopCellEditing(DesignerView.this.rowsTable);
 
                     try {
-                        Collection<String> columnFamilies = DesignerView.this.hbaseHelper.getColumnFamilies(getSelectedTableName());
+                        Collection<String> columnFamilies = DesignerView.this.connection.getColumnFamilies(getSelectedTableName());
 
                         AddRowDialog dialog = new AddRowDialog(getCheckedColumns(), columnFamilies);
                         dialog.showDialog(DesignerView.this.topPanel);
@@ -313,7 +315,7 @@ public class DesignerView {
                         if (row != null) {
                             DesignerView.this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                             try {
-                                DesignerView.this.hbaseHelper.setRow(getSelectedTableName(), row);
+                                DesignerView.this.connection.setRow(getSelectedTableName(), row);
 
                                 if (DesignerView.this.scanner != null) {
                                     DesignerView.this.scanner.resetCurrent(row.getKey());
@@ -321,9 +323,8 @@ public class DesignerView {
 
                                 // Update the column types according to the added row.
                                 for (DataCell cell : row.getCells()) {
-                                    DesignerView.this.clusterConfig.set(
-                                        String.format(
-                                            "table.%s.%s", getSelectedTableName(), cell.getColumnName()), cell.getTypedValue().getType().toString());
+                                    DesignerView.this.clusterConfig.setTableConfig(
+                                        getSelectedTableName(), cell.getColumnName(), cell.getTypedValue().getType().toString());
                                 }
                                 DesignerView.this.clusterConfig.save();
 
@@ -362,7 +363,7 @@ public class DesignerView {
                             for (int selectedRow : selectedRows) {
                                 try {
                                     DataCell key = (DataCell)DesignerView.this.rowsTable.getValueAt(selectedRow, 0);
-                                    DesignerView.this.hbaseHelper.deleteRow(getSelectedTableName(), key.getRow());
+                                    DesignerView.this.connection.deleteRow(getSelectedTableName(), key.getRow());
                                 }
                                 catch (Exception ex) {
                                     setError("Failed to delete row in HBase: ", ex);
@@ -426,7 +427,7 @@ public class DesignerView {
                         try {
                             for (DataRow row : DesignerView.this.changeTracker.getChanges()) {
                                 try {
-                                    DesignerView.this.hbaseHelper.setRow(getSelectedTableName(), row);
+                                    DesignerView.this.connection.setRow(getSelectedTableName(), row);
                                 }
                                 catch (Exception ex) {
                                     setError("Failed to update rows in HBase: ", ex);
@@ -456,7 +457,7 @@ public class DesignerView {
                     if (tableName != null) {
                         DesignerView.this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                         try {
-                            DesignerView.this.hbaseHelper.createTable(tableName, dialog.getColumnFamilies());
+                            DesignerView.this.connection.createTable(tableName, dialog.getColumnFamilies());
                             DesignerView.this.tablesListModel.addElement(tableName);
                             DesignerView.this.tablesList.setSelectedValue(tableName, true);
                         }
@@ -484,7 +485,7 @@ public class DesignerView {
                         try {
                             for (String tableName : getSelectedTables()) {
                                 try {
-                                    DesignerView.this.hbaseHelper.deleteTable(tableName);
+                                    DesignerView.this.connection.deleteTable(tableName);
                                     DesignerView.this.tablesListModel.removeElement(tableName);
                                 }
                                 catch (Exception ex) {
@@ -515,7 +516,7 @@ public class DesignerView {
                             if (!selectedTables.isEmpty()) {
                                 for (String tableName : selectedTables) {
                                     try {
-                                        DesignerView.this.hbaseHelper.truncateTable(tableName);
+                                        DesignerView.this.connection.truncateTable(tableName);
                                     }
                                     catch (Exception ex) {
                                         setError(String.format("Failed to truncate table %s: ", tableName), ex);
@@ -630,7 +631,7 @@ public class DesignerView {
                     if (tableName != null) {
                         DesignerView.this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                         try {
-                            QueryScanner scanner = DesignerView.this.hbaseHelper.getScanner(tableName, null);
+                            QueryScanner scanner = DesignerView.this.connection.getScanner(tableName, null);
                             scanner.setColumnTypes(getColumnTypes());
 
                             ExportTableDialog dialog = new ExportTableDialog(scanner);
@@ -658,13 +659,13 @@ public class DesignerView {
 
                         Collection<String> columnFamilies;
                         if (tableName != null) {
-                            columnFamilies = DesignerView.this.hbaseHelper.getColumnFamilies(tableName);
+                            columnFamilies = DesignerView.this.connection.getColumnFamilies(tableName);
                         }
                         else {
                             columnFamilies = new ArrayList<String>();
                         }
 
-                        ImportTableDialog dialog = new ImportTableDialog(DesignerView.this.hbaseHelper, tableName, getCheckedColumns(), columnFamilies);
+                        ImportTableDialog dialog = new ImportTableDialog(DesignerView.this.connection, tableName, getCheckedColumns(), columnFamilies);
                         dialog.showDialog(DesignerView.this.topPanel);
                     }
                     catch (Exception ex) {
@@ -690,7 +691,7 @@ public class DesignerView {
     /**
      * Gets the reference to the view.
      *
-     * @return A {@link javax.swing.JPanel} that contains the controls.
+     * @return A {@link JPanel} that contains the controls.
      */
     public JPanel getView() {
         return this.topPanel;
@@ -699,10 +700,19 @@ public class DesignerView {
     /**
      * Gets a reference to the class used to access the hbase.
      *
-     * @return A reference to the {@link hrider.hbase.HbaseHelper} class.
+     * @return A reference to the {@link hrider.hbase.Connection} class.
      */
-    public HbaseHelper getHbaseHelper() {
-        return this.hbaseHelper;
+    public Connection getConnection() {
+        return this.connection;
+    }
+
+    /**
+     * Gets a reference to cluster configuration file.
+     *
+     * @return A reference to the {@link ClusterConfig} class.
+     */
+    public ClusterConfig getClusterConfig() {
+        return this.clusterConfig;
     }
     //endregion
 
@@ -730,7 +740,7 @@ public class DesignerView {
             this.tablesListModel.clear();
 
             String filter = this.tablesFilter.getText().trim().toLowerCase();
-            for (String table : this.hbaseHelper.getTables()) {
+            for (String table : this.connection.getTables()) {
                 if (filter.isEmpty() || table.toLowerCase().contains(filter)) {
                     this.tablesListModel.addElement(table);
                 }
@@ -859,7 +869,7 @@ public class DesignerView {
                         String name = (String)model.getValueAt(e.getFirstRow(), 1);
                         boolean isShown = (Boolean)model.getValueAt(e.getFirstRow(), 0);
 
-                        DesignerView.this.clusterConfig.set(String.format("table.%s.%s.isShown", getSelectedTableName(), name), Boolean.toString(isShown));
+                        DesignerView.this.clusterConfig.setTableConfig(getSelectedTableName(), name, "isShown", Boolean.toString(isShown));
                         DesignerView.this.clusterConfig.save();
 
                         setRowsTableColumnVisible(name, isShown);
@@ -868,7 +878,7 @@ public class DesignerView {
                         String name = (String)model.getValueAt(e.getFirstRow(), 1);
                         ObjectType type = (ObjectType)model.getValueAt(e.getFirstRow(), column);
 
-                        DesignerView.this.clusterConfig.set(String.format("table.%s.%s", getSelectedTableName(), name), type.toString());
+                        DesignerView.this.clusterConfig.setTableConfig(getSelectedTableName(), name, type.toString());
                         DesignerView.this.clusterConfig.save();
 
                         if (DesignerView.this.scanner != null) {
@@ -988,8 +998,8 @@ public class DesignerView {
                 public void columnMarginChanged(ChangeEvent e) {
                     TableColumn column = DesignerView.this.rowsTable.getTableHeader().getResizingColumn();
                     if (column != null) {
-                        DesignerView.this.clusterConfig
-                            .set(String.format("table.%s.%s.size", getSelectedTableName(), column.getHeaderValue()), String.valueOf(column.getWidth()));
+                        DesignerView.this.clusterConfig.setTableConfig(
+                            getSelectedTableName(), column.getHeaderValue().toString(), "size", String.valueOf(column.getWidth()));
                     }
                 }
 
@@ -1071,7 +1081,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link hrider.ui.views.DesignerView#rowsNumberSpinner} control.
+     * in the {@link DesignerView#rowsNumberSpinner} control.
      *
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
      *                  {@link Direction#Forward} or {@link Direction#Backward}.
@@ -1082,7 +1092,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link hrider.ui.views.DesignerView#rowsNumberSpinner} control.
+     * in the {@link DesignerView#rowsNumberSpinner} control.
      *
      * @param offset    The first row to start loading from.
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
@@ -1198,7 +1208,7 @@ public class DesignerView {
 
         try {
             if (this.scanner == null) {
-                this.scanner = DesignerView.this.hbaseHelper.getScanner(tableName, null);
+                this.scanner = DesignerView.this.connection.getScanner(tableName, null);
             }
 
             String filter = this.columnsFilter.getText().toLowerCase().trim();
@@ -1312,7 +1322,7 @@ public class DesignerView {
         tableColumn.setCellEditor(new JCellEditor(this.changeTracker, !"key".equals(columnName)));
 
         try {
-            Integer width = this.clusterConfig.get(Integer.class, String.format("table.%s.%s.size", tableName, columnName));
+            Integer width = this.clusterConfig.getTableConfig(Integer.class, tableName, columnName, "size");
             if (width != null) {
                 tableColumn.setPreferredWidth(width);
             }
@@ -1377,7 +1387,7 @@ public class DesignerView {
     private void copyTableToClipboard() {
         String tableName = getSelectedTableName();
         if (tableName != null) {
-            InMemoryClipboard.setData(new ClipboardData<DataTable>(new DataTable(tableName, this.hbaseHelper)));
+            InMemoryClipboard.setData(new ClipboardData<DataTable>(new DataTable(tableName, this.connection)));
         }
         else {
             InMemoryClipboard.setData(null);
@@ -1403,13 +1413,12 @@ public class DesignerView {
                     if (updatedRows != null) {
                         for (DataRow row : updatedRows) {
                             try {
-                                DesignerView.this.hbaseHelper.setRow(getSelectedTableName(), row);
+                                DesignerView.this.connection.setRow(getSelectedTableName(), row);
 
                                 // Update the column types according to the added row.
                                 for (DataCell cell : row.getCells()) {
-                                    this.clusterConfig.set(
-                                        String.format(
-                                            "table.%s.%s", getSelectedTableName(), cell.getColumnName()), cell.getTypedValue().getType().toString());
+                                    this.clusterConfig.setTableConfig(
+                                        getSelectedTableName(), cell.getColumnName(), cell.getTypedValue().getType().toString());
                                 }
                                 this.clusterConfig.save();
 
@@ -1480,7 +1489,7 @@ public class DesignerView {
 
                 boolean proceed = true;
 
-                while (this.hbaseHelper.tableExists(targetTable)) {
+                while (this.connection.tableExists(targetTable)) {
                     String tableName = (String)JOptionPane.showInputDialog(
                         DesignerView.this.topPanel,
                         String.format("The specified table '%s' already exists.\nProvide a new name for the table or the data will be merged.", targetTable),
@@ -1502,12 +1511,12 @@ public class DesignerView {
                 }
 
                 if (proceed) {
-                    if (!this.hbaseHelper.tableExists(targetTable)) {
-                        this.hbaseHelper.createTable(targetTable);
-                        setInfo(String.format("The '%s' table has been created on '%s'.", targetTable, this.hbaseHelper.getServerName()));
+                    if (!this.connection.tableExists(targetTable)) {
+                        this.connection.createTable(targetTable);
+                        setInfo(String.format("The '%s' table has been created on '%s'.", targetTable, this.connection.getServerName()));
                     }
 
-                    this.hbaseHelper.copyTable(targetTable, sourceTable, table.getHbaseHelper());
+                    this.connection.copyTable(targetTable, sourceTable, table.getConnection());
 
                     if (!this.tablesListModel.contains(targetTable)) {
                         String sourcePrefix = String.format("table.%s.", sourceTable);
@@ -1686,7 +1695,7 @@ public class DesignerView {
      * @return The column type.
      */
     private ObjectType getColumnType(String tableName, String columnName) {
-        ObjectType type = this.clusterConfig.get(ObjectType.class, String.format("table.%s.%s", tableName, columnName));
+        ObjectType type = this.clusterConfig.getTableConfig(ObjectType.class, tableName, columnName);
         if (type != null) {
             return type;
         }
@@ -1701,7 +1710,7 @@ public class DesignerView {
      * @return True if the specified column is checked or False otherwise.
      */
     private boolean isShown(String tableName, String columnName) {
-        Boolean isShown = this.clusterConfig.get(Boolean.class, String.format("table.%s.%s.isShown", tableName, columnName));
+        Boolean isShown = this.clusterConfig.getTableConfig(Boolean.class, tableName, columnName, "isShown");
         return isShown == null || isShown;
     }
 

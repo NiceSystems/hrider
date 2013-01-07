@@ -2,8 +2,13 @@ package hrider.ui.forms;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import hrider.config.ClusterConfig;
+import hrider.config.ConnectionDetails;
+import hrider.config.PropertiesConfig;
+import hrider.config.ViewConfig;
 import hrider.data.DataTable;
-import hrider.hbase.HbaseHelper;
+import hrider.hbase.Connection;
+import hrider.hbase.ConnectionManager;
 import hrider.system.ClipboardData;
 import hrider.system.InMemoryClipboard;
 import hrider.ui.MessageHandler;
@@ -18,6 +23,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.Attributes;
@@ -80,18 +87,27 @@ public class Window {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    loadTables();
+                    ConnectionDetails connectionDetails = showDialog();
+                    if (connectionDetails != null) {
+                        try {
+                            Connection connection = ConnectionManager.create(connectionDetails);
+                            loadView(connection);
+                        }
+                        catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
                 }
             });
 
-        loadTables();
+        loadViews();
     }
     //endregion
 
     //region Public Methods
     public static void main(String[] args) {
-        //Schedule a job for the event-dispatching thread:
-        //creating and showing this application's GUI.
+        // Schedule a job for the event-dispatching thread:
+        // creating and showing this application's GUI.
         SwingUtilities.invokeLater(
             new Runnable() {
                 @Override
@@ -125,52 +141,121 @@ public class Window {
         }
     }
 
-    private void loadTables() {
+    /**
+     * Load all cluster views.
+     */
+    private void loadViews() {
+        Collection<ConnectionDetails> connections = new ArrayList<ConnectionDetails>();
 
-        ConnectionDetailsDialog dialog = new ConnectionDetailsDialog();
-        dialog.showDialog(this.topPanel);
+        // See if there are clusters previously connected.
+        Collection<String> clusters = ViewConfig.instance().getClusters();
+        for (String clusterName : clusters) {
+            if (PropertiesConfig.fileExists(clusterName)) {
+                ClusterConfig clusterConfig = new ClusterConfig(clusterName);
 
-        HbaseHelper hbaseHelper = dialog.getHBaseHelper();
-        if (hbaseHelper != null) {
-            DesignerView view = new DesignerView(this.topPanel, hbaseHelper);
+                ConnectionDetails connectionDetails = clusterConfig.getConnection();
+                if (connectionDetails != null) {
+                    connections.add(connectionDetails);
+                }
+                else {
+                    ViewConfig.instance().removeCluster(clusterName);
+                    ViewConfig.instance().save();
 
-            int index = this.tabbedPane.indexOfTab(dialog.getHBaseServer().getHost());
-            if (index == -1) {
-                index = this.tabbedPane.getTabCount();
+                    PropertiesConfig.fileRemove(clusterName);
+                }
+            }
+            else {
+                ViewConfig.instance().removeCluster(clusterName);
+                ViewConfig.instance().save();
+            }
+        }
 
-                JCloseButton closeButton = new JCloseButton(dialog.getHBaseServer().getHost(), this.tabbedPane);
-                this.viewMap.put(closeButton, view);
+        if (connections.isEmpty()) {
+            ConnectionDetails connectionDetails = showDialog();
+            if (connectionDetails != null) {
+                connections.add(connectionDetails);
+            }
+            else {
+                this.canceled = true;
+            }
+        }
 
-                closeButton.addTabClosedListener(
-                    new TabClosedListener() {
-                        @Override
-                        public void onTabClosed(Component component) {
-                            ClipboardData<DataTable> data = InMemoryClipboard.getData();
-                            if (data != null) {
-                                HbaseHelper helper = data.getData().getHbaseHelper();
-                                if (helper != null) {
-                                    DesignerView designerView = Window.this.viewMap.get(component);
-                                    if (helper.equals(designerView.getHbaseHelper())) {
-                                        InMemoryClipboard.setData(null);
-                                    }
+        for (ConnectionDetails connectionDetails : connections) {
+            try {
+                Connection connection = ConnectionManager.create(connectionDetails);
+                loadView(connection);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Loads a single cluster view.
+     *
+     * @param connection A connection to be used to connect to the cluster.
+     */
+    private void loadView(Connection connection) {
+        DesignerView view = new DesignerView(this.topPanel, connection);
+
+        int index = this.tabbedPane.indexOfTab(connection.getServerName());
+        if (index == -1) {
+            index = this.tabbedPane.getTabCount();
+
+            JCloseButton closeButton = new JCloseButton(connection.getServerName(), this.tabbedPane);
+            this.viewMap.put(closeButton, view);
+
+            closeButton.addTabClosedListener(
+                new TabClosedListener() {
+                    @Override
+                    public void onTabClosed(Component component) {
+                        DesignerView designerView = Window.this.viewMap.get(component);
+
+                        ClipboardData<DataTable> data = InMemoryClipboard.getData();
+                        if (data != null) {
+                            Connection helper = data.getData().getConnection();
+                            if (helper != null) {
+                                if (helper.equals(designerView.getConnection())) {
+                                    InMemoryClipboard.setData(null);
                                 }
                             }
                         }
-                    });
 
-                this.tabbedPane.addTab(dialog.getHBaseServer().getHost(), view.getView());
-                this.tabbedPane.setSelectedIndex(index);
-                this.tabbedPane.setTabComponentAt(index, closeButton);
+                        ViewConfig.instance().removeCluster(designerView.getConnection().getServerName());
+                        ViewConfig.instance().save();
 
-                view.populate();
-            }
-            else {
-                this.tabbedPane.setSelectedIndex(index);
-            }
+                        PropertiesConfig.fileRemove(designerView.getConnection().getServerName());
+
+                        ConnectionManager.release(designerView.getConnection().getConnectionDetails());
+                        Window.this.viewMap.remove(component);
+                    }
+                });
+
+            this.tabbedPane.addTab(connection.getServerName(), view.getView());
+            this.tabbedPane.setSelectedIndex(index);
+            this.tabbedPane.setTabComponentAt(index, closeButton);
+
+            ViewConfig.instance().addCluster(connection.getServerName());
+            ViewConfig.instance().save();
+
+            view.populate();
         }
         else {
-            this.canceled = true;
+            this.tabbedPane.setSelectedIndex(index);
         }
+    }
+
+    /**
+     * Shows a connection dialog.
+     *
+     * @return A reference to {@link ConnectionDetails} class that contains all required information to connect to the cluster.
+     */
+    private ConnectionDetails showDialog() {
+        ConnectionDetailsDialog dialog = new ConnectionDetailsDialog();
+        dialog.showDialog(this.topPanel);
+
+        return dialog.getConnectionDetails();
     }
 
     private static String getVersion() {

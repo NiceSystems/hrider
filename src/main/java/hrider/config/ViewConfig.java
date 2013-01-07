@@ -1,5 +1,7 @@
 package hrider.config;
 
+import java.util.Collection;
+
 /**
  * Copyright (C) 2012 NICE Systems ltd.
  * <p/>
@@ -22,10 +24,59 @@ package hrider.config;
  */
 public class ViewConfig extends PropertiesConfig {
 
+    //region Variables
+    private static ViewConfig instance;
+    //endregion
+
+    //region Constructor
+    static {
+        instance = new ViewConfig();
+    }
+
     /**
      * Initializes a new instance of the {@link ViewConfig} class.
      */
     public ViewConfig() {
-        super("view.properties");
+        super("view");
     }
+    //endregion
+
+    //region Public Methods
+
+    /**
+     * Gets the singleton instance of the {@link ViewConfig} class.
+     *
+     * @return A reference to the {@link ViewConfig} singleton.
+     */
+    public static ViewConfig instance() {
+        return instance;
+    }
+
+    /**
+     * Gets a list of all clusters that are open or were previously open.
+     *
+     * @return A list of cluster names.
+     */
+    public Collection<String> getClusters() {
+        return getAll("cluster.").values();
+    }
+
+    /**
+     * Adds a cluster to the configuration.
+     *
+     * @param name The name of the cluster to add.
+     */
+    public void addCluster(String name) {
+        set(String.format("cluster.%s", name), name);
+    }
+
+    /**
+     * Removes a cluster from the configuration.
+     *
+     * @param name The name of the cluster to remove.
+     */
+    public void removeCluster(String name) {
+        remove(String.format("cluster.%s", name));
+    }
+    //endregion
 }

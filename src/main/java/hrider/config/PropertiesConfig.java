@@ -3,7 +3,6 @@ package hrider.config;
 import hrider.reflection.Clazz;
 
 import java.io.*;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -41,13 +40,13 @@ public abstract class PropertiesConfig {
     /**
      * Initializes a new instance of the {@link PropertiesConfig} class with a file name.
      *
-     * @param fileName The name of the configuration file.
+     * @param name The name of the configuration file.
      */
-    protected PropertiesConfig(String fileName) {
+    protected PropertiesConfig(String name) {
         this.properties = new Properties();
 
         try {
-            this.file = new File("config/" + fileName);
+            this.file = loadFile(name);
             if (!this.file.exists()) {
                 File folder = new File("config/");
                 if (!folder.exists()) {
@@ -66,6 +65,26 @@ public abstract class PropertiesConfig {
     //endregion
 
     //region Public Methods
+
+    /**
+     * Checks if the specified properties file exists.
+     *
+     * @param name The name of the file to check. The name should not contain extension.
+     * @return True if the file exists or False otherwise.
+     */
+    public static boolean fileExists(String name) {
+        return loadFile(name).exists();
+    }
+
+    /**
+     * Removes a file that corresponds to the provided name.
+     *
+     * @param name The name of the properties file without extension to remove.
+     * @return True if the file has been successfully removed or False otherwise.
+     */
+    public static boolean fileRemove(String name) {
+        return loadFile(name).delete();
+    }
 
     /**
      * Gets a value for the property specified by name.
@@ -98,11 +117,21 @@ public abstract class PropertiesConfig {
 
     /**
      * Sets the property value.
-     * @param name The name of the property.
+     *
+     * @param name  The name of the property.
      * @param value The value to set.
      */
     public void set(String name, String value) {
         this.properties.setProperty(name, value);
+    }
+
+    /**
+     * Removes a property from the file.
+     *
+     * @param name The name of the property to remove.
+     */
+    public void remove(String name) {
+        this.properties.remove(name);
     }
 
     /**
@@ -128,7 +157,7 @@ public abstract class PropertiesConfig {
         FileOutputStream stream = null;
         try {
             stream = new FileOutputStream(this.file);
-            this.properties.store(stream, new Date().toString());
+            this.properties.store(stream, null);
         }
         catch (Exception ignore) {
         }
@@ -145,6 +174,10 @@ public abstract class PropertiesConfig {
     //endregion
 
     //region Private Methods
+    private static File loadFile(String name) {
+        return new File("config/" + name + ".properties");
+    }
+
     private void loadProperties(File file) throws IOException {
         if (file != null) {
             InputStream stream = null;

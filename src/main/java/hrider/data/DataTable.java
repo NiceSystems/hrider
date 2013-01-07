@@ -1,6 +1,6 @@
 package hrider.data;
 
-import hrider.hbase.HbaseHelper;
+import hrider.hbase.Connection;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ public class DataTable {
     /**
      * This class is used to access the hbase.
      */
-    private HbaseHelper   hbaseHelper;
+    private Connection connection;
     /**
      * The list of rows that belong to the table.
      */
@@ -57,11 +57,11 @@ public class DataTable {
      * Initializes a new instance of the {@link DataTable} class.
      *
      * @param tableName   The name of the table.
-     * @param hbaseHelper The reference to an hbase helper.
+     * @param connection The reference to an hbase helper.
      */
-    public DataTable(String tableName, HbaseHelper hbaseHelper) {
+    public DataTable(String tableName, Connection connection) {
         this.tableName = tableName;
-        this.hbaseHelper = hbaseHelper;
+        this.connection = connection;
         this.rows = new ArrayList<DataRow>();
     }
     //endregion
@@ -87,12 +87,12 @@ public class DataTable {
     }
 
     /**
-     * Gets a reference to the {@link HbaseHelper} class that was used to load the data from hbase.
+     * Gets a reference to the {@link hrider.hbase.Connection} class that was used to load the data from hbase.
      *
      * @return The reference to the hbase helper.
      */
-    public HbaseHelper getHbaseHelper() {
-        return this.hbaseHelper;
+    public Connection getConnection() {
+        return this.connection;
     }
 
     /**

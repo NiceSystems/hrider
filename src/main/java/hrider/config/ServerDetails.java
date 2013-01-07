@@ -1,4 +1,4 @@
-package hrider.data;
+package hrider.config;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -78,6 +78,22 @@ public class ServerDetails {
      */
     public void setPort(String port) {
         this.port = port;
+    }
+    //endregion
+
+    //region Public Methods
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ServerDetails) {
+            ServerDetails details = (ServerDetails)obj;
+            return this.host.equals(details.host);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.host.hashCode();
     }
     //endregion
 }

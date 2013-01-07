@@ -2,11 +2,11 @@ package hrider.ui.forms;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import hrider.config.ConnectionDetails;
 import hrider.config.GlobalConfig;
-import hrider.data.ServerDetails;
-import hrider.hbase.HbaseHelper;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
+import hrider.config.ServerDetails;
+import hrider.hbase.Connection;
+import hrider.hbase.ConnectionManager;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -35,15 +35,14 @@ import java.awt.event.*;
 public class ConnectionDetailsDialog extends JDialog {
 
     //region Variables
-    private JPanel      contentPane;
-    private JButton     buttonConnect;
-    private JButton     buttonCancel;
-    private JTextField  hbaseServer;
-    private JTextField  zooKeeperServer;
-    private JSpinner    zooKeeperPort;
-    private JSpinner    hbasePort;
-    private boolean     okPressed;
-    private HbaseHelper hbaseHelper;
+    private JPanel            contentPane;
+    private JButton           buttonConnect;
+    private JButton           buttonCancel;
+    private JTextField        hbaseServer;
+    private JTextField        zooKeeperServer;
+    private JSpinner          zooKeeperPort;
+    private JSpinner          hbasePort;
+    private ConnectionDetails connectionDetails;
     //endregion
 
     //region Constructor
@@ -53,13 +52,8 @@ public class ConnectionDetailsDialog extends JDialog {
         setTitle("Connect to an Hbase server...");
         getRootPane().setDefaultButton(this.buttonConnect);
 
-        this.hbasePort.setValue(GlobalConfig.instance().get(Integer.class, "connection.hbase.port", "9000"));
-        this.zooKeeperPort.setValue(GlobalConfig.instance().get(Integer.class, "connection.zookeeper.port", "2181"));
-
-        this.hbaseServer.setText(GlobalConfig.instance().get(String.class, "connection.hbase.host"));
-        this.zooKeeperServer.setText(GlobalConfig.instance().get(String.class, "connection.zookeeper.host"));
-
-        this.hbaseServer.select(0, this.hbaseServer.getText().length());
+        this.hbasePort.setValue(GlobalConfig.instance().get(Integer.class, "connection.hbase.defaultPort", "9000"));
+        this.zooKeeperPort.setValue(GlobalConfig.instance().get(Integer.class, "connection.zookeeper.defaultPort", "2181"));
 
         this.buttonConnect.addActionListener(
             new ActionListener() {
@@ -125,48 +119,31 @@ public class ConnectionDetailsDialog extends JDialog {
         this.setVisible(true);
     }
 
-    public HbaseHelper getHBaseHelper() {
-        if (this.okPressed) {
-            return this.hbaseHelper;
-        }
-        return null;
-    }
-
-    public ServerDetails getHBaseServer() {
-        if (this.okPressed) {
-            return new ServerDetails(this.hbaseServer.getText(), this.hbasePort.getValue().toString());
-        }
-        return null;
-    }
-
-    public ServerDetails getZooKeeperServer() {
-        if (this.okPressed) {
-            return new ServerDetails(this.zooKeeperServer.getText(), this.zooKeeperPort.getValue().toString());
-        }
-        return null;
+    public ConnectionDetails getConnectionDetails() {
+        return this.connectionDetails;
     }
     //endregion
 
     //region Private Methods
     private void onOK() {
-        Configuration config = HBaseConfiguration.create();
-        config.set("hbase.zookeeper.quorum", this.zooKeeperServer.getText());
-        config.set("hbase.zookeeper.property.clientPort", this.zooKeeperPort.getValue().toString());
-        config.set("hbase.master", this.hbaseServer.getText() + ':' + this.hbasePort.getValue().toString());
-
         this.contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-        try {
-            this.hbaseHelper = new HbaseHelper(config);
-            this.hbaseHelper.getTables();
+        this.connectionDetails = new ConnectionDetails() {{
+            setHbaseServer(
+                new ServerDetails(ConnectionDetailsDialog.this.hbaseServer.getText(), ConnectionDetailsDialog.this.hbasePort.getValue().toString()));
+            setZookeeperServer(
+                new ServerDetails(
+                    ConnectionDetailsDialog.this.zooKeeperServer.getText(), ConnectionDetailsDialog.this.zooKeeperPort.getValue().toString()));
+        }};
 
-            GlobalConfig.instance().set("connection.zookeeper.host", this.zooKeeperServer.getText());
-            GlobalConfig.instance().set("connection.zookeeper.port", this.zooKeeperPort.getValue().toString());
-            GlobalConfig.instance().set("connection.hbase.host", this.hbaseServer.getText());
-            GlobalConfig.instance().set("connection.hbase.port", this.hbasePort.getValue().toString());
+        try {
+
+            ConnectionManager.create(this.connectionDetails);
+
+            GlobalConfig.instance().set("connection.zookeeper.defaultPort", this.zooKeeperPort.getValue().toString());
+            GlobalConfig.instance().set("connection.hbase.defaultPort", this.hbasePort.getValue().toString());
             GlobalConfig.instance().save();
 
-            this.okPressed = true;
             dispose();
         }
         catch (Exception ex) {
@@ -174,6 +151,9 @@ public class ConnectionDetailsDialog extends JDialog {
                 this, String.format(
                 "%s\n\nMake sure you have access to all nodes of the cluster you try\nto connect to. In case you don't, map the nodes in your hosts file.",
                 ex.getMessage()), "Failed to connect...", JOptionPane.ERROR_MESSAGE);
+
+            ConnectionManager.release(this.connectionDetails);
+            this.connectionDetails = null;
         }
         finally {
             this.contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

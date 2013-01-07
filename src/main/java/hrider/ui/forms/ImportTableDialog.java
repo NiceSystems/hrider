@@ -5,7 +5,7 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import hrider.config.GlobalConfig;
 import hrider.data.*;
-import hrider.hbase.HbaseHelper;
+import hrider.hbase.Connection;
 import hrider.ui.design.JCellEditor;
 
 import javax.swing.*;
@@ -62,7 +62,7 @@ public class ImportTableDialog extends JDialog {
     //endregion
 
     //region Constructor
-    public ImportTableDialog(final HbaseHelper hbaseHelper, String tableName, Iterable<TypedColumn> columns, final Iterable<String> columnFamilies) {
+    public ImportTableDialog(final Connection connection, String tableName, Iterable<TypedColumn> columns, final Iterable<String> columnFamilies) {
         setContentPane(this.contentPane);
         setModal(true);
         setTitle("Import table from file");
@@ -105,7 +105,7 @@ public class ImportTableDialog extends JDialog {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (validateInput()) {
-                        onImport(hbaseHelper);
+                        onImport(connection);
                     }
                 }
             });
@@ -230,7 +230,7 @@ public class ImportTableDialog extends JDialog {
         return -1;
     }
 
-    private void onImport(final HbaseHelper hbaseHelper) {
+    private void onImport(final Connection connection) {
         new Thread(
             new Runnable() {
                 @Override
@@ -263,7 +263,7 @@ public class ImportTableDialog extends JDialog {
                             }
 
                             String tableName = ImportTableDialog.this.tfTableName.getText().trim();
-                            hbaseHelper.createTable(tableName);
+                            connection.createTable(tableName);
 
                             Map<String, ObjectType> columnTypes = getColumnTypes();
 
@@ -301,7 +301,7 @@ public class ImportTableDialog extends JDialog {
                                 }
 
                                 if (readCount % batch == 0) {
-                                    hbaseHelper.setRows(tableName, rows);
+                                    connection.setRows(tableName, rows);
 
                                     writtenCount += rows.size();
                                     rows.clear();
@@ -314,7 +314,7 @@ public class ImportTableDialog extends JDialog {
 
                             // Write last rows.
                             if (!rows.isEmpty()) {
-                                hbaseHelper.setRows(tableName, rows);
+                                connection.setRows(tableName, rows);
 
                                 writtenCount += rows.size();
                                 rows.clear();

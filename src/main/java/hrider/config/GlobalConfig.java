@@ -50,7 +50,7 @@ public class GlobalConfig extends PropertiesConfig {
      * Initializes a new instance of the {@link PropertiesConfig} class with a file name.
      */
     private GlobalConfig() {
-        super("global.properties");
+        super("global");
     }
     //endregion
 
@@ -86,12 +86,22 @@ public class GlobalConfig extends PropertiesConfig {
         return get(Character.class, KEY_EXTERNAL_VIEWER_DELIMETER, DEFAULT_EXTERNAL_VIEWER_DELIMETER);
     }
 
+    /**
+     * Gets a size of the batch to be used for read operations.
+     *
+     * @return A size of the batch.
+     */
     public int getBatchSizeForRead() {
-        return (Integer)get(Integer.class, KEY_BATCH_READ_SIZE, DEFAULT_BATCH_READ_SIZE);
+        return get(Integer.class, KEY_BATCH_READ_SIZE, DEFAULT_BATCH_READ_SIZE);
     }
 
+    /**
+     * Gets a size of the batch to be used for write operations.
+     *
+     * @return A size of the batch.
+     */
     public int getBatchSizeForWrite() {
-        return (Integer)get(Integer.class, KEY_BATCH_WRITE_SIZE, DEFAULT_BATCH_WRITE_SIZE);
+        return get(Integer.class, KEY_BATCH_WRITE_SIZE, DEFAULT_BATCH_WRITE_SIZE);
     }
     //endregion
 }

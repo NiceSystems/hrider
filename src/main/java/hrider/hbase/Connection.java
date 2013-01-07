@@ -1,5 +1,6 @@
 package hrider.hbase;
 
+import hrider.config.ConnectionDetails;
 import hrider.config.GlobalConfig;
 import hrider.data.DataCell;
 import hrider.data.DataRow;
@@ -37,7 +38,7 @@ import java.util.List;
  *          <p/>
  *          This class represents a data access to the hbase tables.
  */
-public class HbaseHelper {
+public class Connection {
 
     //region Variables
     /**
@@ -53,6 +54,10 @@ public class HbaseHelper {
      */
     private TableFactory              factory;
     /**
+     * A configuration used to connect to hbase.
+     */
+    private ConnectionDetails         connectionDetails;
+    /**
      * A list of listeners.
      */
     private List<HbaseActionListener> listeners;
@@ -61,17 +66,20 @@ public class HbaseHelper {
     //region Constructor
 
     /**
-     * Initializes a new instance of the {@link HbaseHelper} class.
+     * Initializes a new instance of the {@link Connection} class.
      *
-     * @param config A configuration to be used to connect to the hbase administration.
+     * @param connectionDetails A configuration to be used to connect to the hbase administration.
      * @throws IOException Error connecting to hbase.
      */
-    public HbaseHelper(Configuration config) throws IOException {
-        this.serverName = config.get("hbase.zookeeper.quorum");
-        this.factory = new TableFactory(config);
+    public Connection(ConnectionDetails connectionDetails) throws IOException {
+        this.connectionDetails = connectionDetails;
+        this.serverName = connectionDetails.getHbaseServer().getHost();
         this.listeners = new ArrayList<HbaseActionListener>();
 
         try {
+            Configuration config = connectionDetails.createConfig();
+
+            this.factory = new TableFactory(config);
             this.hbaseAdmin = new HBaseAdmin(config);
         }
         catch (Exception e) {
@@ -81,6 +89,15 @@ public class HbaseHelper {
     //endregion
 
     //region Public Properties
+
+    /**
+     * Gets a configuration used to connect to hbase.
+     *
+     * @return A reference to the {@link ConnectionDetails} class.
+     */
+    public ConnectionDetails getConnectionDetails() {
+        return this.connectionDetails;
+    }
 
     /**
      * Gets the name of the hbase muster server.
@@ -219,7 +236,7 @@ public class HbaseHelper {
      * @param sourceCluster The source cluster where the source table is located.
      * @throws IOException Error accessing hbase on one of the clusters or on both clusters.
      */
-    public void copyTable(String targetTable, String sourceTable, HbaseHelper sourceCluster) throws IOException, TableNotFoundException {
+    public void copyTable(String targetTable, String sourceTable, Connection sourceCluster) throws IOException, TableNotFoundException {
         HTable source = sourceCluster.factory.get(sourceTable);
         HTable target = this.factory.get(targetTable);
 
