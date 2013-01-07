@@ -881,6 +881,8 @@ public class DesignerView {
                         DesignerView.this.clusterConfig.setTableConfig(getSelectedTableName(), name, type.toString());
                         DesignerView.this.clusterConfig.save();
 
+                        stopCellEditing(DesignerView.this.rowsTable);
+
                         if (DesignerView.this.scanner != null) {
                             try {
                                 DesignerView.this.scanner.updateColumnType(name, type);
