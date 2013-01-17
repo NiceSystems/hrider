@@ -163,6 +163,7 @@ public class ConnectionDetailsDialog extends JDialog {
     private void onCancel() {
         dispose();
     }
+
     //endregion
 
     {

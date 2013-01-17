@@ -99,8 +99,6 @@ public class Window {
                     }
                 }
             });
-
-        loadViews();
     }
     //endregion
 
@@ -127,6 +125,8 @@ public class Window {
      */
     private static void createAndShowGUI() {
         Window window = new Window();
+        window.loadViews(new Splash());
+
         if (!window.canceled) {
             JFrame frame = new JFrame("H-Rider - " + getVersion());
 
@@ -141,52 +141,92 @@ public class Window {
         }
     }
 
+    private static String getVersion() {
+        try {
+            String jarPath = Window.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+
+            JarFile file = new JarFile(jarPath);
+            return file.getManifest().getMainAttributes().get(new Attributes.Name("version")).toString();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            return "Unknown Version";
+        }
+    }
+
     /**
      * Load all cluster views.
      */
-    private void loadViews() {
-        Collection<ConnectionDetails> connections = new ArrayList<ConnectionDetails>();
+    private void loadViews(final Splash splash) {
 
-        // See if there are clusters previously connected.
-        Collection<String> clusters = ViewConfig.instance().getClusters();
-        for (String clusterName : clusters) {
-            if (PropertiesConfig.fileExists(clusterName)) {
-                ClusterConfig clusterConfig = new ClusterConfig(clusterName);
+        final Collection<ConnectionDetails> loaded = new ArrayList<ConnectionDetails>();
 
-                ConnectionDetails connectionDetails = clusterConfig.getConnection();
-                if (connectionDetails != null) {
-                    connections.add(connectionDetails);
+        new Thread(
+            new Runnable() {
+                @Override
+                public void run() {
+                    Collection<ConnectionDetails> connections = new ArrayList<ConnectionDetails>();
+
+                    // See if there are clusters previously connected.
+                    Collection<String> clusters = ViewConfig.instance().getClusters();
+                    for (String clusterName : clusters) {
+                        if (PropertiesConfig.fileExists(clusterName)) {
+                            ClusterConfig clusterConfig = new ClusterConfig(clusterName);
+
+                            ConnectionDetails connectionDetails = clusterConfig.getConnection();
+                            if (connectionDetails != null) {
+                                splash.update(String.format("Connecting to %s...", connectionDetails.getHbaseServer().getHost()));
+
+                                if (connectionDetails.canConnect()) {
+                                    connections.add(connectionDetails);
+                                }
+                            }
+                            else {
+                                ViewConfig.instance().removeCluster(clusterName);
+                                ViewConfig.instance().save();
+
+                                PropertiesConfig.fileRemove(clusterName);
+                            }
+                        }
+                        else {
+                            ViewConfig.instance().removeCluster(clusterName);
+                            ViewConfig.instance().save();
+                        }
+                    }
+
+                    for (ConnectionDetails connectionDetails : connections) {
+                        try {
+                            splash.update(String.format("Loading %s view...", connectionDetails.getHbaseServer().getHost()));
+
+                            Connection connection = ConnectionManager.create(connectionDetails);
+                            loadView(connection);
+
+                            loaded.add(connectionDetails);
+                        }
+                        catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    splash.dispose();
                 }
-                else {
-                    ViewConfig.instance().removeCluster(clusterName);
-                    ViewConfig.instance().save();
+            }).start();
 
-                    PropertiesConfig.fileRemove(clusterName);
-                }
-            }
-            else {
-                ViewConfig.instance().removeCluster(clusterName);
-                ViewConfig.instance().save();
-            }
-        }
+        splash.showDialog();
 
-        if (connections.isEmpty()) {
+        if (loaded.isEmpty()) {
             ConnectionDetails connectionDetails = showDialog();
             if (connectionDetails != null) {
-                connections.add(connectionDetails);
+                try {
+                    Connection connection = ConnectionManager.create(connectionDetails);
+                    loadView(connection);
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             else {
                 this.canceled = true;
-            }
-        }
-
-        for (ConnectionDetails connectionDetails : connections) {
-            try {
-                Connection connection = ConnectionManager.create(connectionDetails);
-                loadView(connection);
-            }
-            catch (IOException e) {
-                e.printStackTrace();
             }
         }
     }
@@ -249,7 +289,7 @@ public class Window {
     /**
      * Shows a connection dialog.
      *
-     * @return A reference to {@link ConnectionDetails} class that contains all required information to connect to the cluster.
+     * @return A reference to {@link hrider.config.ConnectionDetails} class that contains all required information to connect to the cluster.
      */
     private ConnectionDetails showDialog() {
         ConnectionDetailsDialog dialog = new ConnectionDetailsDialog();
@@ -258,18 +298,6 @@ public class Window {
         return dialog.getConnectionDetails();
     }
 
-    private static String getVersion() {
-        try {
-            String jarPath = Window.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-
-            JarFile file = new JarFile(jarPath);
-            return file.getManifest().getMainAttributes().get(new Attributes.Name("version")).toString();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-            return "Unknown Version";
-        }
-    }
     //endregion
 
     {

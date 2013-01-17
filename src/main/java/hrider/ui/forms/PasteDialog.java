@@ -175,6 +175,7 @@ public class PasteDialog extends JDialog {
             }
         }
     }
+
     //endregion
 
     {

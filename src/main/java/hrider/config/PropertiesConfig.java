@@ -109,7 +109,7 @@ public abstract class PropertiesConfig {
      */
     public <T> T get(Class<T> clazz, String name, String defaultValue) {
         String value = this.properties.getProperty(name, defaultValue);
-        if (value != null) {
+        if (value != null && !value.isEmpty()) {
             return (T)Clazz.primitiveToObject(clazz, value);
         }
         return null;

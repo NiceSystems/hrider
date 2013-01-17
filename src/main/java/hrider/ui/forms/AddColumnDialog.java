@@ -116,6 +116,7 @@ public class AddColumnDialog extends JDialog {
         // add your code here if necessary
         dispose();
     }
+
     //endregion
 
     {

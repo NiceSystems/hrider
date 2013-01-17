@@ -312,6 +312,7 @@ public class ExportTableDialog extends JDialog {
 
         return true;
     }
+
     //endregion
 
     {

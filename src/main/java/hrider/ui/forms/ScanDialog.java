@@ -206,6 +206,7 @@ public class ScanDialog extends JDialog {
         // add your code here if necessary
         dispose();
     }
+
     //endregion
 
     {

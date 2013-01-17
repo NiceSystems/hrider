@@ -1,7 +1,10 @@
 package hrider.config;
 
+import hrider.hbase.ConnectionManager;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+
+import java.io.IOException;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -49,6 +52,15 @@ public class ConnectionDetails {
     //endregion
 
     //region Public Methods
+    public boolean canConnect() {
+        try {
+            ConnectionManager.create(this);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     public Configuration createConfig() {
         Configuration config = HBaseConfiguration.create();
         config.set("hbase.zookeeper.quorum", this.zookeeperServer.getHost());

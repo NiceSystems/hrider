@@ -389,6 +389,7 @@ public class ImportTableDialog extends JDialog {
 
         return true;
     }
+
     //endregion
 
     {

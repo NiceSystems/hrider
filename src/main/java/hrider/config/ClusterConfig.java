@@ -67,6 +67,8 @@ public class ClusterConfig extends PropertiesConfig {
         set("connection.hbase.port", connection.getHbaseServer().getPort());
         set("connection.zookeeper.host", connection.getZookeeperServer().getHost());
         set("connection.zookeeper.port", connection.getZookeeperServer().getPort());
+
+        save();
     }
 
     /**
@@ -116,6 +118,7 @@ public class ClusterConfig extends PropertiesConfig {
      */
     public void setTableConfig(String table, String value) {
         set(String.format("table.%s", table), value);
+        save();
     }
 
     /**
@@ -127,6 +130,7 @@ public class ClusterConfig extends PropertiesConfig {
      */
     public void setTableConfig(String table, String column, String value) {
         set(String.format("table.%s.%s", table, column), value);
+        save();
     }
 
     /**
@@ -139,6 +143,70 @@ public class ClusterConfig extends PropertiesConfig {
      */
     public void setTableConfig(String table, String column, String key, String value) {
         set(String.format("table.%s.%s.%s", table, column, key), value);
+        save();
+    }
+
+    /**
+     * Gets a filter to filter tables.
+     *
+     * @return A string representing a filter.
+     */
+    public String getTablesFilter() {
+        return get(String.class, "filter.tables");
+    }
+
+    /**
+     * Gets a type of the tables filter: simple or regex.
+     *
+     * @return A string representing a filter type.
+     */
+    public String getTablesFilterType() {
+        return get(String.class, "filter.tables.type");
+    }
+
+    /**
+     * Gets a filter to filter columns.
+     *
+     * @param table The name of the table.
+     * @return A string representing a filter.
+     */
+    public String getColumnsFilter(String table) {
+        return get(String.class, String.format("filter.%s.columns", table));
+    }
+
+    /**
+     * Gets a type of the columns filter: simple or regex.
+     *
+     * @param table The name of the table.
+     * @return A string representing a filter type.
+     */
+    public String getColumnsFilterType(String table) {
+        return get(String.class, String.format("filter.%s.columns.type", table));
+    }
+
+    /**
+     * Saves a tables filter.
+     *
+     * @param filter A filter to save.
+     * @param type A type of the filter: simple or regex.
+     */
+    public void setTablesFilter(String filter, String type) {
+        set("filter.tables", filter);
+        set("filter.tables.type", type);
+        save();
+    }
+
+    /**
+     * Saves a columns filter.
+     *
+     * @param table The name of the table.
+     * @param filter A filter to save.
+     * @param type A type of the filter: simple or regex.
+     */
+    public void setColumnsFilter(String table, String filter, String type) {
+        set(String.format("filter.%s.columns", table), filter);
+        set(String.format("filter.%s.columns.type", table), type);
+        save();
     }
     //endregion
 }
