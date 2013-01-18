@@ -13,10 +13,20 @@ To get started, begin here:
 3. If you have any problems first read the [FAQ](https://github.com/NiceSystems/hrider/wiki/FAQ).
 
 ## News
+### 18 January, 2013: Release 1.0.2.0 available
+New features: [#14](https://github.com/NiceSystems/hrider/issues/14), [#15](https://github.com/NiceSystems/hrider/issues/15), [#16](https://github.com/NiceSystems/hrider/issues/16)
+
+Issues fixed: [#13] (https://github.com/NiceSystems/hrider/issues/13)
+
+[Download for hbase 0.90.4](http://bit.ly/WbP9j7).
+
+[Download for hbase 0.92.1-cdh4.1.2 and hadoop 2.0.0-cdh4.1.2](http://bit.ly/13Jmqr8).
+
+[Download for hbase 0.94.1 and hadoop 1.0.3](http://bit.ly/Uynjhm).
 ### 20 December, 2012: Release 1.0.1.0 available
 New features: [#3](https://github.com/NiceSystems/hrider/issues/3), [#11](https://github.com/NiceSystems/hrider/issues/11)
 
-Issues fixed: [#12] (https://github.com/NiceSystems/hrider/issues/11)
+Issues fixed: [#12] (https://github.com/NiceSystems/hrider/issues/12)
 
 [Download for hbase 0.90.4](http://bit.ly/R6IOGI).
 
