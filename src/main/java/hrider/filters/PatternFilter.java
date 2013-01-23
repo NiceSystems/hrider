@@ -27,9 +27,15 @@ public class PatternFilter implements Filter {
     private Pattern regex;
     private boolean isNegative;
 
-    public PatternFilter(String regex, boolean isNegative) {
-        this.regex = Pattern.compile(regex);
-        this.isNegative = isNegative;
+    public PatternFilter(String regex) {
+        this.isNegative = regex.startsWith("~");
+
+        if (this.isNegative) {
+            this.regex = Pattern.compile(regex.substring(2, regex.length() - 1));
+        }
+        else {
+            this.regex = Pattern.compile(regex);
+        }
     }
 
     @Override

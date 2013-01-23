@@ -18,9 +18,12 @@ package hrider.filters;
  * @author Igor Cher
  * @version %I%, %G%
  *          <p/>
- *          This enum represents a list of possible operators that can be used in equation filter.
+ *          This class represents an empty filter that always returns true.
  */
-public enum EquationOperator {
-    AND,
-    OR
+public class EmptyFilter implements Filter {
+
+    @Override
+    public boolean match(String value) {
+        return true;
+    }
 }

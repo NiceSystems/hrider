@@ -1,5 +1,9 @@
 package hrider.config;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Copyright (C) 2012 NICE Systems ltd.
  * <p/>
@@ -147,66 +151,107 @@ public class ClusterConfig extends PropertiesConfig {
     }
 
     /**
-     * Gets a filter to filter tables.
+     * Gets a list of table filters.
      *
-     * @return A string representing a filter.
+     * @return A list of table filters.
      */
-    public String getTablesFilter() {
-        return get(String.class, "filter.tables");
+    public List<String> getTableFilters() {
+        String filters = get(String.class, "table.filters");
+        if (filters != null && !filters.isEmpty()) {
+            String[] parts = filters.split(";");
+            return Arrays.asList(parts);
+        }
+        return new ArrayList<String>();
     }
 
     /**
-     * Gets a type of the tables filter: simple or regex.
+     * Gets a previously used table filter.
      *
-     * @return A string representing a filter type.
+     * @return A filter.
      */
-    public String getTablesFilterType() {
-        return get(String.class, "filter.tables.type");
+    public String getSelectedTableFilter() {
+        return get(String.class, "table.filters.selected");
     }
 
     /**
-     * Gets a filter to filter columns.
+     * Gets a list of column filters.
      *
      * @param table The name of the table.
-     * @return A string representing a filter.
+     * @return A list of column filters.
      */
-    public String getColumnsFilter(String table) {
-        return get(String.class, String.format("filter.%s.columns", table));
+    public List<String> getColumnFilters(String table) {
+        String filters = get(String.class, String.format("table.%s.column.filters", table));
+        if (filters != null && !filters.isEmpty()) {
+            String[] parts = filters.split(";");
+            return Arrays.asList(parts);
+        }
+        return new ArrayList<String>();
     }
 
     /**
-     * Gets a type of the columns filter: simple or regex.
+     * Gets a previously used column filter.
      *
      * @param table The name of the table.
-     * @return A string representing a filter type.
+     * @return A filter.
      */
-    public String getColumnsFilterType(String table) {
-        return get(String.class, String.format("filter.%s.columns.type", table));
+    public String getSelectedColumnFilter(String table) {
+        return get(String.class, String.format("table.%s.column.filters.selected", table));
     }
 
     /**
-     * Saves a tables filter.
+     * Saves table filter(s).
      *
-     * @param filter A filter to save.
-     * @param type A type of the filter: simple or regex.
+     * @param filters Filter(s) to save.
      */
-    public void setTablesFilter(String filter, String type) {
-        set("filter.tables", filter);
-        set("filter.tables.type", type);
+    public void setTablesFilter(Iterable<String> filters) {
+        StringBuilder sb = new StringBuilder();
+        for (String filter : filters) {
+            if (sb.length() > 0) {
+                sb.append(';');
+            }
+            sb.append(filter);
+        }
+
+        set("table.filters", sb.toString());
         save();
     }
 
     /**
-     * Saves a columns filter.
+     * Saves currently used table filter.
      *
-     * @param table The name of the table.
-     * @param filter A filter to save.
-     * @param type A type of the filter: simple or regex.
+     * @param filter The filter to save.
      */
-    public void setColumnsFilter(String table, String filter, String type) {
-        set(String.format("filter.%s.columns", table), filter);
-        set(String.format("filter.%s.columns.type", table), type);
+    public void setSelectedTableFilter(String filter) {
+        set("table.filters.selected", filter);
+    }
+
+    /**
+     * Saves column filter(s).
+     *
+     * @param table   The name of the table.
+     * @param filters Filter(s) to save.
+     */
+    public void setColumnsFilter(String table, Iterable<String> filters) {
+        StringBuilder sb = new StringBuilder();
+        for (String filter : filters) {
+            if (sb.length() > 0) {
+                sb.append(';');
+            }
+            sb.append(filter);
+        }
+
+        set(String.format("table.%s.column.filters", table), sb.toString());
         save();
+    }
+
+    /**
+     * Saves currently used column filter.
+     *
+     * @param table  The name of the table.
+     * @param filter The filter to save.
+     */
+    public void setSelectedColumnFilter(String table, String filter) {
+        set(String.format("table.%s.column.filters.selected", table), filter);
     }
     //endregion
 }

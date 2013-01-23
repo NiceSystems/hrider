@@ -28,7 +28,7 @@ import java.awt.event.ActionListener;
 public class ErrorProvider extends JLabel {
 
     //region Variables
-    private Icon  icon;
+    private transient Icon icon;
     private Timer timer;
     private int   counter;
     //endregion
@@ -54,7 +54,7 @@ public class ErrorProvider extends JLabel {
 
                 counter++;
 
-                if (counter == 10) {
+                if (counter == 6) {
                     timer.stop();
                 }
             }
@@ -69,7 +69,7 @@ public class ErrorProvider extends JLabel {
 
     public void setError(String error) {
         if (!this.timer.isRunning()) {
-            setToolTipText(error);
+            setToolTipText(error == null || error.isEmpty() ? "Error message was not provided" : error);
             setVisible(true);
 
             this.counter = 0;

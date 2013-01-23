@@ -72,15 +72,29 @@
                     </properties>
                     <border type="none"/>
                     <children>
-                      <component id="4fe5d" class="javax.swing.JTextField" binding="tablesFilter">
+                      <component id="35c80" class="javax.swing.JComboBox" binding="tablesFilter">
                         <constraints/>
                         <properties>
-                          <minimumSize width="6" height="24"/>
-                          <preferredSize width="6" height="24"/>
-                          <toolTipText value=""/>
+                          <alignmentX value="0.0"/>
+                          <alignmentY value="0.6"/>
+                          <editable value="false"/>
+                          <font/>
+                          <maximumSize width="32767" height="26"/>
+                          <minimumSize width="50" height="20"/>
+                          <preferredSize width="-1" height="-1"/>
                         </properties>
                       </component>
-                      <component id="57772" class="javax.swing.JButton" binding="btTableFilter">
+                      <component id="7b5a5" class="javax.swing.JSeparator">
+                        <constraints/>
+                        <properties>
+                          <foreground system-color="control"/>
+                          <inheritsPopupMenu value="false"/>
+                          <maximumSize width="1" height="1"/>
+                          <orientation value="1"/>
+                          <preferredSize width="1" height="0"/>
+                        </properties>
+                      </component>
+                      <component id="57772" class="javax.swing.JButton" binding="tableFiltersButton">
                         <constraints/>
                         <properties>
                           <enabled value="true"/>
@@ -89,7 +103,7 @@
                           <minimumSize width="24" height="24"/>
                           <preferredSize width="24" height="24"/>
                           <text value=""/>
-                          <toolTipText value="Refresh tables"/>
+                          <toolTipText value="Define table filters"/>
                         </properties>
                       </component>
                     </children>
@@ -305,15 +319,28 @@
                         </properties>
                         <border type="none"/>
                         <children>
-                          <component id="46dd4" class="javax.swing.JTextField" binding="columnsFilter">
+                          <component id="c93fa" class="javax.swing.JComboBox" binding="columnsFilter">
                             <constraints/>
                             <properties>
-                              <minimumSize width="6" height="24"/>
-                              <preferredSize width="6" height="24"/>
-                              <toolTipText value=""/>
+                              <alignmentX value="0.0"/>
+                              <alignmentY value="0.6"/>
+                              <editable value="false"/>
+                              <maximumSize width="32767" height="26"/>
+                              <minimumSize width="-1" height="-1"/>
+                              <preferredSize width="-1" height="-1"/>
                             </properties>
                           </component>
-                          <component id="9e191" class="javax.swing.JButton" binding="btColumnFilter">
+                          <component id="12d91" class="javax.swing.JSeparator">
+                            <constraints/>
+                            <properties>
+                              <foreground system-color="control"/>
+                              <inheritsPopupMenu value="false"/>
+                              <maximumSize width="1" height="1"/>
+                              <orientation value="1"/>
+                              <preferredSize width="1" height="0"/>
+                            </properties>
+                          </component>
+                          <component id="9e191" class="javax.swing.JButton" binding="columnFiltersButton">
                             <constraints/>
                             <properties>
                               <enabled value="true"/>
@@ -322,7 +349,7 @@
                               <minimumSize width="24" height="24"/>
                               <preferredSize width="24" height="24"/>
                               <text value=""/>
-                              <toolTipText value="Refresh tables"/>
+                              <toolTipText value="Define column filters"/>
                             </properties>
                           </component>
                         </children>

@@ -3,16 +3,19 @@ package hrider.ui.forms;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import hrider.filters.EquationFilter;
-import hrider.filters.EquationOperator;
 import hrider.filters.Filter;
+import hrider.filters.PatternFilter;
 import hrider.ui.controls.ErrorProvider;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -38,37 +41,43 @@ import java.util.List;
 public class FilterDialog extends JDialog {
 
     //region Variables
-    private JPanel           contentPane;
-    private JButton          btSave;
-    private JButton          btCancel;
-    private JTextField       tfRegex;
-    private JButton          btTestRegex;
-    private JList            originalList;
-    private JList            filteredList;
-    private DefaultListModel filteredListModel;
-    private JTextArea        textArea;
-    private JButton          btAdd;
-    private JButton          btClear;
-    private JComboBox        cmbOperator;
-    private JButton          btTestPattern;
-    private ErrorProvider    errorProvider;
-    private JCheckBox        excludeCheckBox;
-    private List<String>     values;
-    private boolean          savePressed;
+    private JPanel             contentPane;
+    private JButton            saveButton;
+    private JButton            cancelButton;
+    private JTextField         regexText;
+    private JButton testRegex;
+    private JList              originalList;
+    private JList              filteredList;
+    private DefaultListModel   filteredListModel;
+    private JButton            addButton;
+    private JButton            removeButton;
+    private ErrorProvider      errorProvider;
+    private JCheckBox          excludeCheckBox;
+    private JList              patternsList;
+    private JButton testPattern;
+    private DefaultListModel   patternsListModel;
+    private Collection<String> values;
+    private boolean            savePressed;
     //endregion
 
     //region Constructor
-    public FilterDialog(String regex, List<String> values) {
+    public FilterDialog(Iterable<String> patterns, Collection<String> values) {
         setContentPane(contentPane);
         setModal(true);
         setTitle("Define filters");
-        getRootPane().setDefaultButton(btSave);
+        getRootPane().setDefaultButton(saveButton);
 
-        this.textArea.setText(regex);
         this.values = values;
 
         DefaultListModel originalListModel = new DefaultListModel();
         originalList.setModel(originalListModel);
+
+        patternsListModel = new DefaultListModel();
+        patternsList.setModel(patternsListModel);
+
+        for (String pattern : patterns) {
+            patternsListModel.addElement(pattern);
+        }
 
         filteredListModel = new DefaultListModel();
         filteredList.setModel(filteredListModel);
@@ -78,11 +87,7 @@ public class FilterDialog extends JDialog {
             filteredListModel.addElement(value);
         }
 
-        for (EquationOperator operator : EquationOperator.values()) {
-            cmbOperator.addItem(operator);
-        }
-
-        tfRegex.getDocument().addDocumentListener(
+        regexText.getDocument().addDocumentListener(
             new DocumentListener() {
                 @Override
                 public void insertUpdate(DocumentEvent e) {
@@ -99,15 +104,17 @@ public class FilterDialog extends JDialog {
                 }
             });
 
-        btSave.addActionListener(
+        saveButton.addActionListener(
             new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     onSave();
                 }
             });
 
-        btCancel.addActionListener(
+        cancelButton.addActionListener(
             new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     onCancel();
                 }
@@ -117,6 +124,7 @@ public class FilterDialog extends JDialog {
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(
             new WindowAdapter() {
+                @Override
                 public void windowClosing(WindowEvent e) {
                     onCancel();
                 }
@@ -125,69 +133,73 @@ public class FilterDialog extends JDialog {
         // call onCancel() on ESCAPE
         contentPane.registerKeyboardAction(
             new ActionListener() {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     onCancel();
                 }
             }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-        btTestRegex.addActionListener(
+        testRegex.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
-                        String regex = tfRegex.getText();
+                        String regex = regexText.getText();
                         if (excludeCheckBox.isSelected()) {
                             regex = String.format("~(%s)", regex);
                         }
 
-                        applyFilter(EquationFilter.parse(regex));
+                        applyFilter(new PatternFilter(regex));
                     }
                     catch (Exception ex) {
-                        errorProvider.setError(ex.getMessage());
+                        errorProvider.setError(ex.getLocalizedMessage());
                     }
                 }
             });
 
-        btAdd.addActionListener(
+        addButton.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
-                        EquationFilter.parse(tfRegex.getText());
-
-                        String prefix = "";
+                        String regex = regexText.getText();
                         if (excludeCheckBox.isSelected()) {
-                            prefix = "~";
+                            regex = String.format("~(%s)", regex);
                         }
 
-                        String regex = textArea.getText().trim();
-                        if (!regex.isEmpty()) {
-                            regex = String.format("%s %s ", regex, cmbOperator.getSelectedItem());
-                            textArea.setText(String.format("(%s%s(%s))", regex, prefix, tfRegex.getText()));
-                        }
-                        else {
-                            textArea.setText(String.format("%s(%s)", prefix, tfRegex.getText()));
-                        }
+                        new PatternFilter(regex);
+                        patternsListModel.addElement(regex);
                     }
                     catch (Exception ex) {
-                        errorProvider.setError(ex.getMessage());
+                        errorProvider.setError(ex.getLocalizedMessage());
                     }
                 }
             });
 
-        btClear.addActionListener(
+        removeButton.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    textArea.setText("");
+                    if (patternsList.getSelectedIndex() != -1) {
+                        patternsListModel.removeElementAt(patternsList.getSelectedIndex());
+                    }
                 }
             });
 
-        btTestPattern.addActionListener(
+        patternsList.addListSelectionListener(
+            new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    removeButton.setEnabled(e.getFirstIndex() >= 0);
+                    testPattern.setEnabled(removeButton.isEnabled());
+                }
+            });
+
+        testPattern.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    applyFilter(EquationFilter.parse(textArea.getText()));
+                    applyFilter(new PatternFilter((String)patternsList.getSelectedValue()));
                 }
             });
     }
@@ -204,9 +216,26 @@ public class FilterDialog extends JDialog {
 
     public String getRegex() {
         if (savePressed) {
-            return textArea.getText();
+            String regex = (String)patternsList.getSelectedValue();
+            if (regex == null) {
+                if (patternsListModel.isEmpty()) {
+                    regex = "";
+                }
+                else {
+                    regex = (String)patternsListModel.getElementAt(0);
+                }
+            }
+            return regex;
         }
         return null;
+    }
+
+    public List<String> getRegexes() {
+        List<String> regexes = new ArrayList<String>();
+        for (int i = 0 ; i < patternsListModel.size() ; i++) {
+            regexes.add((String)patternsListModel.getElementAt(i));
+        }
+        return regexes;
     }
     //endregion
 
@@ -249,13 +278,13 @@ public class FilterDialog extends JDialog {
      */
     private void $$$setupUI$$$() {
         contentPane = new JPanel();
-        contentPane.setLayout(new GridLayoutManager(2, 1, new Insets(10, 10, 10, 10), -1, -1));
-        contentPane.setPreferredSize(new Dimension(400, 300));
+        contentPane.setLayout(new GridLayoutManager(4, 1, new Insets(10, 10, 10, 10), -1, -1));
+        contentPane.setPreferredSize(new Dimension(400, 360));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(
             panel1, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             1, null, null, null, 0, false));
         final JPanel panel2 = new JPanel();
         panel2.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1, true, false));
@@ -263,16 +292,16 @@ public class FilterDialog extends JDialog {
             panel2, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        btSave = new JButton();
-        btSave.setText("Save");
+        saveButton = new JButton();
+        saveButton.setText("Save");
         panel2.add(
-            btSave, new GridConstraints(
+            saveButton, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        btCancel = new JButton();
-        btCancel.setText("Cancel");
+        cancelButton = new JButton();
+        cancelButton.setText("Cancel");
         panel2.add(
-            btCancel, new GridConstraints(
+            cancelButton, new GridConstraints(
             0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JSeparator separator1 = new JSeparator();
@@ -281,23 +310,17 @@ public class FilterDialog extends JDialog {
             0, 0, 1, 1, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW,
             GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(5, 5, new Insets(0, 0, 0, 0), -1, -1));
+        panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(
             panel3, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        btTestRegex = new JButton();
-        btTestRegex.setText("Test");
-        panel3.add(
-            btTestRegex, new GridConstraints(
-            0, 4, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+            2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new GridLayoutManager(2, 2, new Insets(0, 0, 0, 0), -1, -1));
         panel3.add(
             panel4, new GridConstraints(
-            4, 0, 1, 5, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(-1, 110), null, 0, false));
         final JLabel label1 = new JLabel();
         label1.setText("Original Data");
         panel4.add(
@@ -325,82 +348,83 @@ public class FilterDialog extends JDialog {
         filteredList = new JList();
         scrollPane2.setViewportView(filteredList);
         final JPanel panel5 = new JPanel();
-        panel5.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
-        panel3.add(
+        panel5.setLayout(new GridLayoutManager(2, 4, new Insets(0, 0, 0, 0), -1, -1));
+        contentPane.add(
             panel5, new GridConstraints(
-            2, 4, 2, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            0, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        btAdd = new JButton();
-        btAdd.setText("Add");
+        regexText = new JTextField();
         panel5.add(
-            btAdd, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        btClear = new JButton();
-        btClear.setText("Clear");
-        panel5.add(
-            btClear, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        btTestPattern = new JButton();
-        btTestPattern.setText("Test");
-        panel5.add(
-            btTestPattern, new GridConstraints(
-            2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane3 = new JScrollPane();
-        panel3.add(
-            scrollPane3, new GridConstraints(
-            3, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        textArea = new JTextArea();
-        textArea.setEditable(false);
-        scrollPane3.setViewportView(textArea);
-        final JLabel label3 = new JLabel();
-        label3.setText("Operator");
-        panel3.add(
-            label3, new GridConstraints(
-            2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
-            null, 0, false));
-        cmbOperator = new JComboBox();
-        final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
-        cmbOperator.setModel(defaultComboBoxModel1);
-        panel3.add(
-            cmbOperator, new GridConstraints(
-            2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
-            null, null, null, 0, false));
-        final Spacer spacer1 = new Spacer();
-        panel3.add(
-            spacer1, new GridConstraints(
-            2, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
-        final JPanel panel6 = new JPanel();
-        panel6.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
-        panel3.add(
-            panel6, new GridConstraints(
-            0, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        tfRegex = new JTextField();
-        panel6.add(
-            tfRegex, new GridConstraints(
+            regexText, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, new Dimension(150, 24), null, 0, false));
         errorProvider = new ErrorProvider();
-        panel6.add(
+        panel5.add(
             errorProvider, new GridConstraints(
-            0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        final JSeparator separator2 = new JSeparator();
-        panel3.add(
-            separator2, new GridConstraints(
-            1, 0, 1, 5, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
-            null, null, null, 0, false));
         excludeCheckBox = new JCheckBox();
         excludeCheckBox.setText("Exclude");
         excludeCheckBox.setToolTipText("Check if the regular expression should be used to exclude the data");
-        panel3.add(
+        panel5.add(
             excludeCheckBox, new GridConstraints(
-            2, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        testRegex = new JButton();
+        testRegex.setText("Test");
+        panel5.add(
+            testRegex, new GridConstraints(
+            0, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JSeparator separator2 = new JSeparator();
+        panel5.add(
+            separator2, new GridConstraints(
+            1, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
+            null, null, null, 0, false));
+        final JPanel panel6 = new JPanel();
+        panel6.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        contentPane.add(
+            panel6, new GridConstraints(
+            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(349, 96), null, 0, false));
+        final JScrollPane scrollPane3 = new JScrollPane();
+        panel6.add(
+            scrollPane3, new GridConstraints(
+            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(-1, 89), null, 0, false));
+        patternsList = new JList();
+        scrollPane3.setViewportView(patternsList);
+        final JPanel panel7 = new JPanel();
+        panel7.setLayout(new GridLayoutManager(4, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel6.add(
+            panel7, new GridConstraints(
+            0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        addButton = new JButton();
+        addButton.setText("Add");
+        panel7.add(
+            addButton, new GridConstraints(
+            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        removeButton = new JButton();
+        removeButton.setEnabled(false);
+        removeButton.setText("Remove");
+        panel7.add(
+            removeButton, new GridConstraints(
+            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer1 = new Spacer();
+        panel7.add(
+            spacer1, new GridConstraints(
+            3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        testPattern = new JButton();
+        testPattern.setEnabled(false);
+        testPattern.setText("Test");
+        panel7.add(
+            testPattern, new GridConstraints(
+            2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**
