@@ -6,11 +6,11 @@ The h-rider is a UI application that provides an easier way to view or manipulat
 ## Getting started
 To get started, begin here:
 
-1. [Learn about](https://github.com/NiceSystems/hrider/wiki/Manual) h-rider by reading the manual.
+1. Learn about h-rider by reading the [manual](https://github.com/NiceSystems/hrider/wiki/Manual).
 
-2. Download h-rider release.
+2. Download h-rider latest release from the links below.
 
-3. If you have any problems first read the [FAQ](https://github.com/NiceSystems/hrider/wiki/FAQ).
+3. If you have any problems read the [FAQ](https://github.com/NiceSystems/hrider/wiki/FAQ) first.
 
 ## News
 ### 18 January, 2013: Release 1.0.2.0 available
