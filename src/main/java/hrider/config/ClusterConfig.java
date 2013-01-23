@@ -46,18 +46,15 @@ public class ClusterConfig extends PropertiesConfig {
      * @return A reference to the {@link ConnectionDetails} class.
      */
     public ConnectionDetails getConnection() {
-        final String hbaseHost = get(String.class, "connection.hbase.host", null);
-        final String hbasePort = get(String.class, "connection.hbase.port", null);
         final String zookeeperHost = get(String.class, "connection.zookeeper.host", null);
         final String zookeeperPort = get(String.class, "connection.zookeeper.port", null);
 
-        if (hbaseHost == null || zookeeperHost == null || hbasePort == null || zookeeperPort == null) {
+        if (zookeeperHost == null || zookeeperPort == null) {
             return null;
         }
 
         return new ConnectionDetails() {{
-            setHbaseServer(new ServerDetails(hbaseHost, hbasePort));
-            setZookeeperServer(new ServerDetails(zookeeperHost, zookeeperPort));
+            setZookeeper(new ServerDetails(zookeeperHost, zookeeperPort));
         }};
     }
 
@@ -67,10 +64,8 @@ public class ClusterConfig extends PropertiesConfig {
      * @param connection A connection details to save.
      */
     public void setConnection(ConnectionDetails connection) {
-        set("connection.hbase.host", connection.getHbaseServer().getHost());
-        set("connection.hbase.port", connection.getHbaseServer().getPort());
-        set("connection.zookeeper.host", connection.getZookeeperServer().getHost());
-        set("connection.zookeeper.port", connection.getZookeeperServer().getPort());
+        set("connection.zookeeper.host", connection.getZookeeper().getHost());
+        set("connection.zookeeper.port", connection.getZookeeper().getPort());
 
         save();
     }

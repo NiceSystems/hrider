@@ -73,7 +73,7 @@ public class Connection {
      */
     public Connection(ConnectionDetails connectionDetails) throws IOException {
         this.connectionDetails = connectionDetails;
-        this.serverName = connectionDetails.getHbaseServer().getHost();
+        this.serverName = connectionDetails.getZookeeper().getHost();
         this.listeners = new ArrayList<HbaseActionListener>();
 
         try {

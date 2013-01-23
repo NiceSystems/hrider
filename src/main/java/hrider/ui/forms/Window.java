@@ -175,7 +175,7 @@ public class Window {
 
                             ConnectionDetails connectionDetails = clusterConfig.getConnection();
                             if (connectionDetails != null) {
-                                splash.update(String.format("Connecting to %s...", connectionDetails.getHbaseServer().getHost()));
+                                splash.update(String.format("Connecting to %s...", connectionDetails.getZookeeper().getHost()));
 
                                 if (connectionDetails.canConnect()) {
                                     connections.add(connectionDetails);
@@ -196,7 +196,7 @@ public class Window {
 
                     for (ConnectionDetails connectionDetails : connections) {
                         try {
-                            splash.update(String.format("Loading %s view...", connectionDetails.getHbaseServer().getHost()));
+                            splash.update(String.format("Loading %s view...", connectionDetails.getZookeeper().getHost()));
 
                             Connection connection = ConnectionManager.create(connectionDetails);
                             loadView(connection);

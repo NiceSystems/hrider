@@ -5,12 +5,9 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import hrider.config.ConnectionDetails;
 import hrider.config.GlobalConfig;
 import hrider.config.ServerDetails;
-import hrider.hbase.Connection;
 import hrider.hbase.ConnectionManager;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -38,10 +35,8 @@ public class ConnectionDetailsDialog extends JDialog {
     private JPanel            contentPane;
     private JButton           buttonConnect;
     private JButton           buttonCancel;
-    private JTextField        hbaseServer;
     private JTextField        zooKeeperServer;
     private JSpinner          zooKeeperPort;
-    private JSpinner          hbasePort;
     private ConnectionDetails connectionDetails;
     //endregion
 
@@ -49,10 +44,9 @@ public class ConnectionDetailsDialog extends JDialog {
     public ConnectionDetailsDialog() {
         setContentPane(this.contentPane);
         setModal(true);
-        setTitle("Connect to an Hbase server...");
+        setTitle("Connect to an Hbase...");
         getRootPane().setDefaultButton(this.buttonConnect);
 
-        this.hbasePort.setValue(GlobalConfig.instance().get(Integer.class, "connection.hbase.defaultPort", "9000"));
         this.zooKeeperPort.setValue(GlobalConfig.instance().get(Integer.class, "connection.zookeeper.defaultPort", "2181"));
 
         this.buttonConnect.addActionListener(
@@ -89,24 +83,6 @@ public class ConnectionDetailsDialog extends JDialog {
                     onCancel();
                 }
             }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-
-        this.hbaseServer.getDocument().addDocumentListener(
-            new DocumentListener() {
-                @Override
-                public void insertUpdate(DocumentEvent e) {
-                    ConnectionDetailsDialog.this.zooKeeperServer.setText(ConnectionDetailsDialog.this.hbaseServer.getText());
-                }
-
-                @Override
-                public void removeUpdate(DocumentEvent e) {
-                    ConnectionDetailsDialog.this.zooKeeperServer.setText(ConnectionDetailsDialog.this.hbaseServer.getText());
-                }
-
-                @Override
-                public void changedUpdate(DocumentEvent e) {
-                    ConnectionDetailsDialog.this.zooKeeperServer.setText(ConnectionDetailsDialog.this.hbaseServer.getText());
-                }
-            });
     }
     //endregion
 
@@ -129,9 +105,7 @@ public class ConnectionDetailsDialog extends JDialog {
         this.contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
         this.connectionDetails = new ConnectionDetails() {{
-            setHbaseServer(
-                new ServerDetails(ConnectionDetailsDialog.this.hbaseServer.getText(), ConnectionDetailsDialog.this.hbasePort.getValue().toString()));
-            setZookeeperServer(
+            setZookeeper(
                 new ServerDetails(
                     ConnectionDetailsDialog.this.zooKeeperServer.getText(), ConnectionDetailsDialog.this.zooKeeperPort.getValue().toString()));
         }};
@@ -141,7 +115,6 @@ public class ConnectionDetailsDialog extends JDialog {
             ConnectionManager.create(this.connectionDetails);
 
             GlobalConfig.instance().set("connection.zookeeper.defaultPort", this.zooKeeperPort.getValue().toString());
-            GlobalConfig.instance().set("connection.hbase.defaultPort", this.hbasePort.getValue().toString());
             GlobalConfig.instance().save();
 
             dispose();
@@ -213,54 +186,32 @@ public class ConnectionDetailsDialog extends JDialog {
             0, 0, 1, 1, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW,
             GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(2, 4, new Insets(0, 0, 0, 0), -1, -1));
+        panel3.setLayout(new GridLayoutManager(1, 4, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(
             panel3, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JLabel label1 = new JLabel();
-        label1.setText("Hbase host:");
+        label1.setText("ZooKeeper Quorum:");
         panel3.add(
             label1, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
-        hbaseServer = new JTextField();
-        panel3.add(
-            hbaseServer, new GridConstraints(
-            0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
-            null, new Dimension(150, -1), null, 0, false));
-        final JLabel label2 = new JLabel();
-        label2.setText("Zoo Keeper host:");
-        panel3.add(
-            label2, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
-            null, 0, false));
         zooKeeperServer = new JTextField();
         panel3.add(
             zooKeeperServer, new GridConstraints(
-            1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+            0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, new Dimension(150, -1), null, 0, false));
-        final JLabel label3 = new JLabel();
-        label3.setText("Port:");
+        final JLabel label2 = new JLabel();
+        label2.setText("Port:");
         panel3.add(
-            label3, new GridConstraints(
+            label2, new GridConstraints(
             0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
-        final JLabel label4 = new JLabel();
-        label4.setText("Port:");
-        panel3.add(
-            label4, new GridConstraints(
-            1, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
-            null, 0, false));
-        hbasePort = new JSpinner();
-        panel3.add(
-            hbasePort, new GridConstraints(
-            0, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
-            null, null, null, 0, false));
         zooKeeperPort = new JSpinner();
         panel3.add(
             zooKeeperPort, new GridConstraints(
-            1, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+            0, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, null, null, 0, false));
     }
 

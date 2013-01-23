@@ -29,25 +29,16 @@ import java.io.IOException;
 public class ConnectionDetails {
 
     //region Variables
-    private ServerDetails hbaseServer;
-    private ServerDetails zookeeperServer;
+    private ServerDetails zookeeper;
     //endregion
 
     //region Public Properties
-    public ServerDetails getHbaseServer() {
-        return this.hbaseServer;
+    public ServerDetails getZookeeper() {
+        return this.zookeeper;
     }
 
-    public void setHbaseServer(ServerDetails hbaseServer) {
-        this.hbaseServer = hbaseServer;
-    }
-
-    public ServerDetails getZookeeperServer() {
-        return this.zookeeperServer;
-    }
-
-    public void setZookeeperServer(ServerDetails zookeeperServer) {
-        this.zookeeperServer = zookeeperServer;
+    public void setZookeeper(ServerDetails zookeeper) {
+        this.zookeeper = zookeeper;
     }
     //endregion
 
@@ -63,9 +54,8 @@ public class ConnectionDetails {
 
     public Configuration createConfig() {
         Configuration config = HBaseConfiguration.create();
-        config.set("hbase.zookeeper.quorum", this.zookeeperServer.getHost());
-        config.set("hbase.zookeeper.property.clientPort", this.zookeeperServer.getPort());
-        config.set("hbase.master", this.hbaseServer.getHost() + ':' + this.hbaseServer.getPort());
+        config.set("hbase.zookeeper.quorum", this.zookeeper.getHost());
+        config.set("hbase.zookeeper.property.clientPort", this.zookeeper.getPort());
 
         return config;
     }
@@ -74,14 +64,14 @@ public class ConnectionDetails {
     public boolean equals(Object obj) {
         if (obj instanceof ConnectionDetails) {
             ConnectionDetails details = (ConnectionDetails)obj;
-            return this.hbaseServer.equals(details.hbaseServer) && this.zookeeperServer.equals(details.zookeeperServer);
+            return this.zookeeper.equals(details.zookeeper);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return this.hbaseServer.hashCode() ^ this.zookeeperServer.hashCode();
+        return this.zookeeper.hashCode();
     }
     //endregion
 }
