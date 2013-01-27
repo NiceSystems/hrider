@@ -159,6 +159,16 @@ public class DesignerView {
                 }
             });
 
+        this.tablesFilter.getEditor().addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    clusterConfig.setSelectedTableFilter((String)tablesFilter.getEditor().getItem());
+
+                    loadTables();
+                }
+            });
+
         this.columnsFilter.addItemListener(
             new ItemListener() {
                 @Override
@@ -168,6 +178,16 @@ public class DesignerView {
 
                         populateColumnsTable(false);
                     }
+                }
+            });
+
+        this.columnsFilter.getEditor().addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    clusterConfig.setSelectedColumnFilter(getSelectedTableName(), (String)columnsFilter.getEditor().getItem());
+
+                    populateColumnsTable(false);
                 }
             });
 
@@ -1964,7 +1984,7 @@ public class DesignerView {
         tablesFilter = new JComboBox();
         tablesFilter.setAlignmentX(0.0f);
         tablesFilter.setAlignmentY(0.6f);
-        tablesFilter.setEditable(false);
+        tablesFilter.setEditable(true);
         tablesFilter.setFont(new Font(tablesFilter.getFont().getName(), tablesFilter.getFont().getStyle(), tablesFilter.getFont().getSize()));
         tablesFilter.setMaximumSize(new Dimension(32767, 26));
         tablesFilter.setMinimumSize(new Dimension(50, 20));
@@ -2124,7 +2144,7 @@ public class DesignerView {
         columnsFilter = new JComboBox();
         columnsFilter.setAlignmentX(0.0f);
         columnsFilter.setAlignmentY(0.6f);
-        columnsFilter.setEditable(false);
+        columnsFilter.setEditable(true);
         columnsFilter.setMaximumSize(new Dimension(32767, 26));
         columnsFilter.setMinimumSize(new Dimension(-1, -1));
         columnsFilter.setPreferredSize(new Dimension(-1, -1));

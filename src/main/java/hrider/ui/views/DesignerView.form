@@ -77,7 +77,7 @@
                         <properties>
                           <alignmentX value="0.0"/>
                           <alignmentY value="0.6"/>
-                          <editable value="false"/>
+                          <editable value="true"/>
                           <font/>
                           <maximumSize width="32767" height="26"/>
                           <minimumSize width="50" height="20"/>
@@ -324,7 +324,7 @@
                             <properties>
                               <alignmentX value="0.0"/>
                               <alignmentY value="0.6"/>
-                              <editable value="false"/>
+                              <editable value="true"/>
                               <maximumSize width="32767" height="26"/>
                               <minimumSize width="-1" height="-1"/>
                               <preferredSize width="-1" height="-1"/>
