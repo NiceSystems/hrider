@@ -1190,11 +1190,9 @@ public class DesignerView {
             });
 
         changeTracker.addListener(
-            new
-
-                ChangeTrackerListener() {
+            new ChangeTrackerListener() {
                     @Override
-                    public void onItemChanged(DataCell cell) {
+                    public void onCellChanged(DataCell cell) {
                         clearError();
 
                         updateRowButton.setEnabled(changeTracker.hasChanges());

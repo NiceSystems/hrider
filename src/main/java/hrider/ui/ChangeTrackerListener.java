@@ -26,7 +26,8 @@ public interface ChangeTrackerListener {
 
     /**
      * This method is called when the cell has been updated in the grid.
+     *
      * @param cell The updated cell.
      */
-    void onItemChanged(DataCell cell);
+    void onCellChanged(DataCell cell);
 }

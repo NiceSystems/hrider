@@ -92,7 +92,7 @@ public class ChangeTracker {
         row.addCell(cell);
 
         for (ChangeTrackerListener listener : this.listeners) {
-            listener.onItemChanged(cell);
+            listener.onCellChanged(cell);
         }
     }
 
@@ -106,7 +106,7 @@ public class ChangeTracker {
             this.changes.remove(row);
 
             for (ChangeTrackerListener listener : this.listeners) {
-                listener.onItemChanged(cell);
+                listener.onCellChanged(cell);
             }
         }
     }
