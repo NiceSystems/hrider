@@ -56,6 +56,7 @@ public class ConnectionDetails {
         Configuration config = HBaseConfiguration.create();
         config.set("hbase.zookeeper.quorum", this.zookeeper.getHost());
         config.set("hbase.zookeeper.property.clientPort", this.zookeeper.getPort());
+        config.set("hbase.client.retries.number", "3");
 
         return config;
     }

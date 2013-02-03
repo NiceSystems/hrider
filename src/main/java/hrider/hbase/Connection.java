@@ -301,7 +301,7 @@ public class Connection {
             families.add(column.getNameAsString());
         }
 
-        Collection<String> familiesToCreate = new ArrayList<String>();
+        Collection<String> familiesToCreate = new HashSet<String>();
         List<Put> puts = new ArrayList<Put>();
 
         for (DataRow row : rows) {
@@ -352,7 +352,7 @@ public class Connection {
             families.add(column.getNameAsString());
         }
 
-        Collection<String> familiesToCreate = new ArrayList<String>();
+        Collection<String> familiesToCreate = new HashSet<String>();
 
         Put put = new Put(row.getKey().toByteArray());
         for (DataCell cell : row.getCells()) {
