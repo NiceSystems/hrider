@@ -67,8 +67,8 @@ public class Window {
             new MessageHandlerListener() {
                 @Override
                 public void onInfo(String message) {
-                    Window.this.statusLabel.setText(message);
-                    Window.this.statusLabel.paintImmediately(Window.this.statusLabel.getBounds());
+                    statusLabel.setText(message);
+                    statusLabel.paintImmediately(statusLabel.getBounds());
                 }
 
                 @Override
@@ -78,8 +78,8 @@ public class Window {
                         error += ": " + ex.toString();
                     }
 
-                    Window.this.statusLabel.setText(error);
-                    Window.this.statusLabel.paintImmediately(Window.this.statusLabel.getBounds());
+                    statusLabel.setText(error);
+                    statusLabel.paintImmediately(statusLabel.getBounds());
                 }
             });
 
@@ -94,7 +94,7 @@ public class Window {
                             loadView(connection);
                         }
                         catch (IOException ex) {
-                            ex.printStackTrace();
+                            MessageHandler.addError(String.format("Failed to connect to %s.", connectionDetails.getZookeeper().getHost()), ex);
                         }
                     }
                 }
@@ -148,8 +148,7 @@ public class Window {
             JarFile file = new JarFile(jarPath);
             return file.getManifest().getMainAttributes().get(new Attributes.Name("version")).toString();
         }
-        catch (IOException e) {
-            e.printStackTrace();
+        catch (IOException ignore) {
             return "Unknown Version";
         }
     }
@@ -171,26 +170,29 @@ public class Window {
                     Collection<String> clusters = ViewConfig.instance().getClusters();
                     for (String clusterName : clusters) {
                         if (PropertiesConfig.fileExists(clusterName)) {
-                            ClusterConfig clusterConfig = new ClusterConfig(clusterName);
+                            boolean canConnect = false;
 
+                            ClusterConfig clusterConfig = new ClusterConfig(clusterName);
                             ConnectionDetails connectionDetails = clusterConfig.getConnection();
+
                             if (connectionDetails != null) {
                                 splash.update(String.format("Connecting to %s...", connectionDetails.getZookeeper().getHost()));
 
                                 if (connectionDetails.canConnect()) {
                                     connections.add(connectionDetails);
+
+                                    canConnect = true;
                                 }
                             }
-                            else {
+
+                            if (!canConnect) {
                                 ViewConfig.instance().removeCluster(clusterName);
-                                ViewConfig.instance().save();
 
                                 PropertiesConfig.fileRemove(clusterName);
                             }
                         }
                         else {
                             ViewConfig.instance().removeCluster(clusterName);
-                            ViewConfig.instance().save();
                         }
                     }
 
@@ -204,7 +206,7 @@ public class Window {
                             loaded.add(connectionDetails);
                         }
                         catch (IOException e) {
-                            e.printStackTrace();
+                            MessageHandler.addError(String.format("Failed to connect to %s.", connectionDetails.getZookeeper().getHost()), e);
                         }
                     }
 
@@ -222,7 +224,7 @@ public class Window {
                     loadView(connection);
                 }
                 catch (IOException e) {
-                    e.printStackTrace();
+                    MessageHandler.addError(String.format("Failed to connect to %s.", connectionDetails.getZookeeper().getHost()), e);
                 }
             }
             else {
@@ -250,7 +252,7 @@ public class Window {
                 new TabClosedListener() {
                     @Override
                     public void onTabClosed(Component component) {
-                        DesignerView designerView = Window.this.viewMap.get(component);
+                        DesignerView designerView = viewMap.get(component);
 
                         ClipboardData<DataTable> data = InMemoryClipboard.getData();
                         if (data != null) {
@@ -263,12 +265,11 @@ public class Window {
                         }
 
                         ViewConfig.instance().removeCluster(designerView.getConnection().getServerName());
-                        ViewConfig.instance().save();
 
                         PropertiesConfig.fileRemove(designerView.getConnection().getServerName());
 
                         ConnectionManager.release(designerView.getConnection().getConnectionDetails());
-                        Window.this.viewMap.remove(component);
+                        viewMap.remove(component);
                     }
                 });
 
@@ -277,7 +278,6 @@ public class Window {
             this.tabbedPane.setTabComponentAt(index, closeButton);
 
             ViewConfig.instance().addCluster(connection.getServerName());
-            ViewConfig.instance().save();
 
             view.populate();
         }
@@ -289,7 +289,7 @@ public class Window {
     /**
      * Shows a connection dialog.
      *
-     * @return A reference to {@link hrider.config.ConnectionDetails} class that contains all required information to connect to the cluster.
+     * @return A reference to {@link ConnectionDetails} class that contains all required information to connect to the cluster.
      */
     private ConnectionDetails showDialog() {
         ConnectionDetailsDialog dialog = new ConnectionDetailsDialog();

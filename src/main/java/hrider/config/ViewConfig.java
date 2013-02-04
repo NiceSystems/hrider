@@ -68,6 +68,7 @@ public class ViewConfig extends PropertiesConfig {
      */
     public void addCluster(String name) {
         set(String.format("cluster.%s", name), name);
+        save();
     }
 
     /**
@@ -77,6 +78,7 @@ public class ViewConfig extends PropertiesConfig {
      */
     public void removeCluster(String name) {
         remove(String.format("cluster.%s", name));
+        save();
     }
     //endregion
 }

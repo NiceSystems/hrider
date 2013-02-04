@@ -96,7 +96,7 @@ public class ImportTableDialog extends JDialog {
             new ListSelectionListener() {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
-                    ImportTableDialog.this.btRemoveColumn.setEnabled(e.getFirstIndex() != -1);
+                    btRemoveColumn.setEnabled(e.getFirstIndex() != -1);
                 }
             });
 
@@ -143,12 +143,12 @@ public class ImportTableDialog extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     JFileChooser dialog = new JFileChooser();
                     dialog.setCurrentDirectory(new File("."));
-                    dialog.setSelectedFile(new File(ImportTableDialog.this.tfFilePath.getText()));
+                    dialog.setSelectedFile(new File(tfFilePath.getText()));
 
-                    int returnVal = dialog.showSaveDialog(ImportTableDialog.this.contentPane);
+                    int returnVal = dialog.showSaveDialog(contentPane);
 
                     if (returnVal == JFileChooser.APPROVE_OPTION) {
-                        ImportTableDialog.this.tfFilePath.setText(dialog.getSelectedFile().getAbsolutePath());
+                        tfFilePath.setText(dialog.getSelectedFile().getAbsolutePath());
                     }
                 }
             });
@@ -157,20 +157,20 @@ public class ImportTableDialog extends JDialog {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    stopCellEditing(ImportTableDialog.this.rowsTable);
+                    stopCellEditing(rowsTable);
 
                     AddColumnDialog dialog = new AddColumnDialog(columnFamilies);
                     dialog.showDialog(ImportTableDialog.this);
 
                     String columnName = dialog.getColumnName();
                     if (columnName != null) {
-                        int rowIndex = getRowIndex(ImportTableDialog.this.rowsTable, 1, columnName);
+                        int rowIndex = getRowIndex(rowsTable, 1, columnName);
                         if (rowIndex == -1) {
-                            ImportTableDialog.this.tableModel.addRow(new Object[]{columnName, ObjectType.String, null});
-                            rowIndex = ImportTableDialog.this.tableModel.getRowCount() - 1;
+                            tableModel.addRow(new Object[]{columnName, ObjectType.String, null});
+                            rowIndex = tableModel.getRowCount() - 1;
                         }
 
-                        ImportTableDialog.this.rowsTable.setRowSelectionInterval(rowIndex, rowIndex);
+                        rowsTable.setRowSelectionInterval(rowIndex, rowIndex);
                     }
                 }
             });
@@ -179,14 +179,14 @@ public class ImportTableDialog extends JDialog {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    int selectedRow = ImportTableDialog.this.rowsTable.getSelectedRow();
+                    int selectedRow = rowsTable.getSelectedRow();
 
                     while (selectedRow != -1) {
-                        ImportTableDialog.this.tableModel.removeRow(selectedRow);
-                        selectedRow = ImportTableDialog.this.rowsTable.getSelectedRow();
+                        tableModel.removeRow(selectedRow);
+                        selectedRow = rowsTable.getSelectedRow();
                     }
 
-                    ImportTableDialog.this.btRemoveColumn.setEnabled(false);
+                    btRemoveColumn.setEnabled(false);
                 }
             });
 
@@ -194,7 +194,7 @@ public class ImportTableDialog extends JDialog {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    ImportTableDialog.this.canceled = true;
+                    canceled = true;
                 }
             });
     }
@@ -236,19 +236,19 @@ public class ImportTableDialog extends JDialog {
                 @Override
                 public void run() {
 
-                    ImportTableDialog.this.tfTableName.setEnabled(false);
-                    ImportTableDialog.this.tfFilePath.setEnabled(false);
-                    ImportTableDialog.this.cmbDelimiter.setEnabled(false);
-                    ImportTableDialog.this.btCancel.setEnabled(true);
-                    ImportTableDialog.this.btClose.setEnabled(false);
-                    ImportTableDialog.this.btBrowse.setEnabled(false);
-                    ImportTableDialog.this.btImport.setEnabled(false);
+                    tfTableName.setEnabled(false);
+                    tfFilePath.setEnabled(false);
+                    cmbDelimiter.setEnabled(false);
+                    btCancel.setEnabled(true);
+                    btClose.setEnabled(false);
+                    btBrowse.setEnabled(false);
+                    btImport.setEnabled(false);
 
-                    ImportTableDialog.this.canceled = false;
+                    canceled = false;
 
                     BufferedReader reader = null;
                     try {
-                        reader = new BufferedReader(new FileReader(ImportTableDialog.this.tfFilePath.getText()));
+                        reader = new BufferedReader(new FileReader(tfFilePath.getText()));
                         String header = reader.readLine();
                         if (header != null) {
                             Pattern p = Pattern.compile(Pattern.quote(Character.toString(getDelimiter())));
@@ -262,21 +262,21 @@ public class ImportTableDialog extends JDialog {
                                 throw new IllegalArgumentException("Column 'key' is missing in the file.");
                             }
 
-                            String tableName = ImportTableDialog.this.tfTableName.getText().trim();
+                            String tableName = tfTableName.getText().trim();
                             connection.createTable(tableName);
 
                             Map<String, ObjectType> columnTypes = getColumnTypes();
 
                             long readCount = 1;
-                            long writtenCount = 1;
+                            long writtenCount = 0;
                             int batch = GlobalConfig.instance().getBatchSizeForWrite();
 
                             Collection<DataRow> rows = new ArrayList<DataRow>();
 
                             String line = reader.readLine();
-                            while (line != null && !ImportTableDialog.this.canceled) {
+                            while (line != null && !canceled) {
 
-                                ImportTableDialog.this.readRowsCount.setText(Long.toString(readCount++));
+                                readRowsCount.setText(Long.toString(readCount++));
                                 DataRow row = new DataRow();
 
                                 String[] values = p.split(line);
@@ -306,7 +306,7 @@ public class ImportTableDialog extends JDialog {
                                     writtenCount += rows.size();
                                     rows.clear();
 
-                                    ImportTableDialog.this.writtenRowsCount.setText(Long.toString(writtenCount));
+                                    writtenRowsCount.setText(Long.toString(writtenCount));
                                 }
 
                                 line = reader.readLine();
@@ -319,14 +319,13 @@ public class ImportTableDialog extends JDialog {
                                 writtenCount += rows.size();
                                 rows.clear();
 
-                                ImportTableDialog.this.writtenRowsCount.setText(Long.toString(writtenCount));
+                                writtenRowsCount.setText(Long.toString(writtenCount));
                             }
                         }
                     }
                     catch (Exception e) {
                         JOptionPane.showMessageDialog(
-                            ImportTableDialog.this.contentPane,
-                            String.format("Failed to import file %s.\nError: %s", ImportTableDialog.this.tfFilePath.getText(), e.getMessage()), "Error",
+                            contentPane, String.format("Failed to import file %s.\nError: %s", tfFilePath.getText(), e.getMessage()), "Error",
                             JOptionPane.ERROR_MESSAGE);
                     }
                     finally {
@@ -338,13 +337,13 @@ public class ImportTableDialog extends JDialog {
                             }
                         }
 
-                        ImportTableDialog.this.tfTableName.setEnabled(true);
-                        ImportTableDialog.this.tfFilePath.setEnabled(true);
-                        ImportTableDialog.this.cmbDelimiter.setEnabled(true);
-                        ImportTableDialog.this.btCancel.setEnabled(false);
-                        ImportTableDialog.this.btClose.setEnabled(true);
-                        ImportTableDialog.this.btBrowse.setEnabled(true);
-                        ImportTableDialog.this.btImport.setEnabled(true);
+                        tfTableName.setEnabled(true);
+                        tfFilePath.setEnabled(true);
+                        cmbDelimiter.setEnabled(true);
+                        btCancel.setEnabled(false);
+                        btClose.setEnabled(true);
+                        btBrowse.setEnabled(true);
+                        btImport.setEnabled(true);
                     }
                 }
             }).start();
@@ -446,7 +445,7 @@ public class ImportTableDialog extends JDialog {
             0, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW,
             GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(4, 4, new Insets(0, 0, 0, 0), -1, -1));
+        panel3.setLayout(new GridLayoutManager(4, 3, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(
             panel3, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
@@ -460,13 +459,13 @@ public class ImportTableDialog extends JDialog {
         tfFilePath = new JTextField();
         panel3.add(
             tfFilePath, new GridConstraints(
-            1, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+            1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, new Dimension(150, -1), null, 0, false));
         btBrowse = new JButton();
         btBrowse.setText("Browse");
         panel3.add(
             btBrowse, new GridConstraints(
-            1, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
+            1, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label2 = new JLabel();
         label2.setText("Delimiter:");
@@ -477,14 +476,14 @@ public class ImportTableDialog extends JDialog {
         cmbDelimiter = new JComboBox();
         cmbDelimiter.setEditable(true);
         final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
-        defaultComboBoxModel1.addElement(",");
         defaultComboBoxModel1.addElement("|");
+        defaultComboBoxModel1.addElement(",");
         defaultComboBoxModel1.addElement("-");
         defaultComboBoxModel1.addElement(":");
         cmbDelimiter.setModel(defaultComboBoxModel1);
         panel3.add(
             cmbDelimiter, new GridConstraints(
-            2, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
+            2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, null, null, 0, false));
         final JLabel label3 = new JLabel();
         label3.setText("Table name:");
@@ -495,13 +494,13 @@ public class ImportTableDialog extends JDialog {
         tfTableName = new JTextField();
         panel3.add(
             tfTableName, new GridConstraints(
-            0, 1, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+            0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, new Dimension(150, -1), null, 0, false));
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
         panel3.add(
             panel4, new GridConstraints(
-            3, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            3, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JPanel panel5 = new JPanel();
         panel5.setLayout(new GridLayoutManager(2, 4, new Insets(0, 0, 0, 0), -1, -1));

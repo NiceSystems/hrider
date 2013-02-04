@@ -82,7 +82,7 @@ public class ExportTableDialog extends JDialog {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (validateInput()) {
-                        ExportTableDialog.this.contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                         try {
                             Collection<TypedColumn> columns = new ArrayList<TypedColumn>();
                             for (String columnName : scanner.getColumns(100)) {
@@ -90,7 +90,7 @@ public class ExportTableDialog extends JDialog {
                             }
 
                             ScanDialog dialog = new ScanDialog(null, columns);
-                            dialog.showDialog(ExportTableDialog.this.contentPane);
+                            dialog.showDialog(contentPane);
 
                             Query query = dialog.getQuery();
                             if (query != null) {
@@ -101,12 +101,11 @@ public class ExportTableDialog extends JDialog {
                         }
                         catch (Exception ex) {
                             JOptionPane.showMessageDialog(
-                                ExportTableDialog.this.contentPane,
-                                String.format("Failed to load columns for '%s' table.\nError: %s", scanner.getTableName(), ex.getMessage()), "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                                contentPane, String.format("Failed to load columns for '%s' table.\nError: %s", scanner.getTableName(), ex.getMessage()),
+                                "Error", JOptionPane.ERROR_MESSAGE);
                         }
                         finally {
-                            ExportTableDialog.this.contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                            contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                         }
                     }
                 }
@@ -116,7 +115,7 @@ public class ExportTableDialog extends JDialog {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    ExportTableDialog.this.canceled = true;
+                    canceled = true;
                 }
             });
 
@@ -124,14 +123,13 @@ public class ExportTableDialog extends JDialog {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (ExportTableDialog.this.filePath != null) {
+                    if (filePath != null) {
                         try {
-                            Desktop.getDesktop().open(new File(ExportTableDialog.this.filePath));
+                            Desktop.getDesktop().open(new File(filePath));
                         }
                         catch (IOException ex) {
                             JOptionPane.showMessageDialog(
-                                ExportTableDialog.this.contentPane,
-                                String.format("Failed to open file %s.\nError: %s", ExportTableDialog.this.filePath, ex.getMessage()), "Error",
+                                contentPane, String.format("Failed to open file %s.\nError: %s", filePath, ex.getMessage()), "Error",
                                 JOptionPane.ERROR_MESSAGE);
                         }
                     }
@@ -144,12 +142,12 @@ public class ExportTableDialog extends JDialog {
                 public void actionPerformed(ActionEvent e) {
                     JFileChooser dialog = new JFileChooser();
                     dialog.setCurrentDirectory(new File("."));
-                    dialog.setSelectedFile(new File(ExportTableDialog.this.tfFilePath.getText()));
+                    dialog.setSelectedFile(new File(tfFilePath.getText()));
 
-                    int returnVal = dialog.showSaveDialog(ExportTableDialog.this.contentPane);
+                    int returnVal = dialog.showSaveDialog(contentPane);
 
                     if (returnVal == JFileChooser.APPROVE_OPTION) {
-                        ExportTableDialog.this.tfFilePath.setText(dialog.getSelectedFile().getAbsolutePath());
+                        tfFilePath.setText(dialog.getSelectedFile().getAbsolutePath());
                     }
                 }
             });
@@ -186,7 +184,7 @@ public class ExportTableDialog extends JDialog {
                 @Override
                 public void run() {
                     try {
-                        ExportTableDialog.this.totalRowsCount.setText(String.valueOf(scanner.getRowsCount()));
+                        totalRowsCount.setText(String.valueOf(scanner.getRowsCount()));
                     }
                     catch (Exception ignore) {
                     }
@@ -225,16 +223,16 @@ public class ExportTableDialog extends JDialog {
             new Runnable() {
                 @Override
                 public void run() {
-                    ExportTableDialog.this.tfFilePath.setEnabled(false);
-                    ExportTableDialog.this.cmbDelimiter.setEnabled(false);
-                    ExportTableDialog.this.btExport.setEnabled(false);
-                    ExportTableDialog.this.btExportWithQueryButton.setEnabled(false);
-                    ExportTableDialog.this.btCancel.setEnabled(true);
-                    ExportTableDialog.this.btOpen.setEnabled(false);
-                    ExportTableDialog.this.btClose.setEnabled(false);
-                    ExportTableDialog.this.btBrowse.setEnabled(false);
+                    tfFilePath.setEnabled(false);
+                    cmbDelimiter.setEnabled(false);
+                    btExport.setEnabled(false);
+                    btExportWithQueryButton.setEnabled(false);
+                    btCancel.setEnabled(true);
+                    btOpen.setEnabled(false);
+                    btClose.setEnabled(false);
+                    btBrowse.setEnabled(false);
 
-                    ExportTableDialog.this.canceled = false;
+                    canceled = false;
 
                     FileOutputStream stream = null;
                     try {
@@ -248,24 +246,23 @@ public class ExportTableDialog extends JDialog {
 
                         int counter = 1;
 
-                        while (!rows.isEmpty() && !ExportTableDialog.this.canceled) {
+                        while (!rows.isEmpty() && !canceled) {
                             for (DataRow row : rows) {
                                 exporter.write(row, columnNames);
 
-                                ExportTableDialog.this.writtenRowsCount.setText(Long.toString(counter++));
-                                ExportTableDialog.this.writtenRowsCount.paintImmediately(ExportTableDialog.this.writtenRowsCount.getBounds());
+                                writtenRowsCount.setText(Long.toString(counter++));
+                                writtenRowsCount.paintImmediately(writtenRowsCount.getBounds());
                             }
 
                             rows = scanner.next(GlobalConfig.instance().getBatchSizeForRead());
                         }
 
-                        ExportTableDialog.this.filePath = file.getAbsolutePath();
-                        ExportTableDialog.this.btOpen.setEnabled(true);
+                        filePath = file.getAbsolutePath();
+                        btOpen.setEnabled(true);
                     }
                     catch (Exception e) {
                         JOptionPane.showMessageDialog(
-                            ExportTableDialog.this.contentPane,
-                            String.format("Failed to export to file %s.\nError: %s", ExportTableDialog.this.tfFilePath.getText(), e.getMessage()), "Error",
+                            contentPane, String.format("Failed to export to file %s.\nError: %s", tfFilePath.getText(), e.getMessage()), "Error",
                             JOptionPane.ERROR_MESSAGE);
                     }
                     finally {
@@ -277,13 +274,13 @@ public class ExportTableDialog extends JDialog {
                             }
                         }
 
-                        ExportTableDialog.this.tfFilePath.setEnabled(true);
-                        ExportTableDialog.this.cmbDelimiter.setEnabled(true);
-                        ExportTableDialog.this.btExport.setEnabled(true);
-                        ExportTableDialog.this.btExportWithQueryButton.setEnabled(true);
-                        ExportTableDialog.this.btCancel.setEnabled(false);
-                        ExportTableDialog.this.btClose.setEnabled(true);
-                        ExportTableDialog.this.btBrowse.setEnabled(true);
+                        tfFilePath.setEnabled(true);
+                        cmbDelimiter.setEnabled(true);
+                        btExport.setEnabled(true);
+                        btExportWithQueryButton.setEnabled(true);
+                        btCancel.setEnabled(false);
+                        btClose.setEnabled(true);
+                        btBrowse.setEnabled(true);
                     }
                 }
             }).start();
@@ -443,8 +440,8 @@ public class ExportTableDialog extends JDialog {
         cmbDelimiter = new JComboBox();
         cmbDelimiter.setEditable(true);
         final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
-        defaultComboBoxModel1.addElement(",");
         defaultComboBoxModel1.addElement("|");
+        defaultComboBoxModel1.addElement(",");
         defaultComboBoxModel1.addElement("-");
         defaultComboBoxModel1.addElement(":");
         cmbDelimiter.setModel(defaultComboBoxModel1);

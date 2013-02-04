@@ -47,7 +47,8 @@ public class ConnectionDetails {
         try {
             ConnectionManager.create(this);
             return true;
-        } catch (IOException e) {
+        }
+        catch (IOException ignore) {
             return false;
         }
     }

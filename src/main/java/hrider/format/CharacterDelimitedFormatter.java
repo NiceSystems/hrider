@@ -43,14 +43,7 @@ public class CharacterDelimitedFormatter implements Formatter {
         }
 
         if (value != null) {
-            String str = value.toString();
-            if (str.contains("\"")) {
-                str = str.replace("\"", "\"\"");
-            }
-            if (str.contains(Character.toString(this.separator))) {
-                str = '"' + str + '"';
-            }
-            this.formatted.append(str);
+            this.formatted.append(value.toString());
         }
     }
 
