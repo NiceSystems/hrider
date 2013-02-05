@@ -1191,13 +1191,13 @@ public class DesignerView {
 
         changeTracker.addListener(
             new ChangeTrackerListener() {
-                    @Override
-                    public void onCellChanged(DataCell cell) {
-                        clearError();
+                @Override
+                public void onCellChanged(DataCell cell) {
+                    clearError();
 
-                        updateRowButton.setEnabled(changeTracker.hasChanges());
-                    }
-                });
+                    updateRowButton.setEnabled(changeTracker.hasChanges());
+                }
+            });
     }
 
     /**
@@ -1402,7 +1402,19 @@ public class DesignerView {
                 filter = new PatternFilter(value);
             }
 
-            for (String column : scanner.getColumns(getPageSize())) {
+            if (row == null) {
+                this.scanner.setColumnTypes(
+                    new HashMap<String, ObjectType>() {{
+                        put("key", ObjectType.String);
+                    }});
+
+                Collection<DataRow> rows = this.scanner.current(1);
+                if (rows != null && !rows.isEmpty()) {
+                    row = rows.iterator().next();
+                }
+            }
+
+            for (String column : this.scanner.getColumns(getPageSize())) {
                 boolean isColumnVisible = "key".equals(column) || filter.match(column);
                 if (isColumnVisible) {
                     addColumnToColumnsTable(tableName, column, row);
@@ -1427,10 +1439,11 @@ public class DesignerView {
      */
     private void addColumnToColumnsTable(String tableName, String columnName, DataRow row) {
         ObjectType columnType = getColumnType(tableName, columnName);
+
         if (columnType == null && row != null) {
             DataCell cell = row.getCell(columnName);
             if (cell != null) {
-                columnType = cell.getTypedValue().getType();
+                columnType = cell.guessType();
             }
         }
 
@@ -1863,11 +1876,7 @@ public class DesignerView {
      * @return The column type.
      */
     private ObjectType getColumnType(String tableName, String columnName) {
-        ObjectType type = this.clusterConfig.getTableConfig(ObjectType.class, tableName, columnName);
-        if (type != null) {
-            return type;
-        }
-        return ObjectType.fromColumn(columnName);
+        return this.clusterConfig.getTableConfig(ObjectType.class, tableName, columnName);
     }
 
     /**

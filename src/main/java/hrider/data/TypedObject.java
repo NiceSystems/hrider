@@ -51,8 +51,12 @@ public class TypedObject {
     public TypedObject(ObjectType objType, Object objValue) {
         this.type = objType;
 
+        if (this.type == null) {
+            this.type = ObjectType.String;
+        }
+
         if (objValue instanceof byte[]) {
-            this.value = objType.fromByteArray((byte[])objValue);
+            this.value = this.type.fromByteArray((byte[])objValue);
         }
         else {
             this.value = objValue;
@@ -99,6 +103,26 @@ public class TypedObject {
             this.value = objType.fromByteArray(this.type.fromObject(this.value));
         }
         this.type = objType;
+    }
+
+    /**
+     * Tries to understand the type of the value based on value itself.
+     *
+     * @return A guessed type if successful or null.
+     */
+    public ObjectType guessType() {
+        if (value instanceof String) {
+            String str = ((String)value).trim();
+
+            if (str.startsWith("{") && str.endsWith("}")) {
+                return ObjectType.Json;
+            }
+
+            if (str.startsWith("<") && str.endsWith(">")) {
+                return ObjectType.Xml;
+            }
+        }
+        return null;
     }
     //endregion
 

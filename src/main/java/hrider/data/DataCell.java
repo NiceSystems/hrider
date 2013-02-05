@@ -127,6 +127,15 @@ public class DataCell {
         return this.typedValue.getType().toObject(data);
     }
 
+    /**
+     * Tries to understand the type of the value based on value itself.
+     *
+     * @return A guessed type if successful or null.
+     */
+    public ObjectType guessType() {
+        return this.typedValue.guessType();
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof DataCell) {
