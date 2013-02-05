@@ -152,8 +152,11 @@ public class ScanDialog extends JDialog {
             query.setColumn(parts[1]);
 
             query.setOperator((Operator)this.comboBoxOperator.getSelectedItem());
-            query.setWord(this.textFieldWord.getText().trim());
-            query.setWordType((ObjectType)this.comboBoxWordType.getSelectedItem());
+
+            if (!this.textFieldWord.getText().trim().isEmpty()) {
+                query.setWord(this.textFieldWord.getText().trim());
+                query.setWordType((ObjectType)this.comboBoxWordType.getSelectedItem());
+            }
 
             return query;
         }

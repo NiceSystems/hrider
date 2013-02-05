@@ -162,7 +162,7 @@ public class QueryScanner extends Scanner {
     @Override
     protected boolean isValidRow(Result row) {
         Query localQuery = this.query;
-        if (localQuery != null && localQuery.getFamily() != null && localQuery.getColumn() != null) {
+        if (localQuery != null && localQuery.getWord() != null) {
             return row.containsColumn(Bytes.toBytesBinary(localQuery.getFamily()), Bytes.toBytesBinary(localQuery.getColumn()));
         }
         return true;
