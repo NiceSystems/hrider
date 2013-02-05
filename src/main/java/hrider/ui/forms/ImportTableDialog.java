@@ -476,8 +476,8 @@ public class ImportTableDialog extends JDialog {
         cmbDelimiter = new JComboBox();
         cmbDelimiter.setEditable(true);
         final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
-        defaultComboBoxModel1.addElement("|");
         defaultComboBoxModel1.addElement(",");
+        defaultComboBoxModel1.addElement("|");
         defaultComboBoxModel1.addElement("-");
         defaultComboBoxModel1.addElement(":");
         cmbDelimiter.setModel(defaultComboBoxModel1);

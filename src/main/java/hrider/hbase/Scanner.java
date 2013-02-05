@@ -127,7 +127,7 @@ public class Scanner {
      * @return A list of columns.
      */
     public Collection<String> getColumns(int rowsNumber) {
-        if (this.markers.isEmpty()) {
+        if (this.markers.isEmpty() || peekMarker().columns.size() != rowsNumber) {
             try {
                 return loadColumns(rowsNumber);
             }
@@ -218,6 +218,31 @@ public class Scanner {
         if (startKey != null) {
             this.markers.push(new Marker(startKey, new ArrayList<DataRow>(), new ArrayList<String>()));
         }
+    }
+
+    /**
+     * Gets a first row in the table.
+     *
+     * @return A first row in the table.
+     * @throws IOException Error accessing hbase.
+     */
+    public DataRow getFirstRow() throws IOException {
+        Scan scan = getScanner();
+
+        HTable table = this.factory.get(this.tableName);
+        ResultScanner scanner = table.getScanner(scan);
+
+        Collection<DataRow> rows = new ArrayList<DataRow>();
+        Collection<String> columns = new ArrayList<String>();
+
+        columns.add("key");
+
+        loadRows(scanner, 0, 1, rows, columns);
+        if (rows.isEmpty()) {
+            return null;
+        }
+
+        return rows.iterator().next();
     }
 
     /**

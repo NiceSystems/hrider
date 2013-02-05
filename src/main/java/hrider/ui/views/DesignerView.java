@@ -1423,10 +1423,7 @@ public class DesignerView {
                         put("key", ObjectType.String);
                     }});
 
-                Collection<DataRow> rows = this.scanner.current(1);
-                if (rows != null && !rows.isEmpty()) {
-                    row = rows.iterator().next();
-                }
+                row = this.scanner.getFirstRow();
             }
 
             for (String column : this.scanner.getColumns(getPageSize())) {

@@ -106,8 +106,8 @@
             <properties>
               <editable value="true"/>
               <model>
-                <item value="|"/>
                 <item value=","/>
+                <item value="|"/>
                 <item value="-"/>
                 <item value=":"/>
               </model>
