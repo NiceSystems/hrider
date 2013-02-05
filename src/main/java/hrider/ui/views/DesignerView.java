@@ -84,7 +84,7 @@ public class DesignerView {
     private JButton                  checkAllButton;
     private JButton                  copyRowButton;
     private JButton                  pasteRowButton;
-    private JButton                  refreshButton;
+    private JButton                  refreshTablesButton;
     private JButton                  copyTableButton;
     private JButton                  pasteTableButton;
     private JButton                  uncheckAllButton;
@@ -100,6 +100,7 @@ public class DesignerView {
     private JButton                  exportTableButton;
     private JButton                  tableFiltersButton;
     private JButton                  columnFiltersButton;
+    private JButton                  refreshColumnsButton;
     private DefaultTableModel        columnsTableModel;
     private DefaultTableModel        rowsTableModel;
     private Query                    lastQuery;
@@ -606,7 +607,7 @@ public class DesignerView {
                 }
             });
 
-        this.refreshButton.addActionListener(
+        this.refreshTablesButton.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -740,6 +741,17 @@ public class DesignerView {
                     catch (Exception ex) {
                         setError("Failed to filter columns", ex);
                     }
+                }
+            });
+
+        this.refreshColumnsButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    clearError();
+
+                    scanner = null;
+                    populateColumnsTable(true);
                 }
             });
     }
@@ -893,7 +905,7 @@ public class DesignerView {
 
         clearError();
 
-        this.refreshButton.setEnabled(false);
+        this.refreshTablesButton.setEnabled(false);
         this.addTableButton.setEnabled(false);
         this.deleteTableButton.setEnabled(false);
         this.truncateTableButton.setEnabled(false);
@@ -931,7 +943,7 @@ public class DesignerView {
             setError("Failed to connect to hadoop: ", ex);
         }
         finally {
-            this.refreshButton.setEnabled(true);
+            this.refreshTablesButton.setEnabled(true);
             this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
     }
@@ -981,6 +993,7 @@ public class DesignerView {
                         addRowButton.setEnabled(false);
                         checkAllButton.setEnabled(false);
                         uncheckAllButton.setEnabled(false);
+                        refreshColumnsButton.setEnabled(false);
                     }
                 }
             });
@@ -1189,7 +1202,7 @@ public class DesignerView {
                 }
             });
 
-        changeTracker.addListener(
+        this.changeTracker.addListener(
             new ChangeTrackerListener() {
                 @Override
                 public void onCellChanged(DataCell cell) {
@@ -1245,6 +1258,7 @@ public class DesignerView {
                 this.addRowButton.setEnabled(true);
                 this.checkAllButton.setEnabled(true);
                 this.uncheckAllButton.setEnabled(true);
+                this.refreshColumnsButton.setEnabled(true);
             }
             else {
                 this.populateButton.setEnabled(false);
@@ -1253,6 +1267,7 @@ public class DesignerView {
                 this.addRowButton.setEnabled(false);
                 this.checkAllButton.setEnabled(false);
                 this.uncheckAllButton.setEnabled(false);
+                this.refreshColumnsButton.setEnabled(false);
             }
         }
         finally {
@@ -2038,15 +2053,17 @@ public class DesignerView {
             toolBar2, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
             new Dimension(-1, 20), null, 0, false));
-        refreshButton = new JButton();
-        refreshButton.setEnabled(true);
-        refreshButton.setHorizontalAlignment(0);
-        refreshButton.setIcon(new ImageIcon(getClass().getResource("/images/refresh.png")));
-        refreshButton.setMinimumSize(new Dimension(24, 24));
-        refreshButton.setPreferredSize(new Dimension(24, 24));
-        refreshButton.setText("");
-        refreshButton.setToolTipText("Refresh tables");
-        toolBar2.add(refreshButton);
+        refreshTablesButton = new JButton();
+        refreshTablesButton.setEnabled(true);
+        refreshTablesButton.setHorizontalAlignment(0);
+        refreshTablesButton.setIcon(new ImageIcon(getClass().getResource("/images/db-refresh.png")));
+        refreshTablesButton.setMinimumSize(new Dimension(24, 24));
+        refreshTablesButton.setPreferredSize(new Dimension(24, 24));
+        refreshTablesButton.setText("");
+        refreshTablesButton.setToolTipText("Refresh tables");
+        toolBar2.add(refreshTablesButton);
+        final JToolBar.Separator toolBar$Separator1 = new JToolBar.Separator();
+        toolBar2.add(toolBar$Separator1);
         addTableButton = new JButton();
         addTableButton.setEnabled(false);
         addTableButton.setHorizontalAlignment(0);
@@ -2194,6 +2211,17 @@ public class DesignerView {
             toolBar4, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
             new Dimension(-1, 20), null, 0, false));
+        refreshColumnsButton = new JButton();
+        refreshColumnsButton.setEnabled(false);
+        refreshColumnsButton.setHorizontalAlignment(0);
+        refreshColumnsButton.setIcon(new ImageIcon(getClass().getResource("/images/refresh.png")));
+        refreshColumnsButton.setMinimumSize(new Dimension(24, 24));
+        refreshColumnsButton.setPreferredSize(new Dimension(24, 24));
+        refreshColumnsButton.setText("");
+        refreshColumnsButton.setToolTipText("Refresh columns");
+        toolBar4.add(refreshColumnsButton);
+        final JToolBar.Separator toolBar$Separator2 = new JToolBar.Separator();
+        toolBar4.add(toolBar$Separator2);
         checkAllButton = new JButton();
         checkAllButton.setEnabled(false);
         checkAllButton.setIcon(new ImageIcon(getClass().getResource("/images/select.png")));
@@ -2227,8 +2255,8 @@ public class DesignerView {
         scanButton.setText("");
         scanButton.setToolTipText("Perform an advanced scan...");
         toolBar5.add(scanButton);
-        final JToolBar.Separator toolBar$Separator1 = new JToolBar.Separator();
-        toolBar5.add(toolBar$Separator1);
+        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
+        toolBar5.add(toolBar$Separator3);
         jumpButton = new JButton();
         jumpButton.setEnabled(false);
         jumpButton.setIcon(new ImageIcon(getClass().getResource("/images/jump.png")));
@@ -2335,23 +2363,23 @@ public class DesignerView {
         rowsNumberSpinner.setMinimumSize(new Dimension(45, 24));
         rowsNumberSpinner.setPreferredSize(new Dimension(60, 24));
         toolBar7.add(rowsNumberSpinner);
-        final JToolBar.Separator toolBar$Separator2 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator2);
+        final JToolBar.Separator toolBar$Separator4 = new JToolBar.Separator();
+        toolBar7.add(toolBar$Separator4);
         visibleRowsLabel = new JLabel();
         visibleRowsLabel.setText("?");
         toolBar7.add(visibleRowsLabel);
-        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator3);
+        final JToolBar.Separator toolBar$Separator5 = new JToolBar.Separator();
+        toolBar7.add(toolBar$Separator5);
         final JLabel label4 = new JLabel();
         label4.setText("of");
         toolBar7.add(label4);
-        final JToolBar.Separator toolBar$Separator4 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator4);
+        final JToolBar.Separator toolBar$Separator6 = new JToolBar.Separator();
+        toolBar7.add(toolBar$Separator6);
         rowsNumberLabel = new JLabel();
         rowsNumberLabel.setText("?");
         toolBar7.add(rowsNumberLabel);
-        final JToolBar.Separator toolBar$Separator5 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator5);
+        final JToolBar.Separator toolBar$Separator7 = new JToolBar.Separator();
+        toolBar7.add(toolBar$Separator7);
         showPrevPageButton = new JButton();
         showPrevPageButton.setEnabled(false);
         showPrevPageButton.setIcon(new ImageIcon(getClass().getResource("/images/prev.png")));

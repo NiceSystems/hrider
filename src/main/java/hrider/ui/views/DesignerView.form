@@ -154,16 +154,22 @@
                     </clientProperties>
                     <border type="none"/>
                     <children>
-                      <component id="400e6" class="javax.swing.JButton" binding="refreshButton">
+                      <component id="400e6" class="javax.swing.JButton" binding="refreshTablesButton">
                         <constraints/>
                         <properties>
                           <enabled value="true"/>
                           <horizontalAlignment value="0"/>
-                          <icon value="images/refresh.png"/>
+                          <icon value="images/db-refresh.png"/>
                           <minimumSize width="24" height="24"/>
                           <preferredSize width="24" height="24"/>
                           <text value=""/>
                           <toolTipText value="Refresh tables"/>
+                        </properties>
+                      </component>
+                      <component id="a0fc6" class="javax.swing.JToolBar$Separator">
+                        <constraints/>
+                        <properties>
+                          <separatorSize width="9" height="9"/>
                         </properties>
                       </component>
                       <component id="870b4" class="javax.swing.JButton" binding="addTableButton">
@@ -393,6 +399,24 @@
                         </properties>
                         <border type="none"/>
                         <children>
+                          <component id="3bd37" class="javax.swing.JButton" binding="refreshColumnsButton">
+                            <constraints/>
+                            <properties>
+                              <enabled value="false"/>
+                              <horizontalAlignment value="0"/>
+                              <icon value="images/refresh.png"/>
+                              <minimumSize width="24" height="24"/>
+                              <preferredSize width="24" height="24"/>
+                              <text value=""/>
+                              <toolTipText value="Refresh columns"/>
+                            </properties>
+                          </component>
+                          <component id="8f666" class="javax.swing.JToolBar$Separator">
+                            <constraints/>
+                            <properties>
+                              <separatorSize width="9" height="9"/>
+                            </properties>
+                          </component>
                           <component id="bf0ee" class="javax.swing.JButton" binding="checkAllButton" default-binding="true">
                             <constraints/>
                             <properties>

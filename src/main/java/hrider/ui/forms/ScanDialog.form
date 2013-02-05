@@ -5,7 +5,9 @@
     <constraints>
       <xy x="48" y="54" width="436" height="272"/>
     </constraints>
-    <properties/>
+    <properties>
+      <maximumSize width="400" height="350"/>
+    </properties>
     <border type="none"/>
     <children>
       <grid id="94766" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
