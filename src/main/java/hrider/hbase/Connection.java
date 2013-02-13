@@ -258,7 +258,7 @@ public class Connection {
 
             isValid = result != null;
             if (isValid) {
-                Collection<String> familiesToCreate = new ArrayList<String>();
+                Collection<String> familiesToCreate = new HashSet<String>();
 
                 Put put = new Put(result.getRow());
                 for (KeyValue keyValue : result.list()) {
