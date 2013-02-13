@@ -118,6 +118,10 @@ public class TypedObject {
                 return ObjectType.Json;
             }
 
+            if (str.startsWith("[") && str.endsWith("]")) {
+                return ObjectType.Json;
+            }
+
             if (str.startsWith("<") && str.endsWith(">")) {
                 return ObjectType.Xml;
             }
