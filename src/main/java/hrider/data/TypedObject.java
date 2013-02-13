@@ -111,7 +111,7 @@ public class TypedObject {
      * @return A guessed type if successful or null.
      */
     public ObjectType guessType() {
-        if (value instanceof String) {
+        if (type == ObjectType.String) {
             String str = ((String)value).trim();
 
             if (str.startsWith("{") && str.endsWith("}")) {

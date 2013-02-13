@@ -93,13 +93,13 @@ public class DesignerView {
     private JLabel                   columnsNumber;
     private JLabel                   tablesNumber;
     private JComboBox                tablesFilter;
+    private DefaultComboBoxModel     tablesFilterModel;
     private JComboBox                columnsFilter;
+    private DefaultComboBoxModel     columnsFilterModel;
     private JButton                  jumpButton;
     private JButton                  openInViewerButton;
     private JButton                  importTableButton;
     private JButton                  exportTableButton;
-    private JButton                  tableFiltersButton;
-    private JButton                  columnFiltersButton;
     private JButton                  refreshColumnsButton;
     private DefaultTableModel        columnsTableModel;
     private DefaultTableModel        rowsTableModel;
@@ -121,8 +121,17 @@ public class DesignerView {
         this.rowsTableRemovedColumns = new HashMap<String, TableColumn>();
         this.clusterConfig = new ClusterConfig(this.connection.getServerName());
         this.clusterConfig.setConnection(connection.getConnectionDetails());
+        this.tablesFilterModel = new DefaultComboBoxModel();
+        this.tablesFilter.setModel(this.tablesFilterModel);
+        this.columnsFilterModel = new DefaultComboBoxModel();
+        this.columnsFilter.setModel(this.columnsFilterModel);
 
         fillComboBox(tablesFilter, this.clusterConfig.getTableFilters());
+
+        String tableFilter = this.clusterConfig.getSelectedTableFilter();
+        if (tableFilter != null) {
+            this.tablesFilter.setSelectedItem(tableFilter);
+        }
 
         InMemoryClipboard.addListener(
             new ClipboardListener() {
@@ -164,9 +173,24 @@ public class DesignerView {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    clusterConfig.setSelectedTableFilter((String)tablesFilter.getEditor().getItem());
+                    String item = (String)tablesFilter.getEditor().getItem();
+                    if (item != null && !item.isEmpty()) {
+                        if (tablesFilterModel.getIndexOf(item) == -1) {
+                            tablesFilter.addItem(item);
+                        }
 
-                    loadTables();
+                        tablesFilter.setSelectedItem(item);
+                        clusterConfig.setTablesFilter(getFilters(tablesFilter));
+                    }
+                    else {
+                        Object selectedItem = tablesFilter.getSelectedItem();
+                        if (selectedItem != null) {
+                            tablesFilter.removeItem(selectedItem);
+                            tablesFilter.setSelectedIndex(0);
+
+                            clusterConfig.setTablesFilter(getFilters(tablesFilter));
+                        }
+                    }
                 }
             });
 
@@ -186,9 +210,24 @@ public class DesignerView {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    clusterConfig.setSelectedColumnFilter(getSelectedTableName(), (String)columnsFilter.getEditor().getItem());
+                    String item = (String)columnsFilter.getEditor().getItem();
+                    if (item != null && !item.isEmpty()) {
+                        if (columnsFilterModel.getIndexOf(item) == -1) {
+                            columnsFilter.addItem(item);
+                        }
 
-                    populateColumnsTable(false);
+                        columnsFilter.setSelectedItem(item);
+                        clusterConfig.setColumnsFilter(getSelectedTableName(), getFilters(columnsFilter));
+                    }
+                    else {
+                        Object selectedItem = columnsFilter.getSelectedItem();
+                        if (selectedItem != null) {
+                            columnsFilter.removeItem(selectedItem);
+                            columnsFilter.setSelectedIndex(0);
+
+                            clusterConfig.setColumnsFilter(getSelectedTableName(), getFilters(columnsFilter));
+                        }
+                    }
                 }
             });
 
@@ -693,57 +732,6 @@ public class DesignerView {
                 }
             });
 
-        this.tableFiltersButton.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    try {
-                        FilterDialog dialog = new FilterDialog(clusterConfig.getTableFilters(), connection.getTables());
-                        dialog.showDialog(topPanel);
-
-                        String regex = dialog.getRegex();
-                        if (regex != null) {
-                            clusterConfig.setTablesFilter(dialog.getRegexes());
-
-                            fillComboBox(tablesFilter, dialog.getRegexes());
-                            setFilter(tablesFilter, regex);
-
-                            loadTables();
-                        }
-                    }
-                    catch (Exception ex) {
-                        setError("Failed to filter tables", ex);
-                    }
-                }
-            });
-
-        this.columnFiltersButton.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    try {
-                        String table = getSelectedTableName();
-                        if (table != null) {
-                            FilterDialog dialog = new FilterDialog(clusterConfig.getColumnFilters(table), scanner.getColumns(getPageSize()));
-                            dialog.showDialog(topPanel);
-
-                            String regex = dialog.getRegex();
-                            if (regex != null) {
-                                clusterConfig.setColumnsFilter(table, dialog.getRegexes());
-
-                                fillComboBox(columnsFilter, dialog.getRegexes());
-                                setFilter(columnsFilter, regex);
-
-                                populateColumnsTable(false);
-                            }
-                        }
-                    }
-                    catch (Exception ex) {
-                        setError("Failed to filter columns", ex);
-                    }
-                }
-            });
-
         this.refreshColumnsButton.addActionListener(
             new ActionListener() {
                 @Override
@@ -971,8 +959,10 @@ public class DesignerView {
                         exportTableButton.setEnabled(true);
                         scanner = null;
 
+                        String currentFilter = clusterConfig.getSelectedColumnFilter(getSelectedTableName());
+
                         fillComboBox(columnsFilter, clusterConfig.getColumnFilters(getSelectedTableName()));
-                        setFilter(columnsFilter, clusterConfig.getSelectedColumnFilter(getSelectedTableName()));
+                        setFilter(columnsFilter, currentFilter);
 
                         populateColumnsTable(true);
                     }
@@ -1932,10 +1922,29 @@ public class DesignerView {
         if (values != null) {
             comboBox.removeAllItems();
 
+            comboBox.addItem("");
+
             for (String value : values) {
                 comboBox.addItem(value);
             }
         }
+    }
+
+    /**
+     * Gets a list of filters from the provided combo box.
+     *
+     * @param comboBox A combo box containing the filters to get.
+     * @return A list of filters.
+     */
+    private static Iterable<String> getFilters(JComboBox comboBox) {
+        Collection<String> filters = new ArrayList<String>();
+        for (int i = 0 ; i < comboBox.getItemCount() ; i++) {
+            String item = (String)comboBox.getItemAt(i);
+            if (item != null && !item.isEmpty()) {
+                filters.add(item);
+            }
+        }
+        return filters;
     }
 
     {
@@ -2009,22 +2018,6 @@ public class DesignerView {
         tablesFilter.setMinimumSize(new Dimension(50, 20));
         tablesFilter.setPreferredSize(new Dimension(-1, -1));
         toolBar1.add(tablesFilter);
-        final JSeparator separator1 = new JSeparator();
-        separator1.setForeground(SystemColor.control);
-        separator1.setInheritsPopupMenu(false);
-        separator1.setMaximumSize(new Dimension(1, 1));
-        separator1.setOrientation(1);
-        separator1.setPreferredSize(new Dimension(1, 0));
-        toolBar1.add(separator1);
-        tableFiltersButton = new JButton();
-        tableFiltersButton.setEnabled(true);
-        tableFiltersButton.setHorizontalAlignment(0);
-        tableFiltersButton.setIcon(new ImageIcon(getClass().getResource("/images/filter.png")));
-        tableFiltersButton.setMinimumSize(new Dimension(24, 24));
-        tableFiltersButton.setPreferredSize(new Dimension(24, 24));
-        tableFiltersButton.setText("");
-        tableFiltersButton.setToolTipText("Define table filters");
-        toolBar1.add(tableFiltersButton);
         final JScrollPane scrollPane1 = new JScrollPane();
         scrollPane1.setAlignmentX(0.5f);
         scrollPane1.setAlignmentY(0.5f);
@@ -2167,25 +2160,9 @@ public class DesignerView {
         columnsFilter.setAlignmentY(0.6f);
         columnsFilter.setEditable(true);
         columnsFilter.setMaximumSize(new Dimension(32767, 26));
-        columnsFilter.setMinimumSize(new Dimension(-1, -1));
+        columnsFilter.setMinimumSize(new Dimension(50, 20));
         columnsFilter.setPreferredSize(new Dimension(-1, -1));
         toolBar3.add(columnsFilter);
-        final JSeparator separator2 = new JSeparator();
-        separator2.setForeground(SystemColor.control);
-        separator2.setInheritsPopupMenu(false);
-        separator2.setMaximumSize(new Dimension(1, 1));
-        separator2.setOrientation(1);
-        separator2.setPreferredSize(new Dimension(1, 0));
-        toolBar3.add(separator2);
-        columnFiltersButton = new JButton();
-        columnFiltersButton.setEnabled(true);
-        columnFiltersButton.setHorizontalAlignment(0);
-        columnFiltersButton.setIcon(new ImageIcon(getClass().getResource("/images/filter.png")));
-        columnFiltersButton.setMinimumSize(new Dimension(24, 24));
-        columnFiltersButton.setPreferredSize(new Dimension(24, 24));
-        columnFiltersButton.setText("");
-        columnFiltersButton.setToolTipText("Define column filters");
-        toolBar3.add(columnFiltersButton);
         final JScrollPane scrollPane2 = new JScrollPane();
         scrollPane2.setDoubleBuffered(true);
         panel4.add(

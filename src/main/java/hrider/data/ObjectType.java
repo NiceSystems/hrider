@@ -33,6 +33,7 @@ import java.util.Locale;
 public enum ObjectType {
 
     String,
+    BinaryString,
     Integer,
     Long,
     Float,
@@ -75,6 +76,7 @@ public enum ObjectType {
 
         switch (this) {
             case String:
+            case BinaryString:
                 return value;
             case Integer:
                 return java.lang.Integer.parseInt(value);
@@ -117,6 +119,8 @@ public enum ObjectType {
 
         switch (this) {
             case String:
+                return Bytes.toBytes(value);
+            case BinaryString:
                 return Bytes.toBytesBinary(value);
             case Integer:
                 return Bytes.toBytes(java.lang.Integer.parseInt(value));
@@ -153,6 +157,8 @@ public enum ObjectType {
 
         switch (this) {
             case String:
+                return Bytes.toString(value);
+            case BinaryString:
                 return Bytes.toStringBinary(value);
             case Integer:
                 return Bytes.toInt(value);
@@ -195,6 +201,8 @@ public enum ObjectType {
 
         switch (this) {
             case String:
+                return Bytes.toBytes((String)value);
+            case BinaryString:
                 return Bytes.toBytesBinary((String)value);
             case Integer:
                 return Bytes.toBytes((java.lang.Integer)value);

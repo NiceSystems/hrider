@@ -218,6 +218,7 @@ public class ClusterConfig extends PropertiesConfig {
      */
     public void setSelectedTableFilter(String filter) {
         set("table.filters.selected", filter);
+        save();
     }
 
     /**
@@ -247,6 +248,7 @@ public class ClusterConfig extends PropertiesConfig {
      */
     public void setSelectedColumnFilter(String table, String filter) {
         set(String.format("table.%s.column.filters.selected", table), filter);
+        save();
     }
     //endregion
 }
