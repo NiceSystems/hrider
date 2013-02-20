@@ -2,6 +2,9 @@ package hrider.data;
 
 import hrider.config.GlobalConfig;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -41,6 +44,7 @@ public enum ObjectType {
     Boolean,
     Short,
     DateTime,
+    JodaDateTime,
     Xml,
     Json;
 
@@ -98,6 +102,18 @@ public enum ObjectType {
                 catch (ParseException ignored) {
                     return null;
                 }
+            case JodaDateTime:
+                String pattern = GlobalConfig.instance().getJodaDateFormat();
+                DateTimeFormatter jodaDF = DateTimeFormat.forPattern(pattern);
+                jodaDF.withOffsetParsed();
+                try {
+                    DateTime parsedValue = jodaDF.parseDateTime(value);
+                    return parsedValue;
+                } catch (UnsupportedOperationException ignored) {
+                    return null;
+                } catch (IllegalArgumentException ignored) {
+                    return null;
+                }
             case Xml:
             case Json:
                 return value;
@@ -136,6 +152,8 @@ public enum ObjectType {
                 return Bytes.toBytes(java.lang.Short.parseShort(value));
             case DateTime:
                 return Bytes.toBytes(value);
+            case JodaDateTime:
+                return Bytes.toBytes(java.lang.Long.parseLong(value));
             case Xml:
             case Json:
                 return Bytes.toBytes(value);
@@ -180,6 +198,8 @@ public enum ObjectType {
                 catch (ParseException ignored) {
                     return null;
                 }
+            case JodaDateTime:
+                return new DateTime(Bytes.toLong(value));
             case Xml:
             case Json:
                 return Bytes.toString(value);
@@ -224,6 +244,8 @@ public enum ObjectType {
                 else {
                     return Bytes.toBytes((String)value);
                 }
+            case JodaDateTime:
+                return Bytes.toBytes(((DateTime)value).getMillis());
             case Xml:
             case Json:
                 return Bytes.toBytes((String)value);
