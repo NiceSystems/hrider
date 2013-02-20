@@ -1,6 +1,9 @@
 package hrider.data;
 
 import hrider.config.GlobalConfig;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -161,6 +164,11 @@ public class TypedObject {
             if (this.type == ObjectType.DateTime) {
                 DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                 return df.format((Date)this.value);
+            }
+            else if (this.type == ObjectType.JodaDateTime) {
+                String pattern = GlobalConfig.instance().getJodaDateFormat();
+                DateTimeFormatter jodaDF = DateTimeFormat.forPattern(pattern);
+                return jodaDF.print((DateTime)this.value);
             }
             return this.value.toString();
         }

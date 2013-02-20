@@ -22,6 +22,7 @@ package hrider.ui.design;
  */
 public enum EditorType {
     Date,
+    JodaDate,
     Text,
     Xml,
     Json
