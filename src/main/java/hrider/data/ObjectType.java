@@ -40,7 +40,8 @@ public enum ObjectType {
     Double,
     Boolean,
     Short,
-    DateTime,
+    DateAsString,
+    DateAsLong,
     Xml,
     Json;
 
@@ -58,7 +59,7 @@ public enum ObjectType {
      */
     public static ObjectType fromColumn(String column) {
         if (column.toLowerCase().endsWith("timestamp")) {
-            return Long;
+            return DateAsLong;
         }
         return String;
     }
@@ -90,7 +91,8 @@ public enum ObjectType {
                 return java.lang.Boolean.parseBoolean(value);
             case Short:
                 return java.lang.Short.parseShort(value);
-            case DateTime:
+            case DateAsLong:
+            case DateAsString:
                 DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                 try {
                     return df.parse(value);
@@ -134,8 +136,10 @@ public enum ObjectType {
                 return Bytes.toBytes(java.lang.Boolean.parseBoolean(value));
             case Short:
                 return Bytes.toBytes(java.lang.Short.parseShort(value));
-            case DateTime:
+            case DateAsString:
                 return Bytes.toBytes(value);
+            case DateAsLong:
+                return Bytes.toBytes(((Date)toObject(value)).getTime());
             case Xml:
             case Json:
                 return Bytes.toBytes(value);
@@ -172,7 +176,7 @@ public enum ObjectType {
                 return Bytes.toBoolean(value);
             case Short:
                 return Bytes.toShort(value);
-            case DateTime:
+            case DateAsString:
                 DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                 try {
                     return df.parse(Bytes.toString(value));
@@ -180,6 +184,8 @@ public enum ObjectType {
                 catch (ParseException ignored) {
                     return null;
                 }
+            case DateAsLong:
+                return new Date(Bytes.toLong(value));
             case Xml:
             case Json:
                 return Bytes.toString(value);
@@ -216,13 +222,23 @@ public enum ObjectType {
                 return Bytes.toBytes((java.lang.Boolean)value);
             case Short:
                 return Bytes.toBytes((java.lang.Short)value);
-            case DateTime:
+            case DateAsString:
                 if (value instanceof Date) {
                     DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                     return Bytes.toBytes(df.format((Date)value));
                 }
                 else {
                     return Bytes.toBytes((String)value);
+                }
+            case DateAsLong:
+                if (value instanceof Date) {
+                    return Bytes.toBytes(((Date)value).getTime());
+                }
+                else if (value instanceof java.lang.Long) {
+                    return Bytes.toBytes((java.lang.Long)value);
+                }
+                else {
+                    return Bytes.toBytes(((Date)toObject((String)value)).getTime());
                 }
             case Xml:
             case Json:

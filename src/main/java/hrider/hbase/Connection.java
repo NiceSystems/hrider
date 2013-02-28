@@ -279,7 +279,7 @@ public class Connection {
                 target.put(put);
 
                 for (HbaseActionListener listener : this.listeners) {
-                    listener.copyOperation(this.serverName, sourceCluster.serverName, targetTable, result);
+                    listener.copyOperation(sourceCluster.serverName, sourceTable, this.serverName, targetTable, result);
                 }
             }
         }

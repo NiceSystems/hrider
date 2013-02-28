@@ -234,8 +234,10 @@ public class DesignerView {
         this.connection.addListener(
             new HbaseActionListener() {
                 @Override
-                public void copyOperation(String source, String target, String table, Result result) {
-                    setInfo(String.format("Copying row '%s' from '%s.%s' to '%s.%s'", Bytes.toStringBinary(result.getRow()), source, table, target, table));
+                public void copyOperation(String source, String sourceTable, String target, String targetTable, Result result) {
+                    setInfo(
+                        String.format(
+                            "Copying row '%s' from '%s.%s' to '%s.%s'", Bytes.toStringBinary(result.getRow()), source, sourceTable, target, targetTable));
                 }
 
                 @Override
@@ -1017,16 +1019,16 @@ public class DesignerView {
      */
     private void initializeColumnsTable() {
         this.columnsTableModel = new DefaultTableModel();
-        this.columnsTableModel.addColumn("Is Shown");
+        this.columnsTableModel.addColumn("Show");
         this.columnsTableModel.addColumn("Column Name");
         this.columnsTableModel.addColumn("Column Type");
         this.columnsTable.setRowHeight(this.columnsTable.getFont().getSize() + 8);
         this.columnsTable.setModel(this.columnsTableModel);
         this.columnsTable.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 
-        this.columnsTable.getColumn("Is Shown").setCellRenderer(new JCheckBoxRenderer(new CheckedRow(1, "key")));
-        this.columnsTable.getColumn("Is Shown").setCellEditor(new JCheckBoxRenderer(new CheckedRow(1, "key")));
-        this.columnsTable.getColumn("Is Shown").setPreferredWidth(55);
+        this.columnsTable.getColumn("Show").setCellRenderer(new JCheckBoxRenderer(new CheckedRow(1, "key")));
+        this.columnsTable.getColumn("Show").setCellEditor(new JCheckBoxRenderer(new CheckedRow(1, "key")));
+        this.columnsTable.getColumn("Show").setPreferredWidth(40);
         this.columnsTable.getColumn("Column Name").setPreferredWidth(110);
 
         JComboBox comboBox = new JComboBox();
@@ -1049,7 +1051,7 @@ public class DesignerView {
                     TableModel model = (TableModel)e.getSource();
                     String columnName = model.getColumnName(column);
 
-                    if ("Is Shown".equals(columnName)) {
+                    if ("Show".equals(columnName)) {
                         String name = (String)model.getValueAt(e.getFirstRow(), 1);
                         boolean isShown = (Boolean)model.getValueAt(e.getFirstRow(), 0);
 
@@ -1684,12 +1686,8 @@ public class DesignerView {
 
             this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             try {
-                String targetTable = getSelectedTableName();
+                String targetTable = table.getTableName();
                 String sourceTable = table.getTableName();
-
-                if (targetTable == null) {
-                    targetTable = sourceTable;
-                }
 
                 boolean proceed = true;
 

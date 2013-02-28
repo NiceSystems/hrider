@@ -29,7 +29,7 @@ public class GlobalConfig extends PropertiesConfig {
     private static final String KEY_BATCH_READ_SIZE                = "global.batch.readSize";
     private static final String KEY_BATCH_WRITE_SIZE               = "global.batch.writeSize";
 
-    private static final String DEFAULT_DATE_FORMAT                    = "yyyy-MM-dd HH:mm:ss.SSS";
+    private static final String DEFAULT_DATE_FORMAT                    = "yyyy-MM-dd HH:mm:ss.SSS ZZ";
     private static final String DEFAULT_EXTERNAL_VIEWER_FILE_EXTENSION = ".csv";
     private static final String DEFAULT_EXTERNAL_VIEWER_DELIMETER      = ",";
     private static final String DEFAULT_BATCH_READ_SIZE                = "1000";
