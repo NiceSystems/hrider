@@ -6,6 +6,7 @@ import hrider.data.DataRow;
 import hrider.data.ObjectType;
 import hrider.data.TypedObject;
 import hrider.ui.MessageHandler;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
@@ -39,9 +40,9 @@ public class Scanner {
 
     //region Variables
     /**
-     * The table factory that is used to access hbase tables.
+     * The connection which owns the scanner.
      */
-    private TableFactory            factory;
+    private Connection              connection;
     /**
      * The name of the hbase table the scanner is going to be executed on.
      */
@@ -78,11 +79,11 @@ public class Scanner {
     /**
      * Initializes a new instance of the {@link Scanner} class.
      *
-     * @param factory   The reference to the table factory.
-     * @param tableName The name of the table to be scanned.
+     * @param connection The reference to the connection.
+     * @param tableName  The name of the table to be scanned.
      */
-    public Scanner(TableFactory factory, String tableName) {
-        this.factory = factory;
+    public Scanner(Connection connection, String tableName) {
+        this.connection = connection;
         this.tableName = tableName;
         this.rowsCount = 0;
         this.lastRow = 0;
@@ -91,6 +92,24 @@ public class Scanner {
     //endregion
 
     //region Public Properties
+
+    /**
+     * Gets a reference to the {@link Connection}.
+     *
+     * @return A reference to the {@link Connection}.
+     */
+    public Connection getConnection() {
+        return this.connection;
+    }
+
+    /**
+     * Gets a reference to the {@link Configuration} instance used by connection.
+     *
+     * @return A reference to the {@link Configuration} instance.
+     */
+    public Configuration getConfiguration() {
+        return this.connection.getConfiguration();
+    }
 
     /**
      * Gets the value indicating if this scanner supports only forward navigation.
@@ -229,7 +248,7 @@ public class Scanner {
     public DataRow getFirstRow() throws IOException {
         Scan scan = getScanner();
 
-        HTable table = this.factory.get(this.tableName);
+        HTable table = this.connection.getTableFactory().get(this.tableName);
         ResultScanner scanner = table.getScanner(scan);
 
         Collection<DataRow> rows = new ArrayList<DataRow>();
@@ -334,7 +353,7 @@ public class Scanner {
             Scan scan = getScanner();
             scan.setCaching(GlobalConfig.instance().getBatchSizeForRead());
 
-            HTable table = this.factory.get(this.tableName);
+            HTable table = this.connection.getTableFactory().get(this.tableName);
             ResultScanner scanner = table.getScanner(scan);
 
             int count = 0;
@@ -451,7 +470,7 @@ public class Scanner {
         Scan scan = getScanner();
         scan.setCaching(itemsNumber);
 
-        HTable table = this.factory.get(this.tableName);
+        HTable table = this.connection.getTableFactory().get(this.tableName);
         ResultScanner scanner = table.getScanner(scan);
 
         Result row;
@@ -501,7 +520,7 @@ public class Scanner {
             popMarker();
         }
 
-        HTable table = this.factory.get(this.tableName);
+        HTable table = this.connection.getTableFactory().get(this.tableName);
         ResultScanner scanner = table.getScanner(scan);
 
         Collection<DataRow> rows = new ArrayList<DataRow>();

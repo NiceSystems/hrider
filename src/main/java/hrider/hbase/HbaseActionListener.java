@@ -1,6 +1,7 @@
 package hrider.hbase;
 
 import hrider.data.DataRow;
+import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 
 /**
@@ -35,6 +36,24 @@ public interface HbaseActionListener {
      * @param result      The row to be copied.
      */
     void copyOperation(String source, String sourceTable, String target, String targetTable, Result result);
+
+    /**
+     * An event that is raised when a row is saved to the file.
+     *
+     * @param tableName The name of the table.
+     * @param path      The path to the file.
+     * @param result    The row to be saved.
+     */
+    void saveOperation(String tableName, String path, Result result);
+
+    /**
+     * An event that is raised when a row is loaded to the table from the file.
+     *
+     * @param tableName The name of the table.
+     * @param path      The path to the file.
+     * @param put       The row to be loaded.
+     */
+    void loadOperation(String tableName, String path, Put put);
 
     /**
      * An event that is raised when a table is created/deleted/truncated.

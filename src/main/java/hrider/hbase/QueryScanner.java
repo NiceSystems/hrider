@@ -34,7 +34,7 @@ public class QueryScanner extends Scanner {
     /**
      * A constant representing a size of the unicode character.
      */
-    private static final int UNICODE_CHAR_SIZE = 4;
+    private static final int    UNICODE_CHAR_SIZE = 4;
     private static final byte[] EMPTY_BYTES_ARRAY = new byte[0];
     //endregion
 
@@ -50,12 +50,12 @@ public class QueryScanner extends Scanner {
     /**
      * Initializes a new instance of the {@link QueryScanner} class.
      *
-     * @param factory   The reference to the table factory class.
-     * @param tableName The name of the table the scan is going to be done on.
-     * @param query     The query to use.
+     * @param connection The reference to the connection.
+     * @param tableName  The name of the table the scan is going to be done on.
+     * @param query      The query to use.
      */
-    public QueryScanner(TableFactory factory, String tableName, Query query) {
-        super(factory, tableName);
+    public QueryScanner(Connection connection, String tableName, Query query) {
+        super(connection, tableName);
 
         this.query = query;
     }
@@ -142,9 +142,7 @@ public class QueryScanner extends Scanner {
 
                 scan.setFilter(
                     new SingleColumnValueFilter(
-                        Bytes.toBytesBinary(this.query.getFamily()),
-                        Bytes.toBytesBinary(this.query.getColumn()),
-                        this.query.getOperator().toFilter(),
+                        Bytes.toBytesBinary(this.query.getFamily()), Bytes.toBytesBinary(this.query.getColumn()), this.query.getOperator().toFilter(),
                         comparator));
             }
         }

@@ -6,7 +6,11 @@ import com.intellij.uiDesigner.core.Spacer;
 import hrider.config.GlobalConfig;
 import hrider.data.*;
 import hrider.hbase.Connection;
+import hrider.hbase.HbaseActionListener;
 import hrider.ui.design.JCellEditor;
+import org.apache.hadoop.hbase.TableNotFoundException;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -15,10 +19,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -57,19 +58,20 @@ public class ImportTableDialog extends JDialog {
     private JButton           btCancel;
     private JLabel            writtenRowsCount;
     private JLabel            readRowsCount;
+    private JComboBox         cmbFileType;
     private DefaultTableModel tableModel;
     private boolean           canceled;
     //endregion
 
     //region Constructor
-    public ImportTableDialog(final Connection connection, String tableName, Iterable<TypedColumn> columns, final Iterable<String> columnFamilies) {
+    public ImportTableDialog(final Connection connection, final String tableName, Iterable<TypedColumn> columns, final Iterable<String> columnFamilies) {
         setContentPane(this.contentPane);
         setModal(true);
         setTitle("Import table from file");
         getRootPane().setDefaultButton(this.btImport);
 
         this.tfTableName.setText(tableName);
-        this.tfFilePath.setText(String.format("%s.csv", tableName));
+        this.tfFilePath.setText(String.format("%s.hfile", tableName));
 
         this.tableModel = new DefaultTableModel();
         this.rowsTable.setModel(this.tableModel);
@@ -197,6 +199,28 @@ public class ImportTableDialog extends JDialog {
                     canceled = true;
                 }
             });
+
+        this.cmbFileType.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    boolean enabled = "Delimited".equals(cmbFileType.getSelectedItem());
+
+                    cmbDelimiter.setEnabled(enabled);
+                    btAddColumn.setEnabled(enabled);
+                    btRemoveColumn.setEnabled(enabled && rowsTable.getSelectedRowCount() > 0);
+                    rowsTable.setEnabled(enabled);
+
+                    if (tfFilePath.getText().startsWith(tableName)) {
+                        if (enabled) {
+                            tfFilePath.setText(String.format("%s.csv", tableName));
+                        }
+                        else {
+                            tfFilePath.setText(String.format("%s.hfile", tableName));
+                        }
+                    }
+                }
+            });
     }
     //endregion
 
@@ -231,13 +255,22 @@ public class ImportTableDialog extends JDialog {
     }
 
     private void onImport(final Connection connection) {
+        final File file = new File(this.tfFilePath.getText().trim());
+        if (!file.exists()) {
+            JOptionPane.showMessageDialog(
+                this.contentPane, String.format("The specified file '%s' does not exist.", this.tfFilePath.getText()), "Error",
+                JOptionPane.ERROR_MESSAGE);
+
+            return;
+        }
+
         new Thread(
             new Runnable() {
                 @Override
                 public void run() {
-
                     tfTableName.setEnabled(false);
                     tfFilePath.setEnabled(false);
+                    cmbFileType.setEnabled(false);
                     cmbDelimiter.setEnabled(false);
                     btCancel.setEnabled(true);
                     btClose.setEnabled(false);
@@ -246,81 +279,12 @@ public class ImportTableDialog extends JDialog {
 
                     canceled = false;
 
-                    BufferedReader reader = null;
                     try {
-                        reader = new BufferedReader(new FileReader(tfFilePath.getText()));
-                        String header = reader.readLine();
-                        if (header != null) {
-                            Pattern p = Pattern.compile(Pattern.quote(Character.toString(getDelimiter())));
-
-                            List<String> columns = Arrays.asList(p.split(header));
-                            if (columns.isEmpty()) {
-                                throw new IllegalArgumentException("No columns information found in the file.");
-                            }
-
-                            if (!columns.contains("key")) {
-                                throw new IllegalArgumentException("Column 'key' is missing in the file.");
-                            }
-
-                            String tableName = tfTableName.getText().trim();
-                            connection.createTable(tableName);
-
-                            Map<String, ObjectType> columnTypes = getColumnTypes();
-
-                            long readCount = 1;
-                            long writtenCount = 0;
-                            int batch = GlobalConfig.instance().getBatchSizeForWrite();
-
-                            Collection<DataRow> rows = new ArrayList<DataRow>();
-
-                            String line = reader.readLine();
-                            while (line != null && !canceled) {
-
-                                readRowsCount.setText(Long.toString(readCount++));
-                                DataRow row = new DataRow();
-
-                                String[] values = p.split(line);
-                                for (int i = 0 ; i < values.length && i < columns.size() ; i++) {
-                                    String column = columns.get(i).trim();
-                                    String value = values[i].trim();
-
-                                    ObjectType type = columnTypes.get(column);
-                                    if (type == null) {
-                                        type = ObjectType.String;
-                                    }
-
-                                    row.addCell(new DataCell(row, column, new TypedObject(type, type.fromString(value))));
-
-                                    if ("key".equalsIgnoreCase(column)) {
-                                        row.setKey(new TypedObject(type, type.fromString(value)));
-                                    }
-                                }
-
-                                if (row.getKey() != null) {
-                                    rows.add(row);
-                                }
-
-                                if (readCount % batch == 0) {
-                                    connection.setRows(tableName, rows);
-
-                                    writtenCount += rows.size();
-                                    rows.clear();
-
-                                    writtenRowsCount.setText(Long.toString(writtenCount));
-                                }
-
-                                line = reader.readLine();
-                            }
-
-                            // Write last rows.
-                            if (!rows.isEmpty()) {
-                                connection.setRows(tableName, rows);
-
-                                writtenCount += rows.size();
-                                rows.clear();
-
-                                writtenRowsCount.setText(Long.toString(writtenCount));
-                            }
+                        if ("Delimited".equals(cmbFileType.getSelectedItem())) {
+                            importDelimitedFile(connection, tfTableName.getText().trim(), file.getAbsolutePath());
+                        }
+                        else {
+                            importHFile(connection, tfTableName.getText().trim(), file.getAbsolutePath());
                         }
                     }
                     catch (Exception e) {
@@ -329,17 +293,10 @@ public class ImportTableDialog extends JDialog {
                             JOptionPane.ERROR_MESSAGE);
                     }
                     finally {
-                        if (reader != null) {
-                            try {
-                                reader.close();
-                            }
-                            catch (IOException ignore) {
-                            }
-                        }
-
                         tfTableName.setEnabled(true);
                         tfFilePath.setEnabled(true);
-                        cmbDelimiter.setEnabled(true);
+                        cmbFileType.setEnabled(true);
+                        cmbDelimiter.setEnabled("Delimited".equals(cmbFileType.getSelectedItem()));
                         btCancel.setEnabled(false);
                         btClose.setEnabled(true);
                         btBrowse.setEnabled(true);
@@ -347,6 +304,141 @@ public class ImportTableDialog extends JDialog {
                     }
                 }
             }).start();
+    }
+
+    private void importDelimitedFile(Connection connection, String table, String filePath) throws IOException, FileNotFoundException, TableNotFoundException {
+
+        BufferedReader reader = null;
+
+        try {
+            reader = new BufferedReader(new FileReader(filePath));
+            String header = reader.readLine();
+            if (header != null) {
+                Pattern p = Pattern.compile(Pattern.quote(Character.toString(getDelimiter())));
+
+                List<String> columns = Arrays.asList(p.split(header));
+                if (columns.isEmpty()) {
+                    throw new IllegalArgumentException("No columns information found in the file.");
+                }
+
+                if (!columns.contains("key")) {
+                    throw new IllegalArgumentException("Column 'key' is missing in the file.");
+                }
+
+                connection.createTable(table);
+
+                Map<String, ObjectType> columnTypes = getColumnTypes();
+
+                long readCount = 1;
+                long writtenCount = 0;
+                int batch = GlobalConfig.instance().getBatchSizeForWrite();
+
+                Collection<DataRow> rows = new ArrayList<DataRow>();
+
+                String line = reader.readLine();
+                while (line != null && !canceled) {
+
+                    readRowsCount.setText(Long.toString(readCount++));
+                    DataRow row = new DataRow();
+
+                    String[] values = p.split(line);
+                    for (int i = 0 ; i < values.length && i < columns.size() ; i++) {
+                        String column = columns.get(i).trim();
+                        String value = values[i].trim();
+
+                        ObjectType type = columnTypes.get(column);
+                        if (type == null) {
+                            type = ObjectType.String;
+                        }
+
+                        row.addCell(new DataCell(row, column, new TypedObject(type, type.fromString(value))));
+
+                        if ("key".equalsIgnoreCase(column)) {
+                            row.setKey(new TypedObject(type, type.fromString(value)));
+                        }
+                    }
+
+                    if (row.getKey() != null) {
+                        rows.add(row);
+                    }
+
+                    if (readCount % batch == 0) {
+                        connection.setRows(table, rows);
+
+                        writtenCount += rows.size();
+                        rows.clear();
+
+                        writtenRowsCount.setText(Long.toString(writtenCount));
+                    }
+
+                    line = reader.readLine();
+                }
+
+                // Write last rows.
+                if (!rows.isEmpty()) {
+                    connection.setRows(table, rows);
+
+                    writtenCount += rows.size();
+                    rows.clear();
+
+                    writtenRowsCount.setText(Long.toString(writtenCount));
+                }
+            }
+        }
+        finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                }
+                catch (IOException ignore) {
+                }
+            }
+        }
+    }
+
+    private void importHFile(Connection connection, String table, String filePath) throws IOException {
+        final int[] counter = {1};
+
+        HbaseActionListener listener = new HbaseActionListener() {
+            @Override
+            public void copyOperation(String source, String sourceTable, String target, String targetTable, Result result) {
+            }
+
+            @Override
+            public void saveOperation(String tableName, String path, Result result) {
+            }
+
+            @Override
+            public void loadOperation(String tableName, String path, Put put) {
+                readRowsCount.setText(Long.toString(counter[0]));
+                readRowsCount.paintImmediately(readRowsCount.getBounds());
+
+                writtenRowsCount.setText(Long.toString(counter[0]++));
+                writtenRowsCount.paintImmediately(writtenRowsCount.getBounds());
+            }
+
+            @Override
+            public void tableOperation(String tableName, String operation) {
+            }
+
+            @Override
+            public void rowOperation(String tableName, DataRow row, String operation) {
+            }
+
+            @Override
+            public void columnOperation(String tableName, String column, String operation) {
+            }
+        };
+
+        connection.addListener(listener);
+
+        try {
+            connection.createTable(table);
+            connection.loadTable(table, filePath);
+        }
+        finally {
+            connection.removeListener(listener);
+        }
     }
 
     private Map<String, ObjectType> getColumnTypes() {
@@ -445,7 +537,7 @@ public class ImportTableDialog extends JDialog {
             0, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW,
             GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(4, 3, new Insets(0, 0, 0, 0), -1, -1));
+        panel3.setLayout(new GridLayoutManager(5, 3, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(
             panel3, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
@@ -471,10 +563,11 @@ public class ImportTableDialog extends JDialog {
         label2.setText("Delimiter:");
         panel3.add(
             label2, new GridConstraints(
-            2, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            3, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         cmbDelimiter = new JComboBox();
         cmbDelimiter.setEditable(true);
+        cmbDelimiter.setEnabled(false);
         final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
         defaultComboBoxModel1.addElement(",");
         defaultComboBoxModel1.addElement("|");
@@ -483,7 +576,7 @@ public class ImportTableDialog extends JDialog {
         cmbDelimiter.setModel(defaultComboBoxModel1);
         panel3.add(
             cmbDelimiter, new GridConstraints(
-            2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
+            3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, null, null, 0, false));
         final JLabel label3 = new JLabel();
         label3.setText("Table name:");
@@ -500,7 +593,7 @@ public class ImportTableDialog extends JDialog {
         panel4.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
         panel3.add(
             panel4, new GridConstraints(
-            3, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            4, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JPanel panel5 = new JPanel();
         panel5.setLayout(new GridLayoutManager(2, 4, new Insets(0, 0, 0, 0), -1, -1));
@@ -526,6 +619,7 @@ public class ImportTableDialog extends JDialog {
             1, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         btAddColumn = new JButton();
+        btAddColumn.setEnabled(false);
         btAddColumn.setText("Add...");
         panel5.add(
             btAddColumn, new GridConstraints(
@@ -542,6 +636,7 @@ public class ImportTableDialog extends JDialog {
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(400, 200), null, 0, false));
         rowsTable = new JTable();
+        rowsTable.setEnabled(false);
         scrollPane1.setViewportView(rowsTable);
         final JLabel label5 = new JLabel();
         label5.setFont(new Font(label5.getFont().getName(), Font.BOLD, label5.getFont().getSize()));
@@ -550,6 +645,21 @@ public class ImportTableDialog extends JDialog {
             label5, new GridConstraints(
             2, 0, 1, 1, GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null,
             null, null, 0, false));
+        final JLabel label6 = new JLabel();
+        label6.setText("File type:");
+        panel3.add(
+            label6, new GridConstraints(
+            2, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            null, 0, false));
+        cmbFileType = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel2 = new DefaultComboBoxModel();
+        defaultComboBoxModel2.addElement("HFile");
+        defaultComboBoxModel2.addElement("Delimited");
+        cmbFileType.setModel(defaultComboBoxModel2);
+        panel3.add(
+            cmbFileType, new GridConstraints(
+            2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
+            null, null, null, 0, false));
         final JSeparator separator3 = new JSeparator();
         contentPane.add(
             separator3, new GridConstraints(
@@ -561,10 +671,10 @@ public class ImportTableDialog extends JDialog {
             panel6, new GridConstraints(
             2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        final JLabel label6 = new JLabel();
-        label6.setText("Written rows:");
+        final JLabel label7 = new JLabel();
+        label7.setText("Written rows:");
         panel6.add(
-            label6, new GridConstraints(
+            label7, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         final Spacer spacer2 = new Spacer();
@@ -577,10 +687,10 @@ public class ImportTableDialog extends JDialog {
             writtenRowsCount, new GridConstraints(
             1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
-        final JLabel label7 = new JLabel();
-        label7.setText("Read rows:");
+        final JLabel label8 = new JLabel();
+        label8.setText("Read rows:");
         panel6.add(
-            label7, new GridConstraints(
+            label8, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         readRowsCount = new JLabel();

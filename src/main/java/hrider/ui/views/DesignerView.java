@@ -23,6 +23,7 @@ import hrider.ui.design.JCellEditor;
 import hrider.ui.design.JCheckBoxRenderer;
 import hrider.ui.design.ResizeableTableHeader;
 import hrider.ui.forms.*;
+import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -238,6 +239,16 @@ public class DesignerView {
                     setInfo(
                         String.format(
                             "Copying row '%s' from '%s.%s' to '%s.%s'", Bytes.toStringBinary(result.getRow()), source, sourceTable, target, targetTable));
+                }
+
+                @Override
+                public void saveOperation(String tableName, String path, Result result) {
+                    setInfo(String.format("Saving row '%s' from table '%s' to file '%s'", Bytes.toStringBinary(result.getRow()), tableName, path));
+                }
+
+                @Override
+                public void loadOperation(String tableName, String path, Put put) {
+                    setInfo(String.format("Loading row '%s' to table '%s' from file '%s'", Bytes.toStringBinary(put.getRow()), tableName, path));
                 }
 
                 @Override
