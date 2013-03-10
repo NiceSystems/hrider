@@ -144,10 +144,16 @@
                           <toolTipText value="Refresh tables"/>
                         </properties>
                       </component>
-                      <component id="a0fc6" class="javax.swing.JToolBar$Separator">
+                      <component id="2f79e" class="javax.swing.JButton" binding="flushTableButton">
                         <constraints/>
                         <properties>
-                          <separatorSize width="9" height="9"/>
+                          <enabled value="false"/>
+                          <horizontalAlignment value="0"/>
+                          <icon value="images/db-flush.png"/>
+                          <minimumSize width="24" height="24"/>
+                          <preferredSize width="24" height="24"/>
+                          <text value=""/>
+                          <toolTipText value="Forse hbase to flush table to HFile"/>
                         </properties>
                       </component>
                       <component id="870b4" class="javax.swing.JButton" binding="addTableButton">
@@ -171,7 +177,7 @@
                           <minimumSize width="24" height="24"/>
                           <preferredSize width="24" height="24"/>
                           <text value=""/>
-                          <toolTipText value="Delete selected table"/>
+                          <toolTipText value="Delete selected table(s)"/>
                         </properties>
                       </component>
                       <component id="13d99" class="javax.swing.JButton" binding="truncateTableButton">
@@ -183,7 +189,7 @@
                           <minimumSize width="24" height="24"/>
                           <preferredSize width="24" height="24"/>
                           <text value=""/>
-                          <toolTipText value="Truncate selected table"/>
+                          <toolTipText value="Truncate selected table(s)"/>
                         </properties>
                       </component>
                       <component id="57be3" class="javax.swing.JButton" binding="copyTableButton">
@@ -367,12 +373,6 @@
                               <toolTipText value="Refresh columns"/>
                             </properties>
                           </component>
-                          <component id="8f666" class="javax.swing.JToolBar$Separator">
-                            <constraints/>
-                            <properties>
-                              <separatorSize width="9" height="9"/>
-                            </properties>
-                          </component>
                           <component id="bf0ee" class="javax.swing.JButton" binding="checkAllButton" default-binding="true">
                             <constraints/>
                             <properties>
@@ -421,10 +421,6 @@
                               <text value=""/>
                               <toolTipText value="Perform an advanced scan..."/>
                             </properties>
-                          </component>
-                          <component id="8aa7e" class="javax.swing.JToolBar$Separator">
-                            <constraints/>
-                            <properties/>
                           </component>
                           <component id="83a5f" class="javax.swing.JButton" binding="jumpButton">
                             <constraints/>

@@ -102,6 +102,7 @@ public class DesignerView {
     private JButton                  importTableButton;
     private JButton                  exportTableButton;
     private JButton                  refreshColumnsButton;
+    private JButton flushTableButton;
     private DefaultTableModel        columnsTableModel;
     private DefaultTableModel        rowsTableModel;
     private Query                    lastQuery;
@@ -659,6 +660,34 @@ public class DesignerView {
                 }
             });
 
+        this.flushTableButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    clearError();
+
+                    int decision = JOptionPane.showConfirmDialog(
+                        topPanel, "Are you sure you want to flush selected table(s).", "Confirmation", JOptionPane.YES_NO_OPTION);
+
+                    if (decision == JOptionPane.YES_OPTION) {
+                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        try {
+                            for (String tableName : getSelectedTables()) {
+                                try {
+                                    connection.flushTable(tableName);
+                                }
+                                catch (Exception ex) {
+                                    setError(String.format("Failed to flush table %s: ", tableName), ex);
+                                }
+                            }
+                        }
+                        finally {
+                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                        }
+                    }
+                }
+            });
+
         this.refreshTablesButton.addActionListener(
             new ActionListener() {
                 @Override
@@ -964,6 +993,7 @@ public class DesignerView {
                 public void valueChanged(ListSelectionEvent e) {
                     int selectedIndices = tablesList.getSelectedIndices().length;
 
+                    flushTableButton.setEnabled(selectedIndices > 0);
                     deleteTableButton.setEnabled(selectedIndices > 0);
                     truncateTableButton.setEnabled(selectedIndices > 0);
 
@@ -2061,8 +2091,15 @@ public class DesignerView {
         refreshTablesButton.setText("");
         refreshTablesButton.setToolTipText("Refresh tables");
         toolBar2.add(refreshTablesButton);
-        final JToolBar.Separator toolBar$Separator1 = new JToolBar.Separator();
-        toolBar2.add(toolBar$Separator1);
+        flushTableButton = new JButton();
+        flushTableButton.setEnabled(false);
+        flushTableButton.setHorizontalAlignment(0);
+        flushTableButton.setIcon(new ImageIcon(getClass().getResource("/images/db-flush.png")));
+        flushTableButton.setMinimumSize(new Dimension(24, 24));
+        flushTableButton.setPreferredSize(new Dimension(24, 24));
+        flushTableButton.setText("");
+        flushTableButton.setToolTipText("Forse hbase to flush table to HFile");
+        toolBar2.add(flushTableButton);
         addTableButton = new JButton();
         addTableButton.setEnabled(false);
         addTableButton.setHorizontalAlignment(0);
@@ -2079,7 +2116,7 @@ public class DesignerView {
         deleteTableButton.setMinimumSize(new Dimension(24, 24));
         deleteTableButton.setPreferredSize(new Dimension(24, 24));
         deleteTableButton.setText("");
-        deleteTableButton.setToolTipText("Delete selected table");
+        deleteTableButton.setToolTipText("Delete selected table(s)");
         toolBar2.add(deleteTableButton);
         truncateTableButton = new JButton();
         truncateTableButton.setEnabled(false);
@@ -2088,7 +2125,7 @@ public class DesignerView {
         truncateTableButton.setMinimumSize(new Dimension(24, 24));
         truncateTableButton.setPreferredSize(new Dimension(24, 24));
         truncateTableButton.setText("");
-        truncateTableButton.setToolTipText("Truncate selected table");
+        truncateTableButton.setToolTipText("Truncate selected table(s)");
         toolBar2.add(truncateTableButton);
         copyTableButton = new JButton();
         copyTableButton.setEnabled(false);
@@ -2203,8 +2240,6 @@ public class DesignerView {
         refreshColumnsButton.setText("");
         refreshColumnsButton.setToolTipText("Refresh columns");
         toolBar4.add(refreshColumnsButton);
-        final JToolBar.Separator toolBar$Separator2 = new JToolBar.Separator();
-        toolBar4.add(toolBar$Separator2);
         checkAllButton = new JButton();
         checkAllButton.setEnabled(false);
         checkAllButton.setIcon(new ImageIcon(getClass().getResource("/images/select.png")));
@@ -2238,8 +2273,6 @@ public class DesignerView {
         scanButton.setText("");
         scanButton.setToolTipText("Perform an advanced scan...");
         toolBar5.add(scanButton);
-        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
-        toolBar5.add(toolBar$Separator3);
         jumpButton = new JButton();
         jumpButton.setEnabled(false);
         jumpButton.setIcon(new ImageIcon(getClass().getResource("/images/jump.png")));
@@ -2346,23 +2379,23 @@ public class DesignerView {
         rowsNumberSpinner.setMinimumSize(new Dimension(45, 24));
         rowsNumberSpinner.setPreferredSize(new Dimension(60, 24));
         toolBar7.add(rowsNumberSpinner);
-        final JToolBar.Separator toolBar$Separator4 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator4);
+        final JToolBar.Separator toolBar$Separator1 = new JToolBar.Separator();
+        toolBar7.add(toolBar$Separator1);
         visibleRowsLabel = new JLabel();
         visibleRowsLabel.setText("?");
         toolBar7.add(visibleRowsLabel);
-        final JToolBar.Separator toolBar$Separator5 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator5);
+        final JToolBar.Separator toolBar$Separator2 = new JToolBar.Separator();
+        toolBar7.add(toolBar$Separator2);
         final JLabel label4 = new JLabel();
         label4.setText("of");
         toolBar7.add(label4);
-        final JToolBar.Separator toolBar$Separator6 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator6);
+        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
+        toolBar7.add(toolBar$Separator3);
         rowsNumberLabel = new JLabel();
         rowsNumberLabel.setText("?");
         toolBar7.add(rowsNumberLabel);
-        final JToolBar.Separator toolBar$Separator7 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator7);
+        final JToolBar.Separator toolBar$Separator4 = new JToolBar.Separator();
+        toolBar7.add(toolBar$Separator4);
         showPrevPageButton = new JButton();
         showPrevPageButton.setEnabled(false);
         showPrevPageButton.setIcon(new ImageIcon(getClass().getResource("/images/prev.png")));

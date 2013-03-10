@@ -12,6 +12,7 @@ import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
 import org.apache.hadoop.hbase.io.hfile.HFile;
+import org.apache.hadoop.hbase.regionserver.MemStore;
 import org.apache.hadoop.hbase.regionserver.StoreFile;
 import org.apache.hadoop.hbase.regionserver.StoreFileScanner;
 import org.apache.hadoop.hbase.regionserver.metrics.SchemaMetrics;
@@ -351,6 +352,16 @@ public class Connection {
         finally {
             writer.close();
         }
+    }
+
+    /**
+     * Flushes a in memory portion of the table into the HFile.
+     * @param tableName The name of the table to flush.
+     * @throws IOException Error accessing hbase.
+     * @throws InterruptedException
+     */
+    public void flushTable(String tableName) throws IOException, InterruptedException {
+        this.hbaseAdmin.flush(tableName);
     }
 
     /**
