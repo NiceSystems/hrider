@@ -2,9 +2,6 @@ package hrider.data;
 
 import hrider.config.GlobalConfig;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -101,18 +98,6 @@ public enum ObjectType {
                     return df.parse(value);
                 }
                 catch (ParseException ignored) {
-                    return null;
-                }
-            case JodaDateTime:
-                String pattern = GlobalConfig.instance().getJodaDateFormat();
-                DateTimeFormatter jodaDF = DateTimeFormat.forPattern(pattern);
-                jodaDF.withOffsetParsed();
-                try {
-                    DateTime parsedValue = jodaDF.parseDateTime(value);
-                    return parsedValue;
-                } catch (UnsupportedOperationException ignored) {
-                    return null;
-                } catch (IllegalArgumentException ignored) {
                     return null;
                 }
             case Xml:

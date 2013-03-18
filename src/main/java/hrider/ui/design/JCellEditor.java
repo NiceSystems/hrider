@@ -7,9 +7,6 @@ import hrider.data.ObjectType;
 import hrider.ui.ChangeTracker;
 import hrider.ui.controls.json.JsonEditor;
 import hrider.ui.controls.xml.XmlEditor;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
@@ -50,7 +47,6 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
     //region Variables
     private JTextField    textEditor;
     private DatePicker    dateEditor;
-    private DatePicker    jodaDateEditor;
     private XmlEditor     xmlEditor;
     private JsonEditor    jsonEditor;
     private DataCell      cell;
@@ -74,10 +70,6 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         this.dateEditor.setBorder(BorderFactory.createEmptyBorder());
         this.dateEditor.setDateFormat(new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH));
         this.dateEditor.setFieldEditable(canEdit);
-        this.jodaDateEditor = new DatePicker(null);
-        this.jodaDateEditor.setBorder(BorderFactory.createEmptyBorder());
-        this.jodaDateEditor.setDateFormat(new SimpleDateFormat(GlobalConfig.instance().getJodaDateFormat(), Locale.ENGLISH));
-        this.jodaDateEditor.setFieldEditable(canEdit);
         this.xmlEditor = new XmlEditor();
         this.xmlEditor.setEditable(canEdit);
         this.jsonEditor = new JsonEditor();
@@ -119,9 +111,6 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         if (type == ObjectType.DateAsString || type == ObjectType.DateAsLong) {
             this.editorType = EditorType.Date;
         }
-        else if (type == ObjectType.JodaDateTime) {
-            this.editorType = EditorType.JodaDate;
-        }
         else if (type == ObjectType.Xml) {
             this.editorType = EditorType.Xml;
         }
@@ -150,17 +139,6 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
                 if (date != null) {
                     DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                     text = df.format(date);
-                }
-                break;
-            case JodaDate:
-                // Try parsing it, just to make sure it won't get accidentally set to null
-                // if there's text but it has a typo.
-                Date jodaDate = this.jodaDateEditor.getDate();
-                if (jodaDate != null) {
-                    String pattern = GlobalConfig.instance().getJodaDateFormat();
-                    DateTimeFormatter jodaDF = DateTimeFormat.forPattern(pattern);
-                    jodaDF.withOffsetParsed();
-                    text = jodaDF.print(new DateTime(jodaDate));
                 }
                 break;
             case Text:
@@ -212,15 +190,6 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
                 catch (PropertyVetoException ignore) {
                 }
                 break;
-            case JodaDate:
-                try {
-                    if (this.cell != null) {
-                        this.jodaDateEditor.setDate(((DateTime)this.cell.getTypedValue().getValue()).toDate());
-                    }
-                }
-                catch (PropertyVetoException ignore) {
-                }
-                break;
             case Text:
                 if (value != null) {
                     this.textEditor.setText(value.toString());
@@ -257,8 +226,6 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         switch (this.editorType) {
             case Date:
                 return this.dateEditor;
-            case JodaDate:
-                return this.jodaDateEditor;
             case Text:
                 return this.textEditor;
             case Xml:

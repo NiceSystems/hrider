@@ -24,7 +24,6 @@ public class GlobalConfig extends PropertiesConfig {
 
     //region Constants
     private static final String KEY_DATE_FORMAT                    = "global.dateFormat";
-    private static final String KEY_JODATIME_DATE_FORMAT           = "global.jodaTimeDateFormat";
     private static final String KEY_EXTERNAL_VIEWER_FILE_EXTENSION = "global.externalViewerFileExtension";
     private static final String KEY_EXTERNAL_VIEWER_DELIMETER      = "global.externalViewerDelimiter";
     private static final String KEY_BATCH_READ_SIZE                = "global.batch.readSize";
@@ -67,15 +66,6 @@ public class GlobalConfig extends PropertiesConfig {
      */
     public String getDateFormat() {
         return get(String.class, KEY_DATE_FORMAT, DEFAULT_DATE_FORMAT);
-    }
-
-    /**
-     * Gets the date time format to be used to parse/convert JodaTime DateTime strings.
-     *
-     * @return A {@link String} representing date time format.
-     */
-    public String getJodaDateFormat() {
-        return get(String.class, KEY_JODATIME_DATE_FORMAT, DEFAULT_JODATIME_DATE_FORMAT);
     }
 
     /**
