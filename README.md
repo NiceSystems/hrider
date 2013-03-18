@@ -13,6 +13,12 @@ To get started, begin here:
 3. If you have any problems read the [FAQ](https://github.com/NiceSystems/hrider/wiki/FAQ) first.
 
 ## News
+### 10 March, 2013: Release 1.0.4.0 available
+New features: [#24](https://github.com/NiceSystems/hrider/issues/24), [#25](https://github.com/NiceSystems/hrider/issues/25), [#27](https://github.com/NiceSystems/hrider/issues/27)
+
+Issues fixed: [#26](https://github.com/NiceSystems/hrider/issues/26)
+
+[Download for hbase 0.94.1](http://bit.ly/12F30pH).
 ### 13 February, 2013: Release 1.0.3.0 available
 New features: [#18](https://github.com/NiceSystems/hrider/issues/18)
 

@@ -5,18 +5,21 @@ import hrider.config.GlobalConfig;
 import hrider.data.DataCell;
 import hrider.data.DataRow;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.TableNotFoundException;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
+import org.apache.hadoop.hbase.io.hfile.CacheConfig;
+import org.apache.hadoop.hbase.io.hfile.HFile;
+import org.apache.hadoop.hbase.regionserver.MemStore;
+import org.apache.hadoop.hbase.regionserver.StoreFile;
+import org.apache.hadoop.hbase.regionserver.StoreFileScanner;
+import org.apache.hadoop.hbase.regionserver.metrics.SchemaMetrics;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -89,6 +92,24 @@ public class Connection {
     //endregion
 
     //region Public Properties
+
+    /**
+     * Gets a reference to the {@link TableFactory} instance used by connection.
+     *
+     * @return A reference to the {@link TableFactory} instance.
+     */
+    public TableFactory getTableFactory() {
+        return this.factory;
+    }
+
+    /**
+     * Gets a reference to the {@link Configuration} instance used by connection.
+     *
+     * @return A reference to the {@link Configuration} instance.
+     */
+    public Configuration getConfiguration() {
+        return this.hbaseAdmin.getConfiguration();
+    }
 
     /**
      * Gets a configuration used to connect to hbase.
@@ -279,11 +300,157 @@ public class Connection {
                 target.put(put);
 
                 for (HbaseActionListener listener : this.listeners) {
-                    listener.copyOperation(this.serverName, sourceCluster.serverName, targetTable, result);
+                    listener.copyOperation(sourceCluster.serverName, sourceTable, this.serverName, targetTable, result);
                 }
             }
         }
         while (isValid);
+    }
+
+    /**
+     * Saves a table locally to an HFile.
+     *
+     * @param tableName The name of the table.
+     * @param path      The path tot he file.
+     * @throws IOException Error accessing hbase.
+     */
+    public void saveTable(String tableName, String path) throws IOException {
+        FileSystem fs = FileSystem.getLocal(this.getConfiguration());
+        HTable table = this.factory.get(tableName);
+
+        Configuration cacheConfig = new Configuration(this.getConfiguration());
+        cacheConfig.setFloat(HConstants.HFILE_BLOCK_CACHE_SIZE_KEY, 0.0f);
+
+        StoreFile.Writer writer = new StoreFile.WriterBuilder(
+            this.getConfiguration(), new CacheConfig(cacheConfig), fs, HFile.DEFAULT_BLOCKSIZE).withFilePath(new Path(path)).build();
+
+        try {
+            Scan scan = new Scan();
+            scan.setCaching(GlobalConfig.instance().getBatchSizeForRead());
+
+            ResultScanner scanner = table.getScanner(scan);
+
+            boolean isValid;
+            do {
+                Result result = scanner.next();
+
+                isValid = result != null;
+                if (isValid) {
+                    for (KeyValue keyValue : result.list()) {
+                        writer.append(keyValue);
+                    }
+
+                    for (HbaseActionListener listener : this.listeners) {
+                        listener.saveOperation(tableName, path, result);
+                    }
+                }
+            }
+            while (isValid);
+
+            writer.appendTrackedTimestampsToMetadata();
+        }
+        finally {
+            writer.close();
+        }
+    }
+
+    /**
+     * Flushes a in memory portion of the table into the HFile.
+     * @param tableName The name of the table to flush.
+     * @throws IOException Error accessing hbase.
+     * @throws InterruptedException
+     */
+    public void flushTable(String tableName) throws IOException, InterruptedException {
+        this.hbaseAdmin.flush(tableName);
+    }
+
+    /**
+     * Loads a locally saved HFile to an existing table.
+     *
+     * @param tableName The name of the table to load to.
+     * @param path      The path to the HFile.
+     * @throws IOException Error accessing hbase.
+     */
+    public void loadTable(String tableName, String path) throws IOException {
+        FileSystem fs = FileSystem.getLocal(this.getConfiguration());
+        HTable table = this.factory.get(tableName);
+
+        HTableDescriptor td = this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(tableName));
+
+        Collection<String> families = new HashSet<String>();
+        for (HColumnDescriptor column : td.getColumnFamilies()) {
+            families.add(column.getNameAsString());
+        }
+
+        StoreFile.Reader reader = new StoreFile.Reader(fs, new Path(path), new CacheConfig(this.getConfiguration()), DataBlockEncoding.NONE);
+
+        try {
+            StoreFileScanner scanner = reader.getStoreFileScanner(false, false);
+            SchemaMetrics.configureGlobally(this.getConfiguration());
+
+            // move to the first row.
+            scanner.seek(new KeyValue(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+
+            Put put = null;
+            Collection<String> familiesToCreate = new HashSet<String>();
+
+            boolean isValid;
+            do {
+                KeyValue kv = scanner.next();
+
+                isValid = kv != null;
+                if (isValid) {
+                    String columnFamily = Bytes.toStringBinary(kv.getFamily());
+                    if (!families.contains(columnFamily)) {
+                        familiesToCreate.add(columnFamily);
+                    }
+
+                    if (put == null) {
+                        put = new Put(kv.getRow());
+                    }
+
+                    if (!Arrays.equals(put.getRow(), kv.getRow())) {
+                        if (!familiesToCreate.isEmpty()) {
+                            createFamilies(tableName, familiesToCreate);
+
+                            families.addAll(familiesToCreate);
+                            familiesToCreate.clear();
+                        }
+
+                        table.put(put);
+
+                        for (HbaseActionListener listener : this.listeners) {
+                            listener.loadOperation(tableName, path, put);
+                        }
+
+                        put = new Put(kv.getRow());
+                    }
+
+                    put.add(kv);
+                }
+                else {
+                    // add the last put to the table.
+                    if (put != null) {
+                        if (!familiesToCreate.isEmpty()) {
+                            createFamilies(tableName, familiesToCreate);
+
+                            families.addAll(familiesToCreate);
+                            familiesToCreate.clear();
+                        }
+
+                        table.put(put);
+
+                        for (HbaseActionListener listener : this.listeners) {
+                            listener.loadOperation(tableName, path, put);
+                        }
+                    }
+                }
+            }
+            while (isValid);
+        }
+        finally {
+            reader.close(false);
+        }
     }
 
     /**
@@ -437,7 +604,7 @@ public class Connection {
      * @return An instance of the scanner.
      */
     public Scanner getScanner(String tableName) {
-        return new Scanner(this.factory, tableName);
+        return new Scanner(this, tableName);
     }
 
     /**
@@ -448,7 +615,7 @@ public class Connection {
      * @return An instance of the query scanner.
      */
     public QueryScanner getScanner(String tableName, Query query) {
-        return new QueryScanner(this.factory, tableName, query);
+        return new QueryScanner(this, tableName, query);
     }
     //endregion
 

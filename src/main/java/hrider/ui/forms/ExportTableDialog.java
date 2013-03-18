@@ -8,14 +8,15 @@ import hrider.data.DataRow;
 import hrider.data.ObjectType;
 import hrider.data.TypedColumn;
 import hrider.export.FileExporter;
-import hrider.hbase.Query;
-import hrider.hbase.QueryScanner;
-import hrider.hbase.Scanner;
+import hrider.hbase.*;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -53,6 +54,7 @@ public class ExportTableDialog extends JDialog {
     private JButton    btOpen;
     private JButton    btClose;
     private JButton    btExportWithQueryButton;
+    private JComboBox  cmbFileType;
     private String     filePath;
     private boolean    canceled;
     //endregion
@@ -65,7 +67,7 @@ public class ExportTableDialog extends JDialog {
         setTitle("Export table to file");
         getRootPane().setDefaultButton(this.btExport);
 
-        this.tfFilePath.setText(String.format("%s.csv", scanner.getTableName()));
+        this.tfFilePath.setText(String.format("%s.hfile", scanner.getTableName()));
 
         this.btExport.addActionListener(
             new ActionListener() {
@@ -160,6 +162,24 @@ public class ExportTableDialog extends JDialog {
                 }
             });
 
+        this.cmbFileType.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    boolean enabled = "Delimited".equals(cmbFileType.getSelectedItem());
+                    cmbDelimiter.setEnabled(enabled);
+
+                    if (tfFilePath.getText().startsWith(scanner.getTableName())) {
+                        if (enabled) {
+                            tfFilePath.setText(String.format("%s.csv", scanner.getTableName()));
+                        }
+                        else {
+                            tfFilePath.setText(String.format("%s.hfile", scanner.getTableName()));
+                        }
+                    }
+                }
+            });
+
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(
@@ -224,6 +244,7 @@ public class ExportTableDialog extends JDialog {
                 @Override
                 public void run() {
                     tfFilePath.setEnabled(false);
+                    cmbFileType.setEnabled(false);
                     cmbDelimiter.setEnabled(false);
                     btExport.setEnabled(false);
                     btExportWithQueryButton.setEnabled(false);
@@ -234,27 +255,12 @@ public class ExportTableDialog extends JDialog {
 
                     canceled = false;
 
-                    FileOutputStream stream = null;
                     try {
-                        stream = new FileOutputStream(file);
-                        FileExporter exporter = new FileExporter(stream, getDelimiter());
-
-                        scanner.resetCurrent(null);
-
-                        Collection<DataRow> rows = scanner.next(GlobalConfig.instance().getBatchSizeForRead());
-                        Collection<String> columnNames = scanner.getColumns(0);
-
-                        int counter = 1;
-
-                        while (!rows.isEmpty() && !canceled) {
-                            for (DataRow row : rows) {
-                                exporter.write(row, columnNames);
-
-                                writtenRowsCount.setText(Long.toString(counter++));
-                                writtenRowsCount.paintImmediately(writtenRowsCount.getBounds());
-                            }
-
-                            rows = scanner.next(GlobalConfig.instance().getBatchSizeForRead());
+                        if ("Delimited".equals(cmbFileType.getSelectedItem())) {
+                            exportDelimitedFile(file, scanner);
+                        }
+                        else {
+                            exportHFile(file, scanner);
                         }
 
                         filePath = file.getAbsolutePath();
@@ -266,16 +272,9 @@ public class ExportTableDialog extends JDialog {
                             JOptionPane.ERROR_MESSAGE);
                     }
                     finally {
-                        if (stream != null) {
-                            try {
-                                stream.close();
-                            }
-                            catch (IOException ignore) {
-                            }
-                        }
-
                         tfFilePath.setEnabled(true);
-                        cmbDelimiter.setEnabled(true);
+                        cmbFileType.setEnabled(true);
+                        cmbDelimiter.setEnabled("Delimited".equals(cmbFileType.getSelectedItem()));
                         btExport.setEnabled(true);
                         btExportWithQueryButton.setEnabled(true);
                         btCancel.setEnabled(false);
@@ -284,6 +283,77 @@ public class ExportTableDialog extends JDialog {
                     }
                 }
             }).start();
+    }
+
+    private void exportDelimitedFile(File file, Scanner scanner) throws IOException, FileNotFoundException {
+        FileOutputStream stream = new FileOutputStream(file);
+        FileExporter exporter = new FileExporter(stream, getDelimiter());
+
+        try {
+            scanner.resetCurrent(null);
+
+            Collection<DataRow> rows = scanner.next(GlobalConfig.instance().getBatchSizeForRead());
+            Collection<String> columnNames = scanner.getColumns(0);
+
+            int counter = 1;
+
+            while (!rows.isEmpty() && !canceled) {
+                for (DataRow row : rows) {
+                    exporter.write(row, columnNames);
+
+                    writtenRowsCount.setText(Long.toString(counter++));
+                    writtenRowsCount.paintImmediately(writtenRowsCount.getBounds());
+                }
+
+                rows = scanner.next(GlobalConfig.instance().getBatchSizeForRead());
+            }
+        }
+        finally {
+            stream.close();
+        }
+    }
+
+    private void exportHFile(File file, Scanner scanner) throws IOException {
+        Connection connection = scanner.getConnection();
+
+        final int[] counter = {1};
+
+        HbaseActionListener listener = new HbaseActionListener() {
+            @Override
+            public void copyOperation(String source, String sourceTable, String target, String targetTable, Result result) {
+            }
+
+            @Override
+            public void saveOperation(String tableName, String path, Result result) {
+                writtenRowsCount.setText(Long.toString(counter[0]++));
+                writtenRowsCount.paintImmediately(writtenRowsCount.getBounds());
+            }
+
+            @Override
+            public void loadOperation(String tableName, String path, Put put) {
+            }
+
+            @Override
+            public void tableOperation(String tableName, String operation) {
+            }
+
+            @Override
+            public void rowOperation(String tableName, DataRow row, String operation) {
+            }
+
+            @Override
+            public void columnOperation(String tableName, String column, String operation) {
+            }
+        };
+
+        connection.addListener(listener);
+
+        try {
+            connection.saveTable(scanner.getTableName(), file.getAbsolutePath());
+        }
+        finally {
+            connection.removeListener(listener);
+        }
     }
 
     private Character getDelimiter() {
@@ -376,7 +446,7 @@ public class ExportTableDialog extends JDialog {
             0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(6, 3, new Insets(0, 0, 0, 0), -1, -1));
+        panel3.setLayout(new GridLayoutManager(7, 3, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(
             panel3, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
@@ -390,7 +460,7 @@ public class ExportTableDialog extends JDialog {
         final Spacer spacer1 = new Spacer();
         panel3.add(
             spacer1, new GridConstraints(
-            5, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+            6, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         tfFilePath = new JTextField();
         panel3.add(
             tfFilePath, new GridConstraints(
@@ -406,39 +476,40 @@ public class ExportTableDialog extends JDialog {
         label2.setText("Written rows:");
         panel3.add(
             label2, new GridConstraints(
-            3, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            4, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         writtenRowsCount = new JLabel();
         writtenRowsCount.setText("?");
         panel3.add(
             writtenRowsCount, new GridConstraints(
-            3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         final JLabel label3 = new JLabel();
         label3.setText("Total rows:");
         panel3.add(
             label3, new GridConstraints(
-            4, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            5, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         totalRowsCount = new JLabel();
         totalRowsCount.setText("?");
         panel3.add(
             totalRowsCount, new GridConstraints(
-            4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         final JLabel label4 = new JLabel();
         label4.setText("Delimiter:");
         panel3.add(
             label4, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            2, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         final JSeparator separator1 = new JSeparator();
         panel3.add(
             separator1, new GridConstraints(
-            2, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
+            3, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
             null, null, null, 0, false));
         cmbDelimiter = new JComboBox();
         cmbDelimiter.setEditable(true);
+        cmbDelimiter.setEnabled(false);
         final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
         defaultComboBoxModel1.addElement(",");
         defaultComboBoxModel1.addElement("|");
@@ -447,6 +518,21 @@ public class ExportTableDialog extends JDialog {
         cmbDelimiter.setModel(defaultComboBoxModel1);
         panel3.add(
             cmbDelimiter, new GridConstraints(
+            2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
+            null, null, null, 0, false));
+        final JLabel label5 = new JLabel();
+        label5.setText("File type:");
+        panel3.add(
+            label5, new GridConstraints(
+            1, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            null, 0, false));
+        cmbFileType = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel2 = new DefaultComboBoxModel();
+        defaultComboBoxModel2.addElement("HFile");
+        defaultComboBoxModel2.addElement("Delimited");
+        cmbFileType.setModel(defaultComboBoxModel2);
+        panel3.add(
+            cmbFileType, new GridConstraints(
             1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, null, null, 0, false));
         final JSeparator separator2 = new JSeparator();

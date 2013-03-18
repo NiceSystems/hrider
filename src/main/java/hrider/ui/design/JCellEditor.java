@@ -116,7 +116,7 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
             type = (ObjectType)table.getValueAt(row, this.typeColumn);
         }
 
-        if (type == ObjectType.DateTime) {
+        if (type == ObjectType.DateAsString || type == ObjectType.DateAsLong) {
             this.editorType = EditorType.Date;
         }
         else if (type == ObjectType.JodaDateTime) {

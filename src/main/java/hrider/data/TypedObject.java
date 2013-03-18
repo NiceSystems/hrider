@@ -41,6 +41,10 @@ public class TypedObject {
      * The type of the {@link TypedObject#value}.
      */
     private ObjectType type;
+    /**
+     * The original value.
+     */
+    private byte[]     orgValue;
     //endregion
 
     //region Constructor
@@ -59,9 +63,11 @@ public class TypedObject {
         }
 
         if (objValue instanceof byte[]) {
+            this.orgValue = (byte[])objValue;
             this.value = this.type.fromByteArray((byte[])objValue);
         }
         else {
+            this.orgValue = this.type.fromObject(objValue);
             this.value = objValue;
         }
     }
@@ -103,9 +109,12 @@ public class TypedObject {
      */
     public void setType(ObjectType objType) {
         if (this.type != null) {
-            this.value = objType.fromByteArray(this.type.fromObject(this.value));
+            Object objValue = objType.fromByteArray(this.orgValue);
+            if (objValue != null) {
+                this.value = objValue;
+                this.type = objType;
+            }
         }
-        this.type = objType;
     }
 
     /**
@@ -161,7 +170,7 @@ public class TypedObject {
     @Override
     public String toString() {
         if (this.value != null) {
-            if (this.type == ObjectType.DateTime) {
+            if (this.type == ObjectType.DateAsString || this.type == ObjectType.DateAsLong) {
                 DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                 return df.format((Date)this.value);
             }
