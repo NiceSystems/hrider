@@ -842,7 +842,7 @@ public class DesignerView {
     /**
      * Gets the reference to the view.
      *
-     * @return A {@link JPanel} that contains the controls.
+     * @return A {@link javax.swing.JPanel} that contains the controls.
      */
     public JPanel getView() {
         return this.topPanel;
@@ -851,7 +851,7 @@ public class DesignerView {
     /**
      * Gets a reference to the class used to access the hbase.
      *
-     * @return A reference to the {@link Connection} class.
+     * @return A reference to the {@link hrider.hbase.Connection} class.
      */
     public Connection getConnection() {
         return this.connection;
@@ -919,7 +919,7 @@ public class DesignerView {
      *
      * @param columnName The name of the column to look.
      * @param table      The table that should contain column.
-     * @return A reference to {@link TableColumn} if found or {@code null} otherwise.
+     * @return A reference to {@link javax.swing.table.TableColumn} if found or {@code null} otherwise.
      */
     private static TableColumn getColumn(String columnName, JTable table) {
         for (int i = 0 ; i < table.getColumnCount() ; i++) {
@@ -1344,7 +1344,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link DesignerView#rowsNumberSpinner} control.
+     * in the {@link hrider.ui.views.DesignerView#rowsNumberSpinner} control.
      *
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
      *                  {@link Direction#Forward} or {@link Direction#Backward}.
@@ -1355,7 +1355,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link DesignerView#rowsNumberSpinner} control.
+     * in the {@link hrider.ui.views.DesignerView#rowsNumberSpinner} control.
      *
      * @param offset    The first row to start loading from.
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
@@ -2171,6 +2171,7 @@ public class DesignerView {
         tableMetadataButton.setMinimumSize(new Dimension(24, 24));
         tableMetadataButton.setPreferredSize(new Dimension(24, 24));
         tableMetadataButton.setText("");
+        tableMetadataButton.setToolTipText("Show table's metadata");
         toolBar2.add(tableMetadataButton);
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
