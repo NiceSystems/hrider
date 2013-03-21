@@ -7,7 +7,7 @@ import hrider.config.GlobalConfig;
 import hrider.data.*;
 import hrider.hbase.Connection;
 import hrider.hbase.HbaseActionListener;
-import hrider.ui.design.JCellEditor;
+import hrider.ui.design.JTableModel;
 import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
@@ -16,7 +16,6 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -45,6 +44,8 @@ import java.util.regex.Pattern;
 public class ImportTableDialog extends JDialog {
 
     //region Variables
+    private static final long serialVersionUID = 2869574256289701614L;
+
     private JPanel            contentPane;
     private JButton           btImport;
     private JButton           btClose;
@@ -59,21 +60,26 @@ public class ImportTableDialog extends JDialog {
     private JLabel            writtenRowsCount;
     private JLabel            readRowsCount;
     private JComboBox         cmbFileType;
+    private JPanel            panelDelimited;
+    private JLabel            labelDelimiter;
     private DefaultTableModel tableModel;
     private boolean           canceled;
     //endregion
 
     //region Constructor
-    public ImportTableDialog(final Connection connection, final String tableName, Iterable<TypedColumn> columns, final Iterable<String> columnFamilies) {
+    public ImportTableDialog(
+        final Connection connection, final String tableName, Iterable<TypedColumn> columns, final Collection<ColumnFamily> columnFamilies) {
         setContentPane(this.contentPane);
         setModal(true);
         setTitle("Import table from file");
         getRootPane().setDefaultButton(this.btImport);
 
-        this.tfTableName.setText(tableName);
-        this.tfFilePath.setText(String.format("%s.hfile", tableName));
+        if (tableName != null) {
+            this.tfTableName.setText(tableName);
+            this.tfFilePath.setText(String.format("%s.hfile", tableName));
+        }
 
-        this.tableModel = new DefaultTableModel();
+        this.tableModel = new JTableModel(1);
         this.rowsTable.setModel(this.tableModel);
 
         this.tableModel.addColumn("Column Name");
@@ -87,7 +93,6 @@ public class ImportTableDialog extends JDialog {
             comboBox.addItem(objectType);
         }
 
-        this.rowsTable.getColumn("Column Name").setCellEditor(new JCellEditor(null, false));
         this.rowsTable.getColumn("Column Type").setCellEditor(new DefaultCellEditor(comboBox));
 
         for (TypedColumn typedColumn : columns) {
@@ -159,16 +164,15 @@ public class ImportTableDialog extends JDialog {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    stopCellEditing(rowsTable);
+                    JTableModel.stopCellEditing(rowsTable);
 
                     AddColumnDialog dialog = new AddColumnDialog(columnFamilies);
-                    dialog.showDialog(ImportTableDialog.this);
+                    if (dialog.showDialog(ImportTableDialog.this)) {
+                        ColumnQualifier column = dialog.getColumn();
 
-                    String columnName = dialog.getColumnName();
-                    if (columnName != null) {
-                        int rowIndex = getRowIndex(rowsTable, 1, columnName);
+                        int rowIndex = getRowIndex(rowsTable, 1, column);
                         if (rowIndex == -1) {
-                            tableModel.addRow(new Object[]{columnName, ObjectType.String, null});
+                            tableModel.addRow(new Object[]{column, ObjectType.String, null});
                             rowIndex = tableModel.getRowCount() - 1;
                         }
 
@@ -181,6 +185,8 @@ public class ImportTableDialog extends JDialog {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    JTableModel.stopCellEditing(rowsTable);
+
                     int selectedRow = rowsTable.getSelectedRow();
 
                     while (selectedRow != -1) {
@@ -204,21 +210,22 @@ public class ImportTableDialog extends JDialog {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    boolean enabled = "Delimited".equals(cmbFileType.getSelectedItem());
+                    boolean visible = "Delimited".equals(cmbFileType.getSelectedItem());
 
-                    cmbDelimiter.setEnabled(enabled);
-                    btAddColumn.setEnabled(enabled);
-                    btRemoveColumn.setEnabled(enabled && rowsTable.getSelectedRowCount() > 0);
-                    rowsTable.setEnabled(enabled);
+                    cmbDelimiter.setVisible(visible);
+                    labelDelimiter.setVisible(visible);
+                    panelDelimited.setVisible(visible);
 
-                    if (tfFilePath.getText().startsWith(tableName)) {
-                        if (enabled) {
+                    if (tableName != null && tfFilePath.getText().startsWith(tableName)) {
+                        if (visible) {
                             tfFilePath.setText(String.format("%s.csv", tableName));
                         }
                         else {
                             tfFilePath.setText(String.format("%s.hfile", tableName));
                         }
                     }
+
+                    pack();
                 }
             });
     }
@@ -235,15 +242,6 @@ public class ImportTableDialog extends JDialog {
     //endregion
 
     //region Private Methods
-    private static void stopCellEditing(JTable table) {
-        if (table.getRowCount() > 0) {
-            TableCellEditor editor = table.getCellEditor();
-            if (editor != null) {
-                editor.stopCellEditing();
-            }
-        }
-    }
-
     private static int getRowIndex(JTable table, int columnIndex, Object expectedValue) {
         for (int i = 0 ; i < table.getRowCount() ; i++) {
             Object value = table.getValueAt(i, columnIndex);
@@ -255,11 +253,12 @@ public class ImportTableDialog extends JDialog {
     }
 
     private void onImport(final Connection connection) {
+        JTableModel.stopCellEditing(rowsTable);
+
         final File file = new File(this.tfFilePath.getText().trim());
         if (!file.exists()) {
             JOptionPane.showMessageDialog(
-                this.contentPane, String.format("The specified file '%s' does not exist.", this.tfFilePath.getText()), "Error",
-                JOptionPane.ERROR_MESSAGE);
+                this.contentPane, String.format("The specified file '%s' does not exist.", this.tfFilePath.getText()), "Error", JOptionPane.ERROR_MESSAGE);
 
             return;
         }
@@ -280,11 +279,29 @@ public class ImportTableDialog extends JDialog {
                     canceled = false;
 
                     try {
+                        String tableName = tfTableName.getText().trim();
+                        if (!connection.tableExists(tableName)) {
+                            int option = JOptionPane.showConfirmDialog(
+                                contentPane, String.format("The specified table '%s' does not exist.\nDo you want to create it?", tableName), "Create table",
+                                JOptionPane.YES_NO_OPTION);
+
+                            if (option != JOptionPane.YES_OPTION) {
+                                return;
+                            }
+
+                            AddTableDialog dialog = new AddTableDialog(new TableDescriptor(tableName));
+                            if (!dialog.showDialog(contentPane)) {
+                                return;
+                            }
+
+                            connection.createOrModifyTable(dialog.getTableDescriptor());
+                        }
+
                         if ("Delimited".equals(cmbFileType.getSelectedItem())) {
-                            importDelimitedFile(connection, tfTableName.getText().trim(), file.getAbsolutePath());
+                            importDelimitedFile(connection, tableName, file.getAbsolutePath());
                         }
                         else {
-                            importHFile(connection, tfTableName.getText().trim(), file.getAbsolutePath());
+                            importHFile(connection, tableName, file.getAbsolutePath());
                         }
                     }
                     catch (Exception e) {
@@ -321,13 +338,12 @@ public class ImportTableDialog extends JDialog {
                     throw new IllegalArgumentException("No columns information found in the file.");
                 }
 
-                if (!columns.contains("key")) {
+                if (!columns.contains(ColumnQualifier.KEY.getName())) {
                     throw new IllegalArgumentException("Column 'key' is missing in the file.");
                 }
 
-                connection.createTable(table);
-
                 Map<String, ObjectType> columnTypes = getColumnTypes();
+                Map<String, ColumnQualifier> columnQualifiers = getColumnQualifiers();
 
                 long readCount = 1;
                 long writtenCount = 0;
@@ -351,11 +367,16 @@ public class ImportTableDialog extends JDialog {
                             type = ObjectType.String;
                         }
 
-                        row.addCell(new DataCell(row, column, new TypedObject(type, type.fromString(value))));
-
-                        if ("key".equalsIgnoreCase(column)) {
+                        if (ColumnQualifier.isKey(column)) {
                             row.setKey(new TypedObject(type, type.fromString(value)));
                         }
+
+                        ColumnQualifier qualifier = columnQualifiers.get(column);
+                        if (qualifier == null) {
+                            qualifier = new ColumnQualifier(column);
+                        }
+
+                        row.addCell(new DataCell(row, qualifier, new TypedObject(type, type.fromString(value))));
                     }
 
                     if (row.getKey() != null) {
@@ -396,7 +417,7 @@ public class ImportTableDialog extends JDialog {
         }
     }
 
-    private void importHFile(Connection connection, String table, String filePath) throws IOException {
+    private void importHFile(Connection connection, String table, String filePath) throws IOException, TableNotFoundException {
         final int[] counter = {1};
 
         HbaseActionListener listener = new HbaseActionListener() {
@@ -433,7 +454,6 @@ public class ImportTableDialog extends JDialog {
         connection.addListener(listener);
 
         try {
-            connection.createTable(table);
             connection.loadTable(table, filePath);
         }
         finally {
@@ -450,6 +470,15 @@ public class ImportTableDialog extends JDialog {
             columnTypes.put(columnName, columnType);
         }
         return columnTypes;
+    }
+
+    private Map<String, ColumnQualifier> getColumnQualifiers() {
+        Map<String, ColumnQualifier> columnQualifiers = new HashMap<String, ColumnQualifier>();
+        for (int i = 0 ; i < this.rowsTable.getRowCount() ; i++) {
+            ColumnQualifier qualifier = (ColumnQualifier)this.rowsTable.getValueAt(i, 0);
+            columnQualifiers.put(qualifier.getFullName(), qualifier);
+        }
+        return columnQualifiers;
     }
 
     private Character getDelimiter() {
@@ -499,18 +528,18 @@ public class ImportTableDialog extends JDialog {
      */
     private void $$$setupUI$$$() {
         contentPane = new JPanel();
-        contentPane.setLayout(new GridLayoutManager(4, 1, new Insets(10, 10, 10, 10), -1, -1));
+        contentPane.setLayout(new GridLayoutManager(5, 1, new Insets(10, 10, 10, 10), -1, -1));
         final JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(
             panel1, new GridConstraints(
-            3, 0, 1, 1, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_HORIZONTAL,
+            4, 0, 1, 1, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_HORIZONTAL,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
         final JPanel panel2 = new JPanel();
         panel2.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel1.add(
             panel2, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            0, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         btImport = new JButton();
         btImport.setText("Import");
@@ -531,11 +560,6 @@ public class ImportTableDialog extends JDialog {
             btClose, new GridConstraints(
             0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JSeparator separator1 = new JSeparator();
-        panel1.add(
-            separator1, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridLayoutManager(5, 3, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(
@@ -559,29 +583,31 @@ public class ImportTableDialog extends JDialog {
             btBrowse, new GridConstraints(
             1, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JLabel label2 = new JLabel();
-        label2.setText("Delimiter:");
+        labelDelimiter = new JLabel();
+        labelDelimiter.setText("Delimiter:");
+        labelDelimiter.setVisible(false);
         panel3.add(
-            label2, new GridConstraints(
+            labelDelimiter, new GridConstraints(
             3, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         cmbDelimiter = new JComboBox();
         cmbDelimiter.setEditable(true);
-        cmbDelimiter.setEnabled(false);
+        cmbDelimiter.setEnabled(true);
         final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
         defaultComboBoxModel1.addElement(",");
         defaultComboBoxModel1.addElement("|");
         defaultComboBoxModel1.addElement("-");
         defaultComboBoxModel1.addElement(":");
         cmbDelimiter.setModel(defaultComboBoxModel1);
+        cmbDelimiter.setVisible(false);
         panel3.add(
             cmbDelimiter, new GridConstraints(
             3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, null, null, 0, false));
-        final JLabel label3 = new JLabel();
-        label3.setText("Table name:");
+        final JLabel label2 = new JLabel();
+        label2.setText("Table name:");
         panel3.add(
-            label3, new GridConstraints(
+            label2, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         tfTableName = new JTextField();
@@ -589,66 +615,67 @@ public class ImportTableDialog extends JDialog {
             tfTableName, new GridConstraints(
             0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, new Dimension(150, -1), null, 0, false));
-        final JPanel panel4 = new JPanel();
-        panel4.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panelDelimited = new JPanel();
+        panelDelimited.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panelDelimited.setVisible(false);
         panel3.add(
-            panel4, new GridConstraints(
+            panelDelimited, new GridConstraints(
             4, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        final JPanel panel5 = new JPanel();
-        panel5.setLayout(new GridLayoutManager(2, 4, new Insets(0, 0, 0, 0), -1, -1));
-        panel4.add(
-            panel5, new GridConstraints(
+        final JPanel panel4 = new JPanel();
+        panel4.setLayout(new GridLayoutManager(2, 4, new Insets(0, 0, 0, 0), -1, -1));
+        panelDelimited.add(
+            panel4, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        final JLabel label4 = new JLabel();
-        label4.setText("Select types for columns:");
-        panel5.add(
-            label4, new GridConstraints(
+        final JLabel label3 = new JLabel();
+        label3.setText("Select types for columns:");
+        panel4.add(
+            label3, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         final Spacer spacer1 = new Spacer();
-        panel5.add(
+        panel4.add(
             spacer1, new GridConstraints(
             1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         btRemoveColumn = new JButton();
         btRemoveColumn.setEnabled(false);
         btRemoveColumn.setText("Remove");
-        panel5.add(
+        panel4.add(
             btRemoveColumn, new GridConstraints(
             1, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         btAddColumn = new JButton();
-        btAddColumn.setEnabled(false);
+        btAddColumn.setEnabled(true);
         btAddColumn.setText("Add...");
-        panel5.add(
+        panel4.add(
             btAddColumn, new GridConstraints(
             1, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JSeparator separator2 = new JSeparator();
-        panel5.add(
-            separator2, new GridConstraints(
+        final JSeparator separator1 = new JSeparator();
+        panel4.add(
+            separator1, new GridConstraints(
             0, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
             null, null, null, 0, false));
         final JScrollPane scrollPane1 = new JScrollPane();
-        panel4.add(
+        panelDelimited.add(
             scrollPane1, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(400, 200), null, 0, false));
         rowsTable = new JTable();
-        rowsTable.setEnabled(false);
+        rowsTable.setEnabled(true);
         scrollPane1.setViewportView(rowsTable);
-        final JLabel label5 = new JLabel();
-        label5.setFont(new Font(label5.getFont().getName(), Font.BOLD, label5.getFont().getSize()));
-        label5.setText("* Note: data for not listed columns will be treated as of String type.");
-        panel4.add(
-            label5, new GridConstraints(
+        final JLabel label4 = new JLabel();
+        label4.setFont(new Font(label4.getFont().getName(), Font.BOLD, label4.getFont().getSize()));
+        label4.setText("* Note: data for not listed columns will be treated as of String type.");
+        panelDelimited.add(
+            label4, new GridConstraints(
             2, 0, 1, 1, GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null,
             null, null, 0, false));
-        final JLabel label6 = new JLabel();
-        label6.setText("File type:");
+        final JLabel label5 = new JLabel();
+        label5.setText("File type:");
         panel3.add(
-            label6, new GridConstraints(
+            label5, new GridConstraints(
             2, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         cmbFileType = new JComboBox();
@@ -660,45 +687,50 @@ public class ImportTableDialog extends JDialog {
             cmbFileType, new GridConstraints(
             2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, null, null, 0, false));
-        final JSeparator separator3 = new JSeparator();
+        final JSeparator separator2 = new JSeparator();
         contentPane.add(
-            separator3, new GridConstraints(
+            separator2, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
             null, null, null, 0, false));
-        final JPanel panel6 = new JPanel();
-        panel6.setLayout(new GridLayoutManager(2, 3, new Insets(0, 0, 0, 0), -1, -1));
+        final JPanel panel5 = new JPanel();
+        panel5.setLayout(new GridLayoutManager(2, 3, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(
-            panel6, new GridConstraints(
+            panel5, new GridConstraints(
             2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        final JLabel label7 = new JLabel();
-        label7.setText("Written rows:");
-        panel6.add(
-            label7, new GridConstraints(
+        final JLabel label6 = new JLabel();
+        label6.setText("Written rows:");
+        panel5.add(
+            label6, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         final Spacer spacer2 = new Spacer();
-        panel6.add(
+        panel5.add(
             spacer2, new GridConstraints(
             1, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         writtenRowsCount = new JLabel();
         writtenRowsCount.setText("?");
-        panel6.add(
+        panel5.add(
             writtenRowsCount, new GridConstraints(
             1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
-        final JLabel label8 = new JLabel();
-        label8.setText("Read rows:");
-        panel6.add(
-            label8, new GridConstraints(
+        final JLabel label7 = new JLabel();
+        label7.setText("Read rows:");
+        panel5.add(
+            label7, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         readRowsCount = new JLabel();
         readRowsCount.setText("?");
-        panel6.add(
+        panel5.add(
             readRowsCount, new GridConstraints(
             0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
+        final JSeparator separator3 = new JSeparator();
+        contentPane.add(
+            separator3, new GridConstraints(
+            3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
+            null, null, null, 0, false));
     }
 
     /**

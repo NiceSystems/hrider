@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="hrider.ui.forms.UpdateTableMetadata">
+  <grid id="cbd77" binding="contentPane" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+    <margin top="10" left="10" bottom="10" right="10"/>
+    <constraints>
+      <xy x="48" y="54" width="436" height="297"/>
+    </constraints>
+    <properties>
+      <maximumSize width="-1" height="-1"/>
+      <minimumSize width="-1" height="-1"/>
+      <preferredSize width="400" height="400"/>
+    </properties>
+    <border type="none"/>
+    <children>
+      <grid id="94766" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+        <margin top="0" left="0" bottom="0" right="0"/>
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <grid id="9538f" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="true" same-size-vertically="false" hgap="-1" vgap="-1">
+            <margin top="0" left="0" bottom="0" right="0"/>
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="4" fill="2" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="e7465" class="javax.swing.JButton" binding="buttonUpdate">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="Update"/>
+                </properties>
+              </component>
+              <component id="5723f" class="javax.swing.JButton" binding="buttonCancel">
+                <constraints>
+                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="Cancel"/>
+                </properties>
+              </component>
+            </children>
+          </grid>
+        </children>
+      </grid>
+      <grid id="e3588" layout-manager="GridLayoutManager" row-count="3" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+        <margin top="0" left="0" bottom="0" right="0"/>
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="34002" class="javax.swing.JLabel">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Table metadata"/>
+            </properties>
+          </component>
+          <scrollpane id="1997e">
+            <constraints>
+              <grid row="1" column="0" row-span="1" col-span="2" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="e305b" class="javax.swing.JTable" binding="tableMetadata">
+                <constraints/>
+                <properties/>
+              </component>
+            </children>
+          </scrollpane>
+          <component id="a7585" class="javax.swing.JLabel">
+            <constraints>
+              <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Column Family"/>
+            </properties>
+          </component>
+          <toolbar id="ce70f">
+            <constraints>
+              <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false">
+                <preferred-size width="-1" height="20"/>
+              </grid>
+            </constraints>
+            <properties>
+              <floatable value="false"/>
+            </properties>
+            <border type="none"/>
+            <children>
+              <component id="7f9a8" class="javax.swing.JComboBox" binding="cmbFamilies">
+                <constraints/>
+                <properties>
+                  <editable value="true"/>
+                </properties>
+              </component>
+              <component id="4319c" class="javax.swing.JToolBar$Separator">
+                <constraints/>
+                <properties/>
+              </component>
+              <component id="80414" class="javax.swing.JButton" binding="addColumnMetadataButton">
+                <constraints/>
+                <properties>
+                  <icon value="images/add.png"/>
+                  <maximumSize width="27" height="27"/>
+                  <minimumSize width="27" height="27"/>
+                  <preferredSize width="27" height="27"/>
+                  <text value=""/>
+                  <toolTipText value="Add metadata attribute"/>
+                </properties>
+              </component>
+              <component id="ede84" class="javax.swing.JButton" binding="removeColumnMetadataButton">
+                <constraints/>
+                <properties>
+                  <enabled value="false"/>
+                  <horizontalAlignment value="0"/>
+                  <icon value="images/delete.png"/>
+                  <maximumSize width="27" height="27"/>
+                  <minimumSize width="27" height="27"/>
+                  <preferredSize width="27" height="27"/>
+                  <text value=""/>
+                  <toolTipText value="Remove metadata attribute"/>
+                </properties>
+              </component>
+            </children>
+          </toolbar>
+          <toolbar id="8dd9">
+            <constraints>
+              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="4" fill="0" indent="0" use-parent-layout="false">
+                <preferred-size width="-1" height="20"/>
+              </grid>
+            </constraints>
+            <properties>
+              <floatable value="false"/>
+            </properties>
+            <border type="none"/>
+            <children>
+              <component id="c436c" class="javax.swing.JButton" binding="addTableMetadataButton">
+                <constraints/>
+                <properties>
+                  <icon value="images/add.png"/>
+                  <maximumSize width="27" height="27"/>
+                  <minimumSize width="27" height="27"/>
+                  <preferredSize width="27" height="27"/>
+                  <text value=""/>
+                  <toolTipText value="Add metadata attribute"/>
+                </properties>
+              </component>
+              <component id="eb48c" class="javax.swing.JButton" binding="removeTableMetadataButton">
+                <constraints/>
+                <properties>
+                  <enabled value="false"/>
+                  <horizontalAlignment value="0"/>
+                  <icon value="images/delete.png"/>
+                  <maximumSize width="27" height="27"/>
+                  <minimumSize width="27" height="27"/>
+                  <preferredSize width="27" height="27"/>
+                  <text value=""/>
+                  <toolTipText value="Remove metadata attribute"/>
+                </properties>
+              </component>
+            </children>
+          </toolbar>
+        </children>
+      </grid>
+      <scrollpane id="c6a26">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="409b0" class="javax.swing.JTable" binding="columnMetadata">
+            <constraints/>
+            <properties/>
+          </component>
+        </children>
+      </scrollpane>
+    </children>
+  </grid>
+</form>

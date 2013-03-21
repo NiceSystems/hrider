@@ -3,9 +3,9 @@ package hrider.ui.forms;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import hrider.data.*;
-import hrider.ui.ChangeTracker;
 import hrider.ui.design.JCellEditor;
 import hrider.ui.design.JCheckBoxRenderer;
+import hrider.ui.design.JTableModel;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -35,6 +35,7 @@ public class AddRowDialog extends JDialog {
 
     //region Variables
     private static final long serialVersionUID = 3548012990232068349L;
+
     private JPanel            contentPane;
     private JButton           buttonAdd;
     private JButton           buttonCancel;
@@ -45,13 +46,13 @@ public class AddRowDialog extends JDialog {
     //endregion
 
     //region Constructor
-    public AddRowDialog(Iterable<TypedColumn> columns, final Iterable<String> columnFamilies) {
+    public AddRowDialog(Iterable<TypedColumn> columns, final Iterable<ColumnFamily> columnFamilies) {
         setContentPane(this.contentPane);
         setModal(true);
         setTitle("Add new row");
         getRootPane().setDefaultButton(this.buttonAdd);
 
-        this.tableModel = new DefaultTableModel();
+        this.tableModel = new JTableModel(0, 2, 3);
         this.rowsTable.setModel(this.tableModel);
 
         this.tableModel.addColumn("Use");
@@ -60,8 +61,8 @@ public class AddRowDialog extends JDialog {
         this.tableModel.addColumn("Value");
         this.rowsTable.setRowHeight(this.rowsTable.getFont().getSize() + 8);
         this.rowsTable.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
-        this.rowsTable.getColumn("Use").setCellRenderer(new JCheckBoxRenderer(new CheckedRow(1, "key")));
-        this.rowsTable.getColumn("Use").setCellEditor(new JCheckBoxRenderer(new CheckedRow(1, "key")));
+        this.rowsTable.getColumn("Use").setCellRenderer(new JCheckBoxRenderer(new CheckedRow(1, ColumnQualifier.KEY)));
+        this.rowsTable.getColumn("Use").setCellEditor(new JCheckBoxRenderer(new CheckedRow(1, ColumnQualifier.KEY)));
         this.rowsTable.getColumn("Use").setPreferredWidth(20);
 
         JComboBox comboBox = new JComboBox();
@@ -70,7 +71,6 @@ public class AddRowDialog extends JDialog {
             comboBox.addItem(objectType);
         }
 
-        this.rowsTable.getColumn("Column Name").setCellEditor(new JCellEditor(null, false));
         this.rowsTable.getColumn("Column Type").setCellEditor(new DefaultCellEditor(comboBox));
         this.rowsTable.getColumn("Value").setCellEditor(new JCellEditor(null, 2, true));
 
@@ -82,7 +82,7 @@ public class AddRowDialog extends JDialog {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    stopCellEditing(AddRowDialog.this.rowsTable);
+                    JTableModel.stopCellEditing(rowsTable);
 
                     onOK();
                 }
@@ -120,20 +120,19 @@ public class AddRowDialog extends JDialog {
                 @Override
                 public void actionPerformed(ActionEvent e) {
 
-                    stopCellEditing(AddRowDialog.this.rowsTable);
+                    JTableModel.stopCellEditing(rowsTable);
 
                     AddColumnDialog dialog = new AddColumnDialog(columnFamilies);
-                    dialog.showDialog(AddRowDialog.this);
+                    if (dialog.showDialog(AddRowDialog.this)) {
+                        ColumnQualifier column = dialog.getColumn();
 
-                    String columnName = dialog.getColumnName();
-                    if (columnName != null) {
-                        int rowIndex = getRowIndex(AddRowDialog.this.rowsTable, 1, columnName);
+                        int rowIndex = getRowIndex(rowsTable, 1, column);
                         if (rowIndex == -1) {
-                            AddRowDialog.this.tableModel.addRow(new Object[]{Boolean.TRUE, columnName, ObjectType.String, null});
-                            rowIndex = AddRowDialog.this.tableModel.getRowCount() - 1;
+                            tableModel.addRow(new Object[]{Boolean.TRUE, column, ObjectType.String, null});
+                            rowIndex = tableModel.getRowCount() - 1;
                         }
 
-                        AddRowDialog.this.rowsTable.setRowSelectionInterval(rowIndex, rowIndex);
+                        rowsTable.setRowSelectionInterval(rowIndex, rowIndex);
                     }
                 }
             });
@@ -141,11 +140,13 @@ public class AddRowDialog extends JDialog {
     //endregion
 
     //region Public Methods
-    public void showDialog(Component owner) {
+    public boolean showDialog(Component owner) {
         this.setComponentOrientation(owner.getComponentOrientation());
         this.pack();
         this.setLocationRelativeTo(owner);
         this.setVisible(true);
+
+        return this.okPressed;
     }
 
     public DataRow getRow() {
@@ -154,15 +155,15 @@ public class AddRowDialog extends JDialog {
             for (int i = 0 ; i < this.rowsTable.getRowCount() ; i++) {
                 boolean use = (Boolean)this.rowsTable.getValueAt(i, 0);
                 if (use) {
-                    String columnName = (String)this.rowsTable.getValueAt(i, 1);
+                    ColumnQualifier columnQualifier = (ColumnQualifier)this.rowsTable.getValueAt(i, 1);
                     ObjectType columnType = (ObjectType)this.rowsTable.getValueAt(i, 2);
                     Object value = columnType.fromString((String)this.rowsTable.getValueAt(i, 3));
 
-                    if ("key".equals(columnName)) {
+                    if (columnQualifier.isKey()) {
                         row.setKey(new TypedObject(columnType, value));
                     }
 
-                    row.addCell(new DataCell(row, columnName, new TypedObject(columnType, value)));
+                    row.addCell(new DataCell(row, columnQualifier, new TypedObject(columnType, value)));
                 }
             }
             return row;
@@ -172,15 +173,6 @@ public class AddRowDialog extends JDialog {
     //endregion
 
     //region Private Methods
-    private static void stopCellEditing(JTable table) {
-        if (table.getRowCount() > 0) {
-            TableCellEditor editor = table.getCellEditor();
-            if (editor != null) {
-                editor.stopCellEditing();
-            }
-        }
-    }
-
     private static int getRowIndex(JTable table, int columnIndex, Object expectedValue) {
         for (int i = 0 ; i < table.getRowCount() ; i++) {
             Object value = table.getValueAt(i, columnIndex);
@@ -193,11 +185,13 @@ public class AddRowDialog extends JDialog {
 
     private void onOK() {
 
+        JTableModel.stopCellEditing(rowsTable);
+
         String value = null;
 
         for (int i = 0 ; i < this.rowsTable.getRowCount() ; i++) {
-            String columnName = (String)this.rowsTable.getValueAt(i, 1);
-            if ("key".equals(columnName)) {
+            ColumnQualifier qualifier = (ColumnQualifier)this.rowsTable.getValueAt(i, 1);
+            if (qualifier.isKey()) {
                 value = (String)this.rowsTable.getValueAt(i, 3);
                 break;
             }
@@ -207,14 +201,14 @@ public class AddRowDialog extends JDialog {
             JOptionPane.showMessageDialog(this.contentPane, "The key is required field.", "Error", JOptionPane.ERROR_MESSAGE);
         }
         else {
-            String columnName = null;
+            ColumnQualifier qualifier = null;
 
             try {
                 for (int i = 0 ; i < this.rowsTable.getRowCount() ; i++) {
                     boolean use = (Boolean)this.rowsTable.getValueAt(i, 0);
                     if (use) {
                         value = (String)this.rowsTable.getValueAt(i, 3);
-                        columnName = (String)this.rowsTable.getValueAt(i, 1);
+                        qualifier = (ColumnQualifier)this.rowsTable.getValueAt(i, 1);
                         ObjectType valueType = (ObjectType)this.rowsTable.getValueAt(i, 2);
 
                         valueType.toObject(value);
@@ -226,7 +220,7 @@ public class AddRowDialog extends JDialog {
             }
             catch (Exception e) {
                 JOptionPane.showMessageDialog(
-                    this.contentPane, String.format("The value of the column '%s' is in a wrong format.%sError: %s", columnName, "\n", e.getMessage()), "Error",
+                    this.contentPane, String.format("The value of the column '%s' is in a wrong format.%sError: %s", qualifier, "\n", e.getMessage()), "Error",
                     JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -255,55 +249,43 @@ public class AddRowDialog extends JDialog {
      */
     private void $$$setupUI$$$() {
         contentPane = new JPanel();
-        contentPane.setLayout(new GridLayoutManager(3, 1, new Insets(10, 10, 10, 10), -1, -1));
-        final JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
-        contentPane.add(
-            panel1, new GridConstraints(
-            2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            1, null, null, null, 0, false));
-        final JPanel panel2 = new JPanel();
-        panel2.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1, true, false));
-        panel1.add(
-            panel2, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        buttonAdd = new JButton();
-        buttonAdd.setText("Add");
-        panel2.add(
-            buttonAdd, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        buttonCancel = new JButton();
-        buttonCancel.setText("Cancel");
-        panel2.add(
-            buttonCancel, new GridConstraints(
-            0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JSeparator separator1 = new JSeparator();
-        panel1.add(
-            separator1, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 5, 0), -1, -1));
-        contentPane.add(
-            panel3, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        final JScrollPane scrollPane1 = new JScrollPane();
-        panel3.add(
-            scrollPane1, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 200), null, 0, false));
-        rowsTable = new JTable();
-        scrollPane1.setViewportView(rowsTable);
+        contentPane.setLayout(new GridLayoutManager(4, 1, new Insets(10, 10, 10, 10), -1, -1));
         buttonAddColumn = new JButton();
         buttonAddColumn.setText("Add Column...");
         contentPane.add(
             buttonAddColumn, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JSeparator separator1 = new JSeparator();
+        contentPane.add(
+            separator1, new GridConstraints(
+            2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
+            null, null, null, 0, false));
+        final JScrollPane scrollPane1 = new JScrollPane();
+        contentPane.add(
+            scrollPane1, new GridConstraints(
+            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 200), null, 0, false));
+        rowsTable = new JTable();
+        scrollPane1.setViewportView(rowsTable);
+        final JPanel panel1 = new JPanel();
+        panel1.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1, true, false));
+        contentPane.add(
+            panel1, new GridConstraints(
+            3, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        buttonAdd = new JButton();
+        buttonAdd.setText("Add");
+        panel1.add(
+            buttonAdd, new GridConstraints(
+            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        buttonCancel = new JButton();
+        buttonCancel.setText("Cancel");
+        panel1.add(
+            buttonCancel, new GridConstraints(
+            0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**

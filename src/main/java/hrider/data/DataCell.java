@@ -26,29 +26,34 @@ public class DataCell {
     /**
      * The row the current cell belongs to.
      */
-    private DataRow     row;
+    private DataRow         row;
     /**
-     * The name of the column (an hbase qualifier) where the cell is located.
+     * The column (an hbase qualifier) where the cell is located.
      */
-    private String      columnName;
+    private ColumnQualifier column;
     /**
      * The value of the cell.
      */
-    private TypedObject typedValue;
+    private TypedObject     typedValue;
     //endregion
+
+    //region Constructor
 
     /**
      * Initializes a new instance of the {@link DataCell} with parameters.
      *
      * @param row        The owner of the cell.
-     * @param columnName The name of the column/qualifier.
+     * @param column     The name of the column/qualifier.
      * @param typedValue The value.
      */
-    public DataCell(DataRow row, String columnName, TypedObject typedValue) {
+    public DataCell(DataRow row, ColumnQualifier column, TypedObject typedValue) {
         this.row = row;
-        this.columnName = columnName;
+        this.column = column;
         this.typedValue = typedValue;
     }
+    //endregion
+
+    //region Public Methods
 
     /**
      * Gets a row.
@@ -69,21 +74,21 @@ public class DataCell {
     }
 
     /**
-     * Gets the name of the column/qualifier.
+     * Gets the column qualifier.
      *
      * @return The column name.
      */
-    public String getColumnName() {
-        return this.columnName;
+    public ColumnQualifier getColumn() {
+        return this.column;
     }
 
     /**
-     * Sets the new column name.
+     * Sets the new column qualifier.
      *
-     * @param columnName A new column name.
+     * @param column A new column name.
      */
-    public void setColumnName(String columnName) {
-        this.columnName = columnName;
+    public void setColumn(ColumnQualifier column) {
+        this.column = column;
     }
 
     /**
@@ -118,6 +123,15 @@ public class DataCell {
     }
 
     /**
+     * Checks whether this cell represents a key.
+     *
+     * @return True if the cell represents a key or False otherwise.
+     */
+    public boolean isKey() {
+        return this.column.isKey();
+    }
+
+    /**
      * Converts a data represented as {@link String} to an actual type.
      *
      * @param data The data to convert.
@@ -142,7 +156,7 @@ public class DataCell {
             DataCell cell = (DataCell)obj;
             return cell.typedValue.equals(this.typedValue) &&
                    cell.row.equals(this.row) &&
-                   cell.columnName.equals(this.columnName);
+                   cell.column.equals(this.column);
         }
         return false;
     }
@@ -156,4 +170,5 @@ public class DataCell {
     public String toString() {
         return this.typedValue.toString();
     }
+    //endregion
 }

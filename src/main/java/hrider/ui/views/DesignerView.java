@@ -2,6 +2,7 @@ package hrider.ui.views;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
 import hrider.config.ClusterConfig;
 import hrider.config.GlobalConfig;
 import hrider.data.*;
@@ -21,6 +22,7 @@ import hrider.ui.ChangeTrackerListener;
 import hrider.ui.MessageHandler;
 import hrider.ui.design.JCellEditor;
 import hrider.ui.design.JCheckBoxRenderer;
+import hrider.ui.design.JTableModel;
 import hrider.ui.design.ResizeableTableHeader;
 import hrider.ui.forms.*;
 import org.apache.hadoop.hbase.client.Put;
@@ -30,7 +32,10 @@ import org.apache.hadoop.hbase.util.Bytes;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
-import javax.swing.table.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
@@ -102,7 +107,8 @@ public class DesignerView {
     private JButton                  importTableButton;
     private JButton                  exportTableButton;
     private JButton                  refreshColumnsButton;
-    private JButton flushTableButton;
+    private JButton                  flushTableButton;
+    private JButton                  tableMetadataButton;
     private DefaultTableModel        columnsTableModel;
     private DefaultTableModel        rowsTableModel;
     private Query                    lastQuery;
@@ -188,8 +194,6 @@ public class DesignerView {
                         Object selectedItem = tablesFilter.getSelectedItem();
                         if (selectedItem != null) {
                             tablesFilter.removeItem(selectedItem);
-                            tablesFilter.setSelectedIndex(0);
-
                             clusterConfig.setTablesFilter(getFilters(tablesFilter));
                         }
                     }
@@ -225,8 +229,6 @@ public class DesignerView {
                         Object selectedItem = columnsFilter.getSelectedItem();
                         if (selectedItem != null) {
                             columnsFilter.removeItem(selectedItem);
-                            columnsFilter.setSelectedIndex(0);
-
                             clusterConfig.setColumnsFilter(getSelectedTableName(), getFilters(columnsFilter));
                         }
                     }
@@ -314,7 +316,7 @@ public class DesignerView {
                 public void actionPerformed(ActionEvent e) {
                     clearError();
 
-                    ScanDialog dialog = new ScanDialog(lastQuery, getCheckedColumns());
+                    ScanDialog dialog = new ScanDialog(lastQuery, getShownTypedColumns());
                     dialog.showDialog(topPanel);
 
                     lastQuery = dialog.getQuery();
@@ -339,7 +341,7 @@ public class DesignerView {
                             stream = new FileOutputStream(tempFile);
                             FileExporter exporter = new FileExporter(stream, GlobalConfig.instance().getExternalViewerDelimeter());
 
-                            List<String> columns = getShownColumnNames();
+                            List<ColumnQualifier> columns = getShownColumns();
 
                             for (int i = 0 ; i < rowsTable.getRowCount() ; i++) {
                                 exporter.write(((DataCell)rowsTable.getValueAt(i, 0)).getRow(), columns);
@@ -372,17 +374,16 @@ public class DesignerView {
                 public void actionPerformed(ActionEvent e) {
                     clearError();
 
-                    stopCellEditing(columnsTable);
-                    stopCellEditing(rowsTable);
+                    JTableModel.stopCellEditing(columnsTable);
+                    JTableModel.stopCellEditing(rowsTable);
 
                     try {
-                        Collection<String> columnFamilies = connection.getColumnFamilies(getSelectedTableName());
+                        Collection<ColumnFamily> columnFamilies = connection.getColumnFamilies(getSelectedTableName());
 
-                        AddRowDialog dialog = new AddRowDialog(getCheckedColumns(), columnFamilies);
-                        dialog.showDialog(topPanel);
+                        AddRowDialog dialog = new AddRowDialog(getShownTypedColumns(), columnFamilies);
+                        if (dialog.showDialog(topPanel)) {
+                            DataRow row = dialog.getRow();
 
-                        DataRow row = dialog.getRow();
-                        if (row != null) {
                             owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                             try {
                                 connection.setRow(getSelectedTableName(), row);
@@ -394,7 +395,7 @@ public class DesignerView {
                                 // Update the column types according to the added row.
                                 for (DataCell cell : row.getCells()) {
                                     clusterConfig.setTableConfig(
-                                        getSelectedTableName(), cell.getColumnName(), cell.getTypedValue().getType().toString());
+                                        getSelectedTableName(), cell.getColumn().getFullName(), cell.getTypedValue().getType().toString());
                                 }
 
                                 populateColumnsTable(true, row);
@@ -420,7 +421,7 @@ public class DesignerView {
                 public void actionPerformed(ActionEvent e) {
                     clearError();
 
-                    stopCellEditing(rowsTable);
+                    JTableModel.stopCellEditing(rowsTable);
 
                     int decision = JOptionPane.showConfirmDialog(
                         topPanel, "Are you sure you want to delete the selected rows?", "Confirmation", JOptionPane.OK_CANCEL_OPTION);
@@ -460,7 +461,7 @@ public class DesignerView {
                 public void actionPerformed(ActionEvent e) {
                     clearError();
 
-                    stopCellEditing(rowsTable);
+                    JTableModel.stopCellEditing(rowsTable);
 
                     copySelectedRowsToClipboard();
                 }
@@ -472,7 +473,7 @@ public class DesignerView {
                 public void actionPerformed(ActionEvent e) {
                     clearError();
 
-                    stopCellEditing(rowsTable);
+                    JTableModel.stopCellEditing(rowsTable);
 
                     pasteRowsFromClipboard();
                 }
@@ -484,7 +485,7 @@ public class DesignerView {
                 public void actionPerformed(ActionEvent e) {
                     clearError();
 
-                    stopCellEditing(rowsTable);
+                    JTableModel.stopCellEditing(rowsTable);
 
                     int decision = JOptionPane.showConfirmDialog(
                         topPanel,
@@ -520,18 +521,16 @@ public class DesignerView {
                     clearError();
 
                     AddTableDialog dialog = new AddTableDialog();
-                    dialog.showDialog(topPanel);
-
-                    String tableName = dialog.getTableName();
-                    if (tableName != null) {
+                    if (dialog.showDialog(topPanel)) {
                         owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                         try {
-                            connection.createTable(tableName, dialog.getColumnFamilies());
-                            tablesListModel.addElement(tableName);
-                            tablesList.setSelectedValue(tableName, true);
+                            connection.createOrModifyTable(dialog.getTableDescriptor());
+
+                            tablesListModel.addElement(dialog.getTableDescriptor().getName());
+                            tablesList.setSelectedValue(dialog.getTableDescriptor().getName(), true);
                         }
                         catch (Exception ex) {
-                            setError(String.format("Failed to create table %s: ", tableName), ex);
+                            setError(String.format("Failed to create table %s: ", dialog.getTableDescriptor().getName()), ex);
                         }
                         finally {
                             owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -754,15 +753,15 @@ public class DesignerView {
                     try {
                         String tableName = getSelectedTableName();
 
-                        Collection<String> columnFamilies;
+                        Collection<ColumnFamily> columnFamilies;
                         if (tableName != null) {
                             columnFamilies = connection.getColumnFamilies(tableName);
                         }
                         else {
-                            columnFamilies = new ArrayList<String>();
+                            columnFamilies = new ArrayList<ColumnFamily>();
                         }
 
-                        ImportTableDialog dialog = new ImportTableDialog(connection, tableName, getCheckedColumns(), columnFamilies);
+                        ImportTableDialog dialog = new ImportTableDialog(connection, tableName, getShownTypedColumns(), columnFamilies);
                         dialog.showDialog(topPanel);
                     }
                     catch (Exception ex) {
@@ -770,6 +769,38 @@ public class DesignerView {
                     }
                     finally {
                         owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                    }
+                }
+            });
+
+        this.tableMetadataButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    clearError();
+
+                    String tableName = getSelectedTableName();
+                    if (tableName != null) {
+                        try {
+                            TableDescriptor tableDescriptor = connection.getTableDescriptor(tableName);
+
+                            UpdateTableMetadata dialog = new UpdateTableMetadata(tableDescriptor);
+                            if (dialog.showDialog(topPanel)) {
+                                owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                                try {
+                                    connection.createOrModifyTable(tableDescriptor);
+                                }
+                                catch (Exception ex) {
+                                    setError(String.format("Failed to update table %s metadata: ", tableName), ex);
+                                }
+                                finally {
+                                    owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                                }
+                            }
+                        }
+                        catch (Exception ex) {
+                            setError(String.format("Failed to retrieve descriptor of the table %s: ", tableName), ex);
+                        }
                     }
                 }
             });
@@ -799,7 +830,7 @@ public class DesignerView {
     /**
      * Gets the reference to the view.
      *
-     * @return A {@link javax.swing.JPanel} that contains the controls.
+     * @return A {@link JPanel} that contains the controls.
      */
     public JPanel getView() {
         return this.topPanel;
@@ -808,7 +839,7 @@ public class DesignerView {
     /**
      * Gets a reference to the class used to access the hbase.
      *
-     * @return A reference to the {@link hrider.hbase.Connection} class.
+     * @return A reference to the {@link Connection} class.
      */
     public Connection getConnection() {
         return this.connection;
@@ -852,20 +883,6 @@ public class DesignerView {
     }
 
     /**
-     * Stops editing of the cell if there is any.
-     *
-     * @param table The table that contains the cell.
-     */
-    private static void stopCellEditing(JTable table) {
-        if (table.getRowCount() > 0) {
-            TableCellEditor editor = table.getCellEditor();
-            if (editor != null) {
-                editor.stopCellEditing();
-            }
-        }
-    }
-
-    /**
      * Checks if the clipboard has rows to paste.
      *
      * @return True if the clipboard has rows to paste or False otherwise.
@@ -890,7 +907,7 @@ public class DesignerView {
      *
      * @param columnName The name of the column to look.
      * @param table      The table that should contain column.
-     * @return A reference to {@link javax.swing.table.TableColumn} if found or {@code null} otherwise.
+     * @return A reference to {@link TableColumn} if found or {@code null} otherwise.
      */
     private static TableColumn getColumn(String columnName, JTable table) {
         for (int i = 0 ; i < table.getColumnCount() ; i++) {
@@ -941,6 +958,7 @@ public class DesignerView {
         this.truncateTableButton.setEnabled(false);
         this.copyTableButton.setEnabled(false);
         this.exportTableButton.setEnabled(false);
+        this.tableMetadataButton.setEnabled(false);
         this.importTableButton.setEnabled(false);
 
         this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -958,7 +976,9 @@ public class DesignerView {
                 filter = new PatternFilter(value);
             }
 
-            for (String table : this.connection.getTables()) {
+            Collection<String> tables = this.connection.getTables();
+
+            for (String table : tables) {
                 if (filter.match(table)) {
                     this.tablesListModel.addElement(table);
                 }
@@ -966,7 +986,7 @@ public class DesignerView {
 
             this.addTableButton.setEnabled(true);
             this.importTableButton.setEnabled(true);
-            this.tablesNumber.setText(String.valueOf(this.tablesListModel.getSize()));
+            this.tablesNumber.setText(String.format("%s of %s", this.tablesListModel.getSize(), tables.size()));
             this.tablesList.setSelectedValue(selectedTable, true);
         }
         catch (Exception ex) {
@@ -1000,6 +1020,8 @@ public class DesignerView {
                     if (selectedIndices == 1) {
                         copyTableButton.setEnabled(true);
                         exportTableButton.setEnabled(true);
+                        tableMetadataButton.setEnabled(true);
+
                         scanner = null;
 
                         String currentFilter = clusterConfig.getSelectedColumnFilter(getSelectedTableName());
@@ -1017,6 +1039,7 @@ public class DesignerView {
 
                         copyTableButton.setEnabled(false);
                         exportTableButton.setEnabled(false);
+                        tableMetadataButton.setEnabled(false);
                         rowsNumberLabel.setText("?");
                         visibleRowsLabel.setText("?");
                         pasteRowButton.setEnabled(false);
@@ -1059,7 +1082,7 @@ public class DesignerView {
      * Initializes a columns table used to present the columns of the selected table.
      */
     private void initializeColumnsTable() {
-        this.columnsTableModel = new DefaultTableModel();
+        this.columnsTableModel = new JTableModel(0, 2);
         this.columnsTableModel.addColumn("Show");
         this.columnsTableModel.addColumn("Column Name");
         this.columnsTableModel.addColumn("Column Type");
@@ -1067,8 +1090,8 @@ public class DesignerView {
         this.columnsTable.setModel(this.columnsTableModel);
         this.columnsTable.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 
-        this.columnsTable.getColumn("Show").setCellRenderer(new JCheckBoxRenderer(new CheckedRow(1, "key")));
-        this.columnsTable.getColumn("Show").setCellEditor(new JCheckBoxRenderer(new CheckedRow(1, "key")));
+        this.columnsTable.getColumn("Show").setCellRenderer(new JCheckBoxRenderer(new CheckedRow(1, ColumnQualifier.KEY)));
+        this.columnsTable.getColumn("Show").setCellEditor(new JCheckBoxRenderer(new CheckedRow(1, ColumnQualifier.KEY)));
         this.columnsTable.getColumn("Show").setPreferredWidth(40);
         this.columnsTable.getColumn("Column Name").setPreferredWidth(110);
 
@@ -1078,7 +1101,6 @@ public class DesignerView {
             comboBox.addItem(objectType);
         }
 
-        this.columnsTable.getColumn("Column Name").setCellEditor(new JCellEditor(this.changeTracker, false));
         this.columnsTable.getColumn("Column Type").setCellEditor(new DefaultCellEditor(comboBox));
 
         this.columnsTable.getModel().addTableModelListener(
@@ -1093,24 +1115,24 @@ public class DesignerView {
                     String columnName = model.getColumnName(column);
 
                     if ("Show".equals(columnName)) {
-                        String name = (String)model.getValueAt(e.getFirstRow(), 1);
+                        ColumnQualifier qualifier = (ColumnQualifier)model.getValueAt(e.getFirstRow(), 1);
                         boolean isShown = (Boolean)model.getValueAt(e.getFirstRow(), 0);
 
-                        clusterConfig.setTableConfig(getSelectedTableName(), name, "isShown", Boolean.toString(isShown));
+                        clusterConfig.setTableConfig(getSelectedTableName(), qualifier.getFullName(), "isShown", Boolean.toString(isShown));
 
-                        setRowsTableColumnVisible(name, isShown);
+                        setRowsTableColumnVisible(qualifier.getFullName(), isShown);
                     }
                     else if ("Column Type".equals(columnName)) {
-                        String name = (String)model.getValueAt(e.getFirstRow(), 1);
+                        ColumnQualifier qualifier = (ColumnQualifier)model.getValueAt(e.getFirstRow(), 1);
                         ObjectType type = (ObjectType)model.getValueAt(e.getFirstRow(), column);
 
-                        clusterConfig.setTableConfig(getSelectedTableName(), name, type.toString());
+                        clusterConfig.setTableConfig(getSelectedTableName(), qualifier.getFullName(), type.toString());
 
-                        stopCellEditing(rowsTable);
+                        JTableModel.stopCellEditing(rowsTable);
 
                         if (scanner != null) {
                             try {
-                                scanner.updateColumnType(name, type);
+                                scanner.updateColumnType(qualifier.getFullName(), type);
                             }
                             catch (Exception ex) {
                                 setError(String.format("The selected type '%s' does not match the data.", type), ex);
@@ -1178,7 +1200,7 @@ public class DesignerView {
                             clearError();
 
                             if (copyRowButton.isEnabled()) {
-                                stopCellEditing(rowsTable);
+                                JTableModel.stopCellEditing(rowsTable);
                                 copySelectedRowsToClipboard();
                             }
                         }
@@ -1186,7 +1208,7 @@ public class DesignerView {
                             clearError();
 
                             if (pasteRowButton.isEnabled()) {
-                                stopCellEditing(rowsTable);
+                                JTableModel.stopCellEditing(rowsTable);
                                 pasteRowsFromClipboard();
                             }
                         }
@@ -1310,7 +1332,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link hrider.ui.views.DesignerView#rowsNumberSpinner} control.
+     * in the {@link DesignerView#rowsNumberSpinner} control.
      *
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
      *                  {@link Direction#Forward} or {@link Direction#Backward}.
@@ -1321,7 +1343,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link hrider.ui.views.DesignerView#rowsNumberSpinner} control.
+     * in the {@link DesignerView#rowsNumberSpinner} control.
      *
      * @param offset    The first row to start loading from.
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
@@ -1331,7 +1353,7 @@ public class DesignerView {
 
         this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
-            stopCellEditing(columnsTable);
+            JTableModel.stopCellEditing(columnsTable);
 
             this.rowsNumberSpinner.setEnabled(true);
 
@@ -1411,7 +1433,7 @@ public class DesignerView {
             for (DataRow row : rows) {
                 DataCell cell = row.getCell(columnName);
                 if (cell == null) {
-                    cell = new DataCell(row, columnName, new TypedObject(getColumnType(tableName, columnName), null));
+                    cell = new DataCell(row, new ColumnQualifier(columnName), new TypedObject(getColumnType(tableName, columnName), null));
                 }
 
                 if (rowIndex >= this.rowsTable.getRowCount()) {
@@ -1453,22 +1475,23 @@ public class DesignerView {
             if (row == null) {
                 this.scanner.setColumnTypes(
                     new HashMap<String, ObjectType>() {{
-                        put("key", ObjectType.String);
+                        put(ColumnQualifier.KEY.getName(), ObjectType.String);
                     }});
 
                 row = this.scanner.getFirstRow();
             }
 
-            for (String column : this.scanner.getColumns(getPageSize())) {
-                boolean isColumnVisible = "key".equals(column) || filter.match(column);
+            Collection<ColumnQualifier> columns = this.scanner.getColumns(getPageSize());
+            for (ColumnQualifier column : columns) {
+                boolean isColumnVisible = column.isKey() || filter.match(column.getFullName());
                 if (isColumnVisible) {
                     addColumnToColumnsTable(tableName, column, row);
                 }
 
-                setRowsTableColumnVisible(column, isColumnVisible && isShown(tableName, column));
+                setRowsTableColumnVisible(column.getFullName(), isColumnVisible && isShown(tableName, column.getFullName()));
             }
 
-            this.columnsNumber.setText(String.valueOf(this.columnsTableModel.getRowCount()));
+            this.columnsNumber.setText(String.format("%s of %s", this.columnsTableModel.getRowCount(), columns.size()));
         }
         catch (Exception ex) {
             setError("Failed to fill tables list: ", ex);
@@ -1478,26 +1501,26 @@ public class DesignerView {
     /**
      * Adds a column to the columns table.
      *
-     * @param tableName  The name of the table the column belongs to. Used to look for the column type in the saved configuration.
-     * @param columnName The name of the column to add.
-     * @param row        The row that might contain column type information.
+     * @param tableName The name of the table the column belongs to. Used to look for the column type in the saved configuration.
+     * @param qualifier The column qualifier to add.
+     * @param row       The row that might contain column type information.
      */
-    private void addColumnToColumnsTable(String tableName, String columnName, DataRow row) {
-        ObjectType columnType = getColumnType(tableName, columnName);
+    private void addColumnToColumnsTable(String tableName, ColumnQualifier qualifier, DataRow row) {
+        ObjectType columnType = getColumnType(tableName, qualifier.getFullName());
 
         if (columnType == null && row != null) {
-            DataCell cell = row.getCell(columnName);
+            DataCell cell = row.getCell(qualifier);
             if (cell != null) {
                 columnType = cell.guessType();
             }
         }
 
         if (columnType == null) {
-            columnType = ObjectType.fromColumn(columnName);
+            columnType = ObjectType.fromColumn(qualifier.getFullName());
         }
 
-        boolean isShown = isShown(tableName, columnName);
-        this.columnsTableModel.addRow(new Object[]{isShown, columnName, columnType});
+        boolean isShown = isShown(tableName, qualifier.getFullName());
+        this.columnsTableModel.addRow(new Object[]{isShown, qualifier, columnType});
     }
 
     /**
@@ -1509,11 +1532,11 @@ public class DesignerView {
         this.rowsTableRemovedColumns.clear();
 
         for (int i = 0, j = 0 ; i < this.columnsTable.getRowCount() ; i++) {
-            String columnName = (String)this.columnsTableModel.getValueAt(i, 1);
+            ColumnQualifier qualifier = (ColumnQualifier)this.columnsTableModel.getValueAt(i, 1);
 
             boolean isShown = (Boolean)this.columnsTableModel.getValueAt(i, 0);
             if (isShown) {
-                addColumnToRowsTable(tableName, columnName, j++);
+                addColumnToRowsTable(tableName, qualifier.getFullName(), j++);
             }
         }
     }
@@ -1567,7 +1590,7 @@ public class DesignerView {
         TableColumn tableColumn = new TableColumn(columnIndex);
         tableColumn.setIdentifier(columnName);
         tableColumn.setHeaderValue(columnName);
-        tableColumn.setCellEditor(new JCellEditor(this.changeTracker, !"key".equals(columnName)));
+        tableColumn.setCellEditor(new JCellEditor(this.changeTracker, !ColumnQualifier.isKey(columnName)));
 
         try {
             Integer width = this.clusterConfig.getTableConfig(Integer.class, tableName, columnName, "size");
@@ -1596,7 +1619,7 @@ public class DesignerView {
                 String columnName = rowsTable.getColumnName(i);
                 DataCell cell = row.getCell(columnName);
                 if (cell == null) {
-                    cell = new DataCell(row, columnName, new TypedObject(getColumnType(tableName, columnName), null));
+                    cell = new DataCell(row, new ColumnQualifier(columnName), new TypedObject(getColumnType(tableName, columnName), null));
                 }
                 values.add(cell);
             }
@@ -1655,10 +1678,8 @@ public class DesignerView {
                 owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 try {
                     PasteDialog dialog = new PasteDialog(changeTracker, table.getRows());
-                    dialog.showDialog(topPanel);
-
-                    Collection<DataRow> updatedRows = dialog.getRows();
-                    if (updatedRows != null) {
+                    if (dialog.showDialog(topPanel)) {
+                        Collection<DataRow> updatedRows = dialog.getRows();
                         for (DataRow row : updatedRows) {
                             try {
                                 connection.setRow(getSelectedTableName(), row);
@@ -1666,7 +1687,7 @@ public class DesignerView {
                                 // Update the column types according to the added row.
                                 for (DataCell cell : row.getCells()) {
                                     this.clusterConfig.setTableConfig(
-                                        getSelectedTableName(), cell.getColumnName(), cell.getTypedValue().getType().toString());
+                                        getSelectedTableName(), cell.getColumn().getFullName(), cell.getTypedValue().getType().toString());
                                 }
 
                                 populateColumnsTable(true, row);
@@ -1727,51 +1748,24 @@ public class DesignerView {
 
             this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             try {
-                String targetTable = table.getTableName();
-                String sourceTable = table.getTableName();
+                TableDescriptor sourceTable = table.getConnection().getTableDescriptor(table.getTableName());
 
-                boolean proceed = true;
-
-                while (this.connection.tableExists(targetTable)) {
-                    String tableName = (String)JOptionPane.showInputDialog(
-                        topPanel,
-                        String.format("The specified table '%s' already exists.\nProvide a new name for the table or the data will be merged.", targetTable),
-                        "Provide a new name for the table", JOptionPane.PLAIN_MESSAGE, null, null, targetTable);
-
-                    proceed = tableName != null;
-
-                    // Canceled by the user.
-                    if (!proceed) {
-                        break;
-                    }
-
-                    // The table name has not been changed.
-                    if (tableName.isEmpty() || tableName.equals(targetTable)) {
-                        break;
-                    }
-
-                    targetTable = tableName;
-                }
-
-                if (proceed) {
-                    if (!this.connection.tableExists(targetTable)) {
-                        this.connection.createTable(targetTable);
-                        setInfo(String.format("The '%s' table has been created on '%s'.", targetTable, this.connection.getServerName()));
-                    }
-
+                AddTableDialog dialog = new AddTableDialog(sourceTable);
+                if (dialog.showDialog(topPanel)) {
+                    TableDescriptor targetTable = dialog.getTableDescriptor();
                     this.connection.copyTable(targetTable, sourceTable, table.getConnection());
 
-                    if (!this.tablesListModel.contains(targetTable)) {
-                        String sourcePrefix = String.format("table.%s.", sourceTable);
-                        String targetPrefix = String.format("table.%s.", targetTable);
+                    if (!this.tablesListModel.contains(targetTable.getName())) {
+                        String sourcePrefix = String.format("table.%s.", sourceTable.getName());
+                        String targetPrefix = String.format("table.%s.", targetTable.getName());
 
                         for (Map.Entry<String, String> keyValue : this.clusterConfig.getAll(sourcePrefix).entrySet()) {
                             this.clusterConfig.set(keyValue.getKey().replace(sourcePrefix, targetPrefix), keyValue.getValue());
                         }
-                        this.tablesListModel.addElement(targetTable);
+                        this.tablesListModel.addElement(targetTable.getName());
                     }
 
-                    this.tablesList.setSelectedValue(targetTable, true);
+                    this.tablesList.setSelectedValue(targetTable.getName(), true);
                 }
             }
             catch (IOException e) {
@@ -1791,8 +1785,8 @@ public class DesignerView {
     private Map<String, ObjectType> getColumnTypes() {
         Map<String, ObjectType> columnTypes = new HashMap<String, ObjectType>();
         for (int i = 0 ; i < columnsTable.getRowCount() ; i++) {
-            String columnName = (String)columnsTableModel.getValueAt(i, 1);
-            columnTypes.put(columnName, (ObjectType)columnsTableModel.getValueAt(i, 2));
+            ColumnQualifier qualifier = (ColumnQualifier)columnsTableModel.getValueAt(i, 1);
+            columnTypes.put(qualifier.getFullName(), (ObjectType)columnsTableModel.getValueAt(i, 2));
         }
         return columnTypes;
     }
@@ -1802,28 +1796,15 @@ public class DesignerView {
      *
      * @return A list of checked columns from the columns table.
      */
-    private Collection<TypedColumn> getCheckedColumns() {
+    private Collection<TypedColumn> getShownTypedColumns() {
         Collection<TypedColumn> typedColumns = new ArrayList<TypedColumn>();
         for (int i = 0 ; i < this.columnsTable.getRowCount() ; i++) {
             boolean isShown = (Boolean)this.columnsTableModel.getValueAt(i, 0);
             if (isShown) {
                 typedColumns.add(
                     new TypedColumn(
-                        (String)this.columnsTableModel.getValueAt(i, 1), (ObjectType)this.columnsTableModel.getValueAt(i, 2)));
+                        (ColumnQualifier)this.columnsTableModel.getValueAt(i, 1), (ObjectType)this.columnsTableModel.getValueAt(i, 2)));
             }
-        }
-        return typedColumns;
-    }
-
-    /**
-     * Gets a list of all populated columns.
-     *
-     * @return A list of columns.
-     */
-    private List<String> getColumns() {
-        List<String> typedColumns = new ArrayList<String>();
-        for (int i = 0 ; i < this.columnsTable.getRowCount() ; i++) {
-            typedColumns.add((String)this.columnsTableModel.getValueAt(i, 1));
         }
         return typedColumns;
     }
@@ -1833,14 +1814,15 @@ public class DesignerView {
      *
      * @return A list of column names.
      */
-    private List<String> getShownColumnNames() {
-        List<String> columnNames = new ArrayList<String>();
-        Enumeration<TableColumn> columns = this.rowsTable.getColumnModel().getColumns();
-        while (columns.hasMoreElements()) {
-            TableColumn column = columns.nextElement();
-            columnNames.add(column.getIdentifier().toString());
+    private List<ColumnQualifier> getShownColumns() {
+        List<ColumnQualifier> typedColumns = new ArrayList<ColumnQualifier>();
+        for (int i = 0 ; i < this.columnsTable.getRowCount() ; i++) {
+            boolean isShown = (Boolean)this.columnsTableModel.getValueAt(i, 0);
+            if (isShown) {
+                typedColumns.add((ColumnQualifier)this.columnsTableModel.getValueAt(i, 1));
+            }
         }
-        return columnNames;
+        return typedColumns;
     }
 
     /**
@@ -1860,11 +1842,11 @@ public class DesignerView {
      */
     private int getColumnIndex(String columnName) {
         for (int i = 0, j = 0 ; i < this.columnsTable.getRowCount() ; i++) {
-            String name = (String)this.columnsTableModel.getValueAt(i, 1);
+            ColumnQualifier qualifier = (ColumnQualifier)this.columnsTableModel.getValueAt(i, 1);
 
             boolean isShown = (Boolean)this.columnsTableModel.getValueAt(i, 0);
             if (isShown) {
-                if (name.equals(columnName)) {
+                if (qualifier.getFullName().equals(columnName)) {
                     return j;
                 }
 
@@ -2013,7 +1995,7 @@ public class DesignerView {
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         topSplitPane.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), null));
         final JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.setLayout(new GridLayoutManager(4, 1, new Insets(0, 0, 0, 0), -1, -1));
         panel1.setAlignmentX(0.5f);
         panel1.setAlignmentY(0.5f);
         panel1.setMaximumSize(new Dimension(-1, -1));
@@ -2022,32 +2004,32 @@ public class DesignerView {
         topSplitPane.setLeftComponent(panel1);
         panel1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), null));
         final JPanel panel2 = new JPanel();
-        panel2.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+        panel2.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         panel2.setAlignmentX(0.5f);
         panel2.setAlignmentY(0.5f);
         panel1.add(
             panel2, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL,
+            1, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        final JLabel label1 = new JLabel();
-        label1.setText("Tables:");
-        panel2.add(
-            label1, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
-            null, 0, false));
-        tablesNumber = new JLabel();
-        tablesNumber.setText("0");
-        panel2.add(
-            tablesNumber, new GridConstraints(
-            0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
-            null, 0, false));
         final JToolBar toolBar1 = new JToolBar();
         toolBar1.setFloatable(false);
         panel2.add(
             toolBar1, new GridConstraints(
-            0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, new Dimension(-1, 20), null, 0, false));
+        refreshTablesButton = new JButton();
+        refreshTablesButton.setEnabled(true);
+        refreshTablesButton.setHorizontalAlignment(0);
+        refreshTablesButton.setIcon(new ImageIcon(getClass().getResource("/images/db-refresh.png")));
+        refreshTablesButton.setMaximumSize(new Dimension(24, 24));
+        refreshTablesButton.setMinimumSize(new Dimension(24, 24));
+        refreshTablesButton.setPreferredSize(new Dimension(24, 24));
+        refreshTablesButton.setText("");
+        refreshTablesButton.setToolTipText("Refresh tables");
+        toolBar1.add(refreshTablesButton);
+        final JToolBar.Separator toolBar$Separator1 = new JToolBar.Separator();
+        toolBar1.add(toolBar$Separator1);
         tablesFilter = new JComboBox();
         tablesFilter.setAlignmentX(0.0f);
         tablesFilter.setAlignmentY(0.6f);
@@ -2062,7 +2044,7 @@ public class DesignerView {
         scrollPane1.setAlignmentY(0.5f);
         panel1.add(
             scrollPane1, new GridConstraints(
-            2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(256, 286), null, 0, false));
         tablesList = new JList();
         tablesList.setSelectionMode(2);
@@ -2071,7 +2053,7 @@ public class DesignerView {
         panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         panel1.add(
             panel3, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JToolBar toolBar2 = new JToolBar();
         toolBar2.setBorderPainted(false);
@@ -2080,30 +2062,13 @@ public class DesignerView {
         toolBar2.putClientProperty("JToolBar.isRollover", Boolean.TRUE);
         panel3.add(
             toolBar2, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
-            new Dimension(-1, 20), null, 0, false));
-        refreshTablesButton = new JButton();
-        refreshTablesButton.setEnabled(true);
-        refreshTablesButton.setHorizontalAlignment(0);
-        refreshTablesButton.setIcon(new ImageIcon(getClass().getResource("/images/db-refresh.png")));
-        refreshTablesButton.setMinimumSize(new Dimension(24, 24));
-        refreshTablesButton.setPreferredSize(new Dimension(24, 24));
-        refreshTablesButton.setText("");
-        refreshTablesButton.setToolTipText("Refresh tables");
-        toolBar2.add(refreshTablesButton);
-        flushTableButton = new JButton();
-        flushTableButton.setEnabled(false);
-        flushTableButton.setHorizontalAlignment(0);
-        flushTableButton.setIcon(new ImageIcon(getClass().getResource("/images/db-flush.png")));
-        flushTableButton.setMinimumSize(new Dimension(24, 24));
-        flushTableButton.setPreferredSize(new Dimension(24, 24));
-        flushTableButton.setText("");
-        flushTableButton.setToolTipText("Forse hbase to flush table to HFile");
-        toolBar2.add(flushTableButton);
+            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+            null, new Dimension(-1, 20), null, 0, false));
         addTableButton = new JButton();
         addTableButton.setEnabled(false);
         addTableButton.setHorizontalAlignment(0);
         addTableButton.setIcon(new ImageIcon(getClass().getResource("/images/add-table.png")));
+        addTableButton.setMaximumSize(new Dimension(24, 24));
         addTableButton.setMinimumSize(new Dimension(24, 24));
         addTableButton.setPreferredSize(new Dimension(24, 24));
         addTableButton.setText("");
@@ -2113,6 +2078,7 @@ public class DesignerView {
         deleteTableButton.setEnabled(false);
         deleteTableButton.setHorizontalAlignment(0);
         deleteTableButton.setIcon(new ImageIcon(getClass().getResource("/images/delete-table.png")));
+        deleteTableButton.setMaximumSize(new Dimension(24, 24));
         deleteTableButton.setMinimumSize(new Dimension(24, 24));
         deleteTableButton.setPreferredSize(new Dimension(24, 24));
         deleteTableButton.setText("");
@@ -2122,6 +2088,7 @@ public class DesignerView {
         truncateTableButton.setEnabled(false);
         truncateTableButton.setHorizontalAlignment(0);
         truncateTableButton.setIcon(new ImageIcon(getClass().getResource("/images/truncate-table.png")));
+        truncateTableButton.setMaximumSize(new Dimension(24, 24));
         truncateTableButton.setMinimumSize(new Dimension(24, 24));
         truncateTableButton.setPreferredSize(new Dimension(24, 24));
         truncateTableButton.setText("");
@@ -2130,7 +2097,7 @@ public class DesignerView {
         copyTableButton = new JButton();
         copyTableButton.setEnabled(false);
         copyTableButton.setIcon(new ImageIcon(getClass().getResource("/images/db-copy.png")));
-        copyTableButton.setMaximumSize(new Dimension(49, 27));
+        copyTableButton.setMaximumSize(new Dimension(24, 24));
         copyTableButton.setMinimumSize(new Dimension(24, 24));
         copyTableButton.setPreferredSize(new Dimension(24, 24));
         copyTableButton.setText("");
@@ -2139,7 +2106,7 @@ public class DesignerView {
         pasteTableButton = new JButton();
         pasteTableButton.setEnabled(false);
         pasteTableButton.setIcon(new ImageIcon(getClass().getResource("/images/db-paste.png")));
-        pasteTableButton.setMaximumSize(new Dimension(49, 27));
+        pasteTableButton.setMaximumSize(new Dimension(24, 24));
         pasteTableButton.setMinimumSize(new Dimension(24, 24));
         pasteTableButton.setPreferredSize(new Dimension(24, 24));
         pasteTableButton.setText("");
@@ -2148,7 +2115,7 @@ public class DesignerView {
         exportTableButton = new JButton();
         exportTableButton.setEnabled(false);
         exportTableButton.setIcon(new ImageIcon(getClass().getResource("/images/db-export.png")));
-        exportTableButton.setMaximumSize(new Dimension(49, 27));
+        exportTableButton.setMaximumSize(new Dimension(24, 24));
         exportTableButton.setMinimumSize(new Dimension(24, 24));
         exportTableButton.setPreferredSize(new Dimension(24, 24));
         exportTableButton.setText("");
@@ -2157,50 +2124,90 @@ public class DesignerView {
         importTableButton = new JButton();
         importTableButton.setEnabled(false);
         importTableButton.setIcon(new ImageIcon(getClass().getResource("/images/db-import.png")));
-        importTableButton.setMaximumSize(new Dimension(49, 27));
+        importTableButton.setMaximumSize(new Dimension(24, 24));
         importTableButton.setMinimumSize(new Dimension(24, 24));
         importTableButton.setPreferredSize(new Dimension(24, 24));
         importTableButton.setText("");
         importTableButton.setToolTipText("Import table from the file");
         toolBar2.add(importTableButton);
+        flushTableButton = new JButton();
+        flushTableButton.setEnabled(false);
+        flushTableButton.setHorizontalAlignment(0);
+        flushTableButton.setIcon(new ImageIcon(getClass().getResource("/images/db-flush.png")));
+        flushTableButton.setMaximumSize(new Dimension(24, 24));
+        flushTableButton.setMinimumSize(new Dimension(24, 24));
+        flushTableButton.setPreferredSize(new Dimension(24, 24));
+        flushTableButton.setText("");
+        flushTableButton.setToolTipText("Forse hbase to flush table to HFile");
+        toolBar2.add(flushTableButton);
+        tableMetadataButton = new JButton();
+        tableMetadataButton.setEnabled(false);
+        tableMetadataButton.setIcon(new ImageIcon(getClass().getResource("/images/db-metadata.png")));
+        tableMetadataButton.setMaximumSize(new Dimension(24, 24));
+        tableMetadataButton.setMinimumSize(new Dimension(24, 24));
+        tableMetadataButton.setPreferredSize(new Dimension(24, 24));
+        tableMetadataButton.setText("");
+        toolBar2.add(tableMetadataButton);
+        final JPanel panel4 = new JPanel();
+        panel4.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.add(
+            panel4, new GridConstraints(
+            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        final JLabel label1 = new JLabel();
+        label1.setText("Tables:");
+        panel4.add(
+            label1, new GridConstraints(
+            0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            null, 0, false));
+        final Spacer spacer1 = new Spacer();
+        panel4.add(
+            spacer1, new GridConstraints(
+            0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        tablesNumber = new JLabel();
+        tablesNumber.setText("0 of 0");
+        panel4.add(
+            tablesNumber, new GridConstraints(
+            0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            null, 0, false));
         innerSplitPane = new JSplitPane();
         innerSplitPane.setContinuousLayout(true);
         innerSplitPane.setDividerSize(9);
         innerSplitPane.setOneTouchExpandable(true);
         topSplitPane.setRightComponent(innerSplitPane);
         innerSplitPane.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0), null));
-        final JPanel panel4 = new JPanel();
-        panel4.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 2), -1, -1));
-        panel4.setAlignmentX(0.5f);
-        panel4.setAlignmentY(0.5f);
-        panel4.setMaximumSize(new Dimension(-1, -1));
-        panel4.setMinimumSize(new Dimension(-1, -1));
-        panel4.setPreferredSize(new Dimension(250, -1));
-        innerSplitPane.setLeftComponent(panel4);
         final JPanel panel5 = new JPanel();
-        panel5.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
-        panel4.add(
-            panel5, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+        panel5.setLayout(new GridLayoutManager(4, 1, new Insets(0, 0, 0, 2), -1, -1));
+        panel5.setAlignmentX(0.5f);
+        panel5.setAlignmentY(0.5f);
+        panel5.setMaximumSize(new Dimension(-1, -1));
+        panel5.setMinimumSize(new Dimension(-1, -1));
+        panel5.setPreferredSize(new Dimension(250, -1));
+        innerSplitPane.setLeftComponent(panel5);
+        final JPanel panel6 = new JPanel();
+        panel6.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel5.add(
+            panel6, new GridConstraints(
+            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        final JLabel label2 = new JLabel();
-        label2.setText("Columns:");
-        panel5.add(
-            label2, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
-            null, 0, false));
-        columnsNumber = new JLabel();
-        columnsNumber.setText("0");
-        panel5.add(
-            columnsNumber, new GridConstraints(
-            0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
-            null, 0, false));
         final JToolBar toolBar3 = new JToolBar();
         toolBar3.setFloatable(false);
-        panel5.add(
+        panel6.add(
             toolBar3, new GridConstraints(
-            0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, new Dimension(-1, 20), null, 0, false));
+        refreshColumnsButton = new JButton();
+        refreshColumnsButton.setEnabled(false);
+        refreshColumnsButton.setHorizontalAlignment(0);
+        refreshColumnsButton.setIcon(new ImageIcon(getClass().getResource("/images/refresh.png")));
+        refreshColumnsButton.setMaximumSize(new Dimension(24, 24));
+        refreshColumnsButton.setMinimumSize(new Dimension(24, 24));
+        refreshColumnsButton.setPreferredSize(new Dimension(24, 24));
+        refreshColumnsButton.setText("");
+        refreshColumnsButton.setToolTipText("Refresh columns");
+        toolBar3.add(refreshColumnsButton);
+        final JToolBar.Separator toolBar$Separator2 = new JToolBar.Separator();
+        toolBar3.add(toolBar$Separator2);
         columnsFilter = new JComboBox();
         columnsFilter.setAlignmentX(0.0f);
         columnsFilter.setAlignmentY(0.6f);
@@ -2211,35 +2218,26 @@ public class DesignerView {
         toolBar3.add(columnsFilter);
         final JScrollPane scrollPane2 = new JScrollPane();
         scrollPane2.setDoubleBuffered(true);
-        panel4.add(
+        panel5.add(
             scrollPane2, new GridConstraints(
-            2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
+            3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         columnsTable = new JTable();
         columnsTable.setAutoResizeMode(1);
         scrollPane2.setViewportView(columnsTable);
-        final JPanel panel6 = new JPanel();
-        panel6.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
-        panel4.add(
-            panel6, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+        final JPanel panel7 = new JPanel();
+        panel7.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel5.add(
+            panel7, new GridConstraints(
+            2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JToolBar toolBar4 = new JToolBar();
         toolBar4.setBorderPainted(false);
         toolBar4.setFloatable(false);
-        panel6.add(
+        panel7.add(
             toolBar4, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
             new Dimension(-1, 20), null, 0, false));
-        refreshColumnsButton = new JButton();
-        refreshColumnsButton.setEnabled(false);
-        refreshColumnsButton.setHorizontalAlignment(0);
-        refreshColumnsButton.setIcon(new ImageIcon(getClass().getResource("/images/refresh.png")));
-        refreshColumnsButton.setMinimumSize(new Dimension(24, 24));
-        refreshColumnsButton.setPreferredSize(new Dimension(24, 24));
-        refreshColumnsButton.setText("");
-        refreshColumnsButton.setToolTipText("Refresh columns");
-        toolBar4.add(refreshColumnsButton);
         checkAllButton = new JButton();
         checkAllButton.setEnabled(false);
         checkAllButton.setIcon(new ImageIcon(getClass().getResource("/images/select.png")));
@@ -2261,7 +2259,7 @@ public class DesignerView {
         final JToolBar toolBar5 = new JToolBar();
         toolBar5.setBorderPainted(false);
         toolBar5.setFloatable(false);
-        panel6.add(
+        panel7.add(
             toolBar5, new GridConstraints(
             0, 1, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
             new Dimension(-1, 20), null, 0, false));
@@ -2289,30 +2287,52 @@ public class DesignerView {
         populateButton.setText("");
         populateButton.setToolTipText("Populate rows for the selected columns");
         toolBar5.add(populateButton);
-        final JPanel panel7 = new JPanel();
-        panel7.setLayout(new GridLayoutManager(2, 1, new Insets(0, 4, 0, 0), -1, -1));
-        panel7.setAlignmentX(0.5f);
-        panel7.setAlignmentY(0.5f);
-        panel7.setMaximumSize(new Dimension(-1, -1));
-        panel7.setMinimumSize(new Dimension(200, -1));
-        panel7.setPreferredSize(new Dimension(-1, -1));
-        innerSplitPane.setRightComponent(panel7);
         final JPanel panel8 = new JPanel();
         panel8.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
-        panel7.add(
+        panel5.add(
             panel8, new GridConstraints(
+            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        final JLabel label2 = new JLabel();
+        label2.setText("Columns:");
+        panel8.add(
+            label2, new GridConstraints(
+            0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            null, 0, false));
+        final Spacer spacer2 = new Spacer();
+        panel8.add(
+            spacer2, new GridConstraints(
+            0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        columnsNumber = new JLabel();
+        columnsNumber.setText("0 of 0");
+        panel8.add(
+            columnsNumber, new GridConstraints(
+            0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            null, 0, false));
+        final JPanel panel9 = new JPanel();
+        panel9.setLayout(new GridLayoutManager(2, 1, new Insets(0, 4, 0, 0), -1, -1));
+        panel9.setAlignmentX(0.5f);
+        panel9.setAlignmentY(0.5f);
+        panel9.setMaximumSize(new Dimension(-1, -1));
+        panel9.setMinimumSize(new Dimension(200, -1));
+        panel9.setPreferredSize(new Dimension(-1, -1));
+        innerSplitPane.setRightComponent(panel9);
+        final JPanel panel10 = new JPanel();
+        panel10.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+        panel9.add(
+            panel10, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JLabel label3 = new JLabel();
         label3.setText("Rows:");
-        panel8.add(
+        panel10.add(
             label3, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         final JToolBar toolBar6 = new JToolBar();
         toolBar6.setBorderPainted(false);
         toolBar6.setFloatable(false);
-        panel8.add(
+        panel10.add(
             toolBar6, new GridConstraints(
             0, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
             new Dimension(-1, 20), null, 0, false));
@@ -2369,7 +2389,7 @@ public class DesignerView {
         final JToolBar toolBar7 = new JToolBar();
         toolBar7.setBorderPainted(false);
         toolBar7.setFloatable(false);
-        panel8.add(
+        panel10.add(
             toolBar7, new GridConstraints(
             0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
             new Dimension(-1, 20), null, 0, false));
@@ -2379,23 +2399,23 @@ public class DesignerView {
         rowsNumberSpinner.setMinimumSize(new Dimension(45, 24));
         rowsNumberSpinner.setPreferredSize(new Dimension(60, 24));
         toolBar7.add(rowsNumberSpinner);
-        final JToolBar.Separator toolBar$Separator1 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator1);
+        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
+        toolBar7.add(toolBar$Separator3);
         visibleRowsLabel = new JLabel();
         visibleRowsLabel.setText("?");
         toolBar7.add(visibleRowsLabel);
-        final JToolBar.Separator toolBar$Separator2 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator2);
+        final JToolBar.Separator toolBar$Separator4 = new JToolBar.Separator();
+        toolBar7.add(toolBar$Separator4);
         final JLabel label4 = new JLabel();
         label4.setText("of");
         toolBar7.add(label4);
-        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator3);
+        final JToolBar.Separator toolBar$Separator5 = new JToolBar.Separator();
+        toolBar7.add(toolBar$Separator5);
         rowsNumberLabel = new JLabel();
         rowsNumberLabel.setText("?");
         toolBar7.add(rowsNumberLabel);
-        final JToolBar.Separator toolBar$Separator4 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator4);
+        final JToolBar.Separator toolBar$Separator6 = new JToolBar.Separator();
+        toolBar7.add(toolBar$Separator6);
         showPrevPageButton = new JButton();
         showPrevPageButton.setEnabled(false);
         showPrevPageButton.setIcon(new ImageIcon(getClass().getResource("/images/prev.png")));
@@ -2415,7 +2435,7 @@ public class DesignerView {
         showNextPageButton.setToolTipText("Go to the next page");
         toolBar7.add(showNextPageButton);
         final JScrollPane scrollPane3 = new JScrollPane();
-        panel7.add(
+        panel9.add(
             scrollPane3, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));

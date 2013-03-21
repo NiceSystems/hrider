@@ -87,12 +87,14 @@ public class ConnectionDetailsDialog extends JDialog {
     //endregion
 
     //region Public Methods
-    public void showDialog(Component owner) {
+    public boolean showDialog(Component owner) {
         this.setComponentOrientation(owner.getComponentOrientation());
         this.pack();
         this.setResizable(false);
         this.setLocationRelativeTo(owner);
         this.setVisible(true);
+
+        return this.connectionDetails != null;
     }
 
     public ConnectionDetails getConnectionDetails() {
@@ -183,8 +185,8 @@ public class ConnectionDetailsDialog extends JDialog {
         final JSeparator separator1 = new JSeparator();
         panel1.add(
             separator1, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
+            null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridLayoutManager(1, 4, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(

@@ -26,11 +26,11 @@ public class TypedColumn {
     /**
      * The name of the column.
      */
-    private String     column;
+    private ColumnQualifier column;
     /**
      * The type of the column.
      */
-    private ObjectType type;
+    private ObjectType      type;
     //endregion
 
     //region Constructor
@@ -38,11 +38,11 @@ public class TypedColumn {
     /**
      * Initializes a new instance of the {@link TypedColumn} class.
      *
-     * @param columnName The name of the column.
+     * @param column     The qualifier of the column.
      * @param columnType The type of the column.
      */
-    public TypedColumn(String columnName, ObjectType columnType) {
-        this.column = columnName;
+    public TypedColumn(ColumnQualifier column, ObjectType columnType) {
+        this.column = column;
         this.type = columnType;
     }
     //endregion
@@ -50,20 +50,20 @@ public class TypedColumn {
     //region Public Properties
 
     /**
-     * Gets the name of the column.
+     * Gets the qualifier of the column.
      *
      * @return The name of the column.
      */
-    public String getColumn() {
+    public ColumnQualifier getColumn() {
         return this.column;
     }
 
     /**
-     * Sets a new column name.
+     * Sets a new column qualifier.
      *
-     * @param value A new column name.
+     * @param value A new column qualifier.
      */
-    public void setColumn(String value) {
+    public void setColumn(ColumnQualifier value) {
         this.column = value;
     }
 

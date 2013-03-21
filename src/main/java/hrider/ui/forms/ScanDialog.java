@@ -65,7 +65,7 @@ public class ScanDialog extends JDialog {
         this.endTimeDatePicker.setDateFormat(new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH));
 
         for (TypedColumn column : columns) {
-            if (!"key".equalsIgnoreCase(column.getColumn())) {
+            if (!column.getColumn().isKey()) {
                 this.comboBoxColumns.addItem(column.getColumn());
             }
         }
@@ -120,12 +120,14 @@ public class ScanDialog extends JDialog {
     //endregion
 
     //region Public Methods
-    public void showDialog(Component owner) {
+    public boolean showDialog(Component owner) {
         this.setComponentOrientation(owner.getComponentOrientation());
         this.pack();
         this.setResizable(false);
         this.setLocationRelativeTo(owner);
         this.setVisible(true);
+
+        return this.okPressed;
     }
 
     public Query getQuery() {
@@ -228,19 +230,19 @@ public class ScanDialog extends JDialog {
      */
     private void $$$setupUI$$$() {
         contentPane = new JPanel();
-        contentPane.setLayout(new GridLayoutManager(2, 1, new Insets(10, 10, 10, 10), -1, -1));
+        contentPane.setLayout(new GridLayoutManager(3, 1, new Insets(10, 10, 10, 10), -1, -1));
         contentPane.setMaximumSize(new Dimension(400, 350));
         final JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(
             panel1, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             1, null, null, null, 0, false));
         final JPanel panel2 = new JPanel();
         panel2.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1, true, false));
         panel1.add(
             panel2, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            0, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         buttonRun = new JButton();
         buttonRun.setText("Run");
@@ -254,11 +256,6 @@ public class ScanDialog extends JDialog {
             buttonCancel, new GridConstraints(
             0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JSeparator separator1 = new JSeparator();
-        panel1.add(
-            separator1, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridLayoutManager(6, 3, new Insets(5, 5, 5, 0), -1, -1));
         contentPane.add(
@@ -358,6 +355,11 @@ public class ScanDialog extends JDialog {
         panel3.add(
             comboBoxWordType, new GridConstraints(
             5, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
+            null, null, null, 0, false));
+        final JSeparator separator1 = new JSeparator();
+        contentPane.add(
+            separator1, new GridConstraints(
+            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
             null, null, null, 0, false));
         label2.setLabelFor(textFieldWord);
     }

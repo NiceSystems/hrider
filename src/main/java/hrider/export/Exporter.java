@@ -1,5 +1,6 @@
 package hrider.export;
 
+import hrider.data.ColumnQualifier;
 import hrider.data.DataRow;
 
 import java.io.IOException;
@@ -32,5 +33,5 @@ public interface Exporter {
      * @param row A row to write.
      * @param columns A list of columns in the specified order which values to be written.
      */
-    void write(DataRow row, Iterable<String> columns) throws IOException;
+    void write(DataRow row, Iterable<ColumnQualifier> columns) throws IOException;
 }

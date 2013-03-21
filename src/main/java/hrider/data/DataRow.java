@@ -87,12 +87,21 @@ public class DataRow {
     }
 
     /**
+     * Gets the cell according to the specified column qualifier.
+     * @param columnQualifier The column qualifier to look for the cell.
+     * @return The instance of the {@link DataCell} if found or null otherwise.
+     */
+    public DataCell getCell(ColumnQualifier columnQualifier) {
+        return this.cells.get(columnQualifier.getFullName());
+    }
+
+    /**
      * Adds cell to the collection of cells in the row.
      *
      * @param cell The cell to add.
      */
     public void addCell(DataCell cell) {
-        this.cells.put(cell.getColumnName(), cell);
+        this.cells.put(cell.getColumn().getFullName(), cell);
     }
 
     /**
@@ -101,7 +110,7 @@ public class DataRow {
      * @param cell The cell to remove.
      */
     public void removeCell(DataCell cell) {
-        this.cells.remove(cell.getColumnName());
+        this.cells.remove(cell.getColumn().getFullName());
     }
 
     /**

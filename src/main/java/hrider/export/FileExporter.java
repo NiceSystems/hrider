@@ -1,5 +1,6 @@
 package hrider.export;
 
+import hrider.data.ColumnQualifier;
 import hrider.data.DataCell;
 import hrider.data.DataRow;
 import hrider.format.CharacterDelimitedFormatter;
@@ -64,12 +65,12 @@ public class FileExporter implements Exporter {
      * @throws IOException
      */
     @Override
-    public void write(DataRow row, Iterable<String> columns) throws IOException {
+    public void write(DataRow row, Iterable<ColumnQualifier> columns) throws IOException {
 
         if (!this.headerWritten) {
 
             Formatter formatter = new CharacterDelimitedFormatter(this.delimiter);
-            for (String column : columns) {
+            for (ColumnQualifier column : columns) {
                 formatter.append(column);
             }
 
@@ -81,7 +82,7 @@ public class FileExporter implements Exporter {
 
         Formatter formatter = new CharacterDelimitedFormatter(this.delimiter);
 
-        for (String column : columns) {
+        for (ColumnQualifier column : columns) {
             DataCell cell = row.getCell(column);
             if (cell != null) {
                 formatter.append(cell.getTypedValue().getValue());
