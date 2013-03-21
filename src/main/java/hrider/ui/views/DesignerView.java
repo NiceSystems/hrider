@@ -526,8 +526,20 @@ public class DesignerView {
                         try {
                             connection.createOrModifyTable(dialog.getTableDescriptor());
 
-                            tablesListModel.addElement(dialog.getTableDescriptor().getName());
-                            tablesList.setSelectedValue(dialog.getTableDescriptor().getName(), true);
+                            Filter filter;
+
+                            String value = (String)tablesFilter.getSelectedItem();
+                            if (value == null || value.isEmpty()) {
+                                filter = new EmptyFilter();
+                            }
+                            else {
+                                filter = new PatternFilter(value);
+                            }
+
+                            if (filter.match(dialog.getTableDescriptor().getName())) {
+                                tablesListModel.addElement(dialog.getTableDescriptor().getName());
+                                tablesList.setSelectedValue(dialog.getTableDescriptor().getName(), true);
+                            }
                         }
                         catch (Exception ex) {
                             setError(String.format("Failed to create table %s: ", dialog.getTableDescriptor().getName()), ex);
@@ -1755,17 +1767,29 @@ public class DesignerView {
                     TableDescriptor targetTable = dialog.getTableDescriptor();
                     this.connection.copyTable(targetTable, sourceTable, table.getConnection());
 
-                    if (!this.tablesListModel.contains(targetTable.getName())) {
-                        String sourcePrefix = String.format("table.%s.", sourceTable.getName());
-                        String targetPrefix = String.format("table.%s.", targetTable.getName());
+                    Filter filter;
 
-                        for (Map.Entry<String, String> keyValue : this.clusterConfig.getAll(sourcePrefix).entrySet()) {
-                            this.clusterConfig.set(keyValue.getKey().replace(sourcePrefix, targetPrefix), keyValue.getValue());
-                        }
-                        this.tablesListModel.addElement(targetTable.getName());
+                    String value = (String)tablesFilter.getSelectedItem();
+                    if (value == null || value.isEmpty()) {
+                        filter = new EmptyFilter();
+                    }
+                    else {
+                        filter = new PatternFilter(value);
                     }
 
-                    this.tablesList.setSelectedValue(targetTable.getName(), true);
+                    if (filter.match(targetTable.getName())) {
+                        if (!this.tablesListModel.contains(targetTable.getName())) {
+                            String sourcePrefix = String.format("table.%s.", sourceTable.getName());
+                            String targetPrefix = String.format("table.%s.", targetTable.getName());
+
+                            for (Map.Entry<String, String> keyValue : this.clusterConfig.getAll(sourcePrefix).entrySet()) {
+                                this.clusterConfig.set(keyValue.getKey().replace(sourcePrefix, targetPrefix), keyValue.getValue());
+                            }
+                            this.tablesListModel.addElement(targetTable.getName());
+                        }
+
+                        this.tablesList.setSelectedValue(targetTable.getName(), true);
+                    }
                 }
             }
             catch (IOException e) {
