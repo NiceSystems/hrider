@@ -4,6 +4,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.michaelbaranov.microba.calendar.DatePicker;
 import hrider.config.GlobalConfig;
+import hrider.data.ColumnQualifier;
 import hrider.data.ObjectType;
 import hrider.data.TypedColumn;
 import hrider.hbase.Operator;
@@ -147,12 +148,10 @@ public class ScanDialog extends JDialog {
                 query.setEndDate(this.endTimeDatePicker.getDate());
             }
 
-            String column = (String)this.comboBoxColumns.getSelectedItem();
+            ColumnQualifier column = (ColumnQualifier)this.comboBoxColumns.getSelectedItem();
 
-            String[] parts = column.split(":");
-            query.setFamily(parts[0]);
-            query.setColumn(parts[1]);
-
+            query.setFamily(column.getFamily());
+            query.setColumn(column.getName());
             query.setOperator((Operator)this.comboBoxOperator.getSelectedItem());
 
             if (!this.textFieldWord.getText().trim().isEmpty()) {
