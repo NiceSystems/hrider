@@ -1,12 +1,11 @@
 package hrider.hbase;
 
 import hrider.config.GlobalConfig;
-import hrider.data.DataCell;
-import hrider.data.DataRow;
-import hrider.data.ObjectType;
-import hrider.data.TypedObject;
+import hrider.data.*;
 import hrider.ui.MessageHandler;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
@@ -145,14 +144,14 @@ public class Scanner {
      * @param rowsNumber The number of rows to look for the columns in case there is no columns loaded at this moment.
      * @return A list of columns.
      */
-    public Collection<String> getColumns(int rowsNumber) {
+    public Collection<ColumnQualifier> getColumns(int rowsNumber) {
         if (this.markers.isEmpty() || peekMarker().columns.size() != rowsNumber) {
             try {
                 return loadColumns(rowsNumber);
             }
             catch (IOException e) {
                 MessageHandler.addError(String.format("Failed to load columns for table %s.", this.tableName), e);
-                return new ArrayList<String>();
+                return new ArrayList<ColumnQualifier>();
             }
         }
         else {
@@ -235,7 +234,7 @@ public class Scanner {
         this.markers.clear();
 
         if (startKey != null) {
-            this.markers.push(new Marker(startKey, new ArrayList<DataRow>(), new ArrayList<String>()));
+            this.markers.push(new Marker(startKey, new ArrayList<DataRow>(), new ArrayList<ColumnQualifier>()));
         }
     }
 
@@ -252,9 +251,9 @@ public class Scanner {
         ResultScanner scanner = table.getScanner(scan);
 
         Collection<DataRow> rows = new ArrayList<DataRow>();
-        Collection<String> columns = new ArrayList<String>();
+        Collection<ColumnQualifier> columns = new ArrayList<ColumnQualifier>();
 
-        columns.add("key");
+        columns.add(ColumnQualifier.KEY);
 
         loadRows(scanner, 0, 1, rows, columns);
         if (rows.isEmpty()) {
@@ -405,13 +404,16 @@ public class Scanner {
      * @return A key of the last loaded row. Used to mark the current position for the next scan.
      * @throws IOException Error accessing hbase.
      */
-    protected TypedObject loadRows(ResultScanner scanner, long offset, int rowsNumber, Collection<DataRow> rows, Collection<String> columns) throws
+    protected TypedObject loadRows(ResultScanner scanner, long offset, int rowsNumber, Collection<DataRow> rows, Collection<ColumnQualifier> columns) throws
         IOException {
-        ObjectType keyType = this.columnTypes.get("key");
+        ObjectType keyType = this.columnTypes.get(ColumnQualifier.KEY.getName());
 
         int index = 0;
         boolean isValid;
         TypedObject key = null;
+
+        HTable table = this.connection.getTableFactory().get(this.tableName);
+        HTableDescriptor tableDescriptor = table.getTableDescriptor();
 
         do {
             Result result = scanner.next();
@@ -422,24 +424,28 @@ public class Scanner {
                     key = new TypedObject(keyType, result.getRow());
 
                     DataRow row = new DataRow(key);
-                    row.addCell(new DataCell(row, "key", key));
+                    row.addCell(new DataCell(row, ColumnQualifier.KEY, key));
 
                     NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> familyMap = result.getMap();
-                    for (NavigableMap.Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> family : familyMap.entrySet()) {
-                        for (NavigableMap.Entry<byte[], NavigableMap<Long, byte[]>> quantifier : family.getValue().entrySet()) {
-                            String columnName = String.format("%s:%s", Bytes.toStringBinary(family.getKey()), Bytes.toStringBinary(quantifier.getKey()));
+                    for (NavigableMap.Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> familyEntry : familyMap.entrySet()) {
+                        HColumnDescriptor columnDescriptor = tableDescriptor.getFamily(familyEntry.getKey());
+
+                        for (NavigableMap.Entry<byte[], NavigableMap<Long, byte[]>> qualifierEntry : familyEntry.getValue().entrySet()) {
+                            ColumnQualifier qualifier = new ColumnQualifier(Bytes.toStringBinary(qualifierEntry.getKey()), new ColumnFamily(columnDescriptor));
 
                             ObjectType columnType = ObjectType.String;
+                            String columnName = qualifier.getFullName();
+
                             if (this.columnTypes.containsKey(columnName)) {
                                 columnType = this.columnTypes.get(columnName);
                             }
 
-                            for (NavigableMap.Entry<Long, byte[]> cell : quantifier.getValue().entrySet()) {
-                                row.addCell(new DataCell(row, columnName, new TypedObject(columnType, cell.getValue())));
+                            for (NavigableMap.Entry<Long, byte[]> cell : qualifierEntry.getValue().entrySet()) {
+                                row.addCell(new DataCell(row, qualifier, new TypedObject(columnType, cell.getValue())));
                             }
 
-                            if (!columns.contains(columnName)) {
-                                columns.add(columnName);
+                            if (!columns.contains(qualifier)) {
+                                columns.add(qualifier);
                             }
                         }
                     }
@@ -461,9 +467,9 @@ public class Scanner {
      * @param rowsNumber The number of rows to look for the column names. The column name is a key from key/value pairs in hbase row.
      * @throws IOException Error accessing hbase.
      */
-    private Collection<String> loadColumns(int rowsNumber) throws IOException {
-        Collection<String> columnNames = new ArrayList<String>();
-        columnNames.add("key");
+    private Collection<ColumnQualifier> loadColumns(int rowsNumber) throws IOException {
+        Collection<ColumnQualifier> columns = new ArrayList<ColumnQualifier>();
+        columns.add(ColumnQualifier.KEY);
 
         int itemsNumber = rowsNumber <= GlobalConfig.instance().getBatchSizeForRead() ? rowsNumber : GlobalConfig.instance().getBatchSizeForRead();
 
@@ -471,6 +477,8 @@ public class Scanner {
         scan.setCaching(itemsNumber);
 
         HTable table = this.connection.getTableFactory().get(this.tableName);
+        HTableDescriptor tableDescriptor = table.getTableDescriptor();
+
         ResultScanner scanner = table.getScanner(scan);
 
         Result row;
@@ -480,11 +488,13 @@ public class Scanner {
             row = scanner.next();
             if (row != null) {
                 NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> familyMap = row.getMap();
-                for (NavigableMap.Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> entry : familyMap.entrySet()) {
-                    for (byte[] quantifier : entry.getValue().keySet()) {
-                        String columnName = String.format("%s:%s", Bytes.toStringBinary(entry.getKey()), Bytes.toStringBinary(quantifier));
-                        if (!columnNames.contains(columnName)) {
-                            columnNames.add(columnName);
+                for (NavigableMap.Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> familyEntry : familyMap.entrySet()) {
+                    HColumnDescriptor columnDescriptor = tableDescriptor.getFamily(familyEntry.getKey());
+
+                    for (byte[] quantifier : familyEntry.getValue().keySet()) {
+                        ColumnQualifier columnQualifier = new ColumnQualifier(Bytes.toStringBinary(quantifier), new ColumnFamily(columnDescriptor));
+                        if (!columns.contains(columnQualifier)) {
+                            columns.add(columnQualifier);
                         }
                     }
                 }
@@ -494,7 +504,7 @@ public class Scanner {
         }
         while (row != null && counter < rowsNumber);
 
-        return columnNames;
+        return columns;
     }
 
     /**
@@ -524,9 +534,9 @@ public class Scanner {
         ResultScanner scanner = table.getScanner(scan);
 
         Collection<DataRow> rows = new ArrayList<DataRow>();
-        Collection<String> columns = new ArrayList<String>();
+        Collection<ColumnQualifier> columns = new ArrayList<ColumnQualifier>();
 
-        columns.add("key");
+        columns.add(ColumnQualifier.KEY);
 
         TypedObject lastKey = loadRows(scanner, offset, rowsNumber, rows, columns);
         if (lastKey != null) {
@@ -571,15 +581,15 @@ public class Scanner {
         /**
          * The last key loaded from the previous batch of rows.
          */
-        private TypedObject         key;
+        private TypedObject                 key;
         /**
          * A list of previously loaded rows.
          */
-        private Collection<DataRow> rows;
+        private Collection<DataRow>         rows;
         /**
          * A list of columns loaded from the rows.
          */
-        private Collection<String>  columns;
+        private Collection<ColumnQualifier> columns;
         //endregion
 
         //region Constructor
@@ -591,7 +601,7 @@ public class Scanner {
          * @param rows    A list of loaded rows.
          * @param columns A list of columns loaded from the rows.
          */
-        private Marker(TypedObject key, Collection<DataRow> rows, Collection<String> columns) {
+        private Marker(TypedObject key, Collection<DataRow> rows, Collection<ColumnQualifier> columns) {
             this.key = key;
             this.rows = rows;
             this.columns = columns;

@@ -4,6 +4,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import hrider.config.GlobalConfig;
+import hrider.data.ColumnQualifier;
 import hrider.data.DataRow;
 import hrider.data.ObjectType;
 import hrider.data.TypedColumn;
@@ -55,6 +56,7 @@ public class ExportTableDialog extends JDialog {
     private JButton    btClose;
     private JButton    btExportWithQueryButton;
     private JComboBox  cmbFileType;
+    private JLabel labelDelimiter;
     private String     filePath;
     private boolean    canceled;
     //endregion
@@ -87,16 +89,13 @@ public class ExportTableDialog extends JDialog {
                         contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                         try {
                             Collection<TypedColumn> columns = new ArrayList<TypedColumn>();
-                            for (String columnName : scanner.getColumns(100)) {
-                                columns.add(new TypedColumn(columnName, ObjectType.String));
+                            for (ColumnQualifier column : scanner.getColumns(100)) {
+                                columns.add(new TypedColumn(column, ObjectType.String));
                             }
 
                             ScanDialog dialog = new ScanDialog(null, columns);
-                            dialog.showDialog(contentPane);
-
-                            Query query = dialog.getQuery();
-                            if (query != null) {
-                                scanner.setQuery(query);
+                            if (dialog.showDialog(contentPane)) {
+                                scanner.setQuery(dialog.getQuery());
 
                                 onExport(scanner);
                             }
@@ -166,17 +165,21 @@ public class ExportTableDialog extends JDialog {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    boolean enabled = "Delimited".equals(cmbFileType.getSelectedItem());
-                    cmbDelimiter.setEnabled(enabled);
+                    boolean visible = "Delimited".equals(cmbFileType.getSelectedItem());
+
+                    cmbDelimiter.setVisible(visible);
+                    labelDelimiter.setVisible(visible);
 
                     if (tfFilePath.getText().startsWith(scanner.getTableName())) {
-                        if (enabled) {
+                        if (visible) {
                             tfFilePath.setText(String.format("%s.csv", scanner.getTableName()));
                         }
                         else {
                             tfFilePath.setText(String.format("%s.hfile", scanner.getTableName()));
                         }
                     }
+
+                    pack();
                 }
             });
 
@@ -293,13 +296,13 @@ public class ExportTableDialog extends JDialog {
             scanner.resetCurrent(null);
 
             Collection<DataRow> rows = scanner.next(GlobalConfig.instance().getBatchSizeForRead());
-            Collection<String> columnNames = scanner.getColumns(0);
+            Collection<ColumnQualifier> columns = scanner.getColumns(0);
 
             int counter = 1;
 
             while (!rows.isEmpty() && !canceled) {
                 for (DataRow row : rows) {
-                    exporter.write(row, columnNames);
+                    exporter.write(row, columns);
 
                     writtenRowsCount.setText(Long.toString(counter++));
                     writtenRowsCount.paintImmediately(writtenRowsCount.getBounds());
@@ -496,10 +499,11 @@ public class ExportTableDialog extends JDialog {
             totalRowsCount, new GridConstraints(
             5, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
-        final JLabel label4 = new JLabel();
-        label4.setText("Delimiter:");
+        labelDelimiter = new JLabel();
+        labelDelimiter.setText("Delimiter:");
+        labelDelimiter.setVisible(false);
         panel3.add(
-            label4, new GridConstraints(
+            labelDelimiter, new GridConstraints(
             2, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         final JSeparator separator1 = new JSeparator();
@@ -509,21 +513,22 @@ public class ExportTableDialog extends JDialog {
             null, null, null, 0, false));
         cmbDelimiter = new JComboBox();
         cmbDelimiter.setEditable(true);
-        cmbDelimiter.setEnabled(false);
+        cmbDelimiter.setEnabled(true);
         final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
         defaultComboBoxModel1.addElement(",");
         defaultComboBoxModel1.addElement("|");
         defaultComboBoxModel1.addElement("-");
         defaultComboBoxModel1.addElement(":");
         cmbDelimiter.setModel(defaultComboBoxModel1);
+        cmbDelimiter.setVisible(false);
         panel3.add(
             cmbDelimiter, new GridConstraints(
             2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, null, null, 0, false));
-        final JLabel label5 = new JLabel();
-        label5.setText("File type:");
+        final JLabel label4 = new JLabel();
+        label4.setText("File type:");
         panel3.add(
-            label5, new GridConstraints(
+            label4, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         cmbFileType = new JComboBox();
@@ -538,8 +543,8 @@ public class ExportTableDialog extends JDialog {
         final JSeparator separator2 = new JSeparator();
         contentPane.add(
             separator2, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
+            null, null, null, 0, false));
     }
 
     /**

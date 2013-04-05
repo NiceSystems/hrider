@@ -80,6 +80,18 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
     //region Public Methods
 
     /**
+     * Sets the editor to be editable or not.
+     *
+     * @param editable True if the editor should be editable or False otherwise.
+     */
+    public void setEditable(boolean editable) {
+        this.textEditor.setEditable(editable);
+        this.dateEditor.setFieldEditable(editable);
+        this.xmlEditor.setEditable(editable);
+        this.jsonEditor.setEditable(editable);
+    }
+
+    /**
      * This method is called when a cell value is edited by the user.
      *
      * @param table      The table that owns the cell.

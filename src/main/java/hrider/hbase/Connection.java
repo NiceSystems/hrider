@@ -2,8 +2,10 @@ package hrider.hbase;
 
 import hrider.config.ConnectionDetails;
 import hrider.config.GlobalConfig;
+import hrider.data.ColumnFamily;
 import hrider.data.DataCell;
 import hrider.data.DataRow;
+import hrider.data.TableDescriptor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -12,7 +14,6 @@ import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.io.hfile.CacheConfig;
 import org.apache.hadoop.hbase.io.hfile.HFile;
-import org.apache.hadoop.hbase.regionserver.MemStore;
 import org.apache.hadoop.hbase.regionserver.StoreFile;
 import org.apache.hadoop.hbase.regionserver.StoreFileScanner;
 import org.apache.hadoop.hbase.regionserver.metrics.SchemaMetrics;
@@ -133,6 +134,18 @@ public class Connection {
     //region Public Methods
 
     /**
+     * Gets a descriptor for the specified table.
+     *
+     * @param tableName The name of the table.
+     * @return A new instance of the {@link TableDescriptor}.
+     * @throws IOException            Error accessing hbase.
+     * @throws TableNotFoundException The specified table does not exist.
+     */
+    public TableDescriptor getTableDescriptor(String tableName) throws IOException, TableNotFoundException {
+        return new TableDescriptor(this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(tableName)));
+    }
+
+    /**
      * Adds a listener for hbase related operations.
      *
      * @param listener A listener to add.
@@ -170,39 +183,39 @@ public class Connection {
     }
 
     /**
-     * Creates a new table in the hbase cluster.
+     * Creates a new table or modifies an existing one in the hbase cluster.
      *
      * @param tableName The name of the table to create.
      * @throws IOException Error accessing hbase.
      */
-    public void createTable(String tableName) throws IOException, TableNotFoundException {
-        createTable(tableName, new ArrayList<String>());
+    public void createOrModifyTable(String tableName) throws IOException, TableNotFoundException {
+        createOrModifyTable(new TableDescriptor(tableName));
     }
 
     /**
-     * Creates a new table in the hbase cluster with the specified column families.
+     * Creates a new table or modifies an existing one in the hbase cluster.
      *
-     * @param tableName      The name of the table to create.
-     * @param columnFamilies A list of column families to add to the table.
+     * @param tableDescriptor The descriptor of the table to create.
      * @throws IOException Error accessing hbase.
      */
-    public void createTable(String tableName, Collection<String> columnFamilies) throws IOException, TableNotFoundException {
-        if (!this.hbaseAdmin.tableExists(tableName)) {
-            this.hbaseAdmin.createTable(new HTableDescriptor(tableName));
+    public void createOrModifyTable(TableDescriptor tableDescriptor) throws IOException, TableNotFoundException {
+        if (this.hbaseAdmin.tableExists(tableDescriptor.getName())) {
+            if (this.hbaseAdmin.isTableEnabled(tableDescriptor.getName())) {
+                this.hbaseAdmin.disableTable(tableDescriptor.getName());
+            }
+
+            this.hbaseAdmin.modifyTable(Bytes.toBytes(tableDescriptor.getName()), tableDescriptor.toDescriptor());
+            this.hbaseAdmin.enableTable(tableDescriptor.getName());
 
             for (HbaseActionListener listener : this.listeners) {
-                listener.tableOperation(tableName, "created");
+                listener.tableOperation(tableDescriptor.getName(), "modified");
             }
         }
+        else {
+            this.hbaseAdmin.createTable(tableDescriptor.toDescriptor());
 
-        if (!columnFamilies.isEmpty()) {
-            HTableDescriptor td = this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(tableName));
-            for (HColumnDescriptor column : td.getColumnFamilies()) {
-                columnFamilies.remove(column.getNameAsString());
-            }
-
-            if (!columnFamilies.isEmpty()) {
-                createFamilies(tableName, columnFamilies);
+            for (HbaseActionListener listener : this.listeners) {
+                listener.tableOperation(tableDescriptor.getName(), "created");
             }
         }
     }
@@ -257,54 +270,50 @@ public class Connection {
      * @param sourceCluster The source cluster where the source table is located.
      * @throws IOException Error accessing hbase on one of the clusters or on both clusters.
      */
-    public void copyTable(String targetTable, String sourceTable, Connection sourceCluster) throws IOException, TableNotFoundException {
-        HTable source = sourceCluster.factory.get(sourceTable);
-        HTable target = this.factory.get(targetTable);
+    public void copyTable(TableDescriptor targetTable, TableDescriptor sourceTable, Connection sourceCluster) throws IOException, TableNotFoundException {
+        createOrModifyTable(targetTable);
 
-        HTableDescriptor td = this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(targetTable));
-
-        Collection<String> families = new HashSet<String>();
-        for (HColumnDescriptor column : td.getColumnFamilies()) {
-            families.add(column.getNameAsString());
-        }
+        HTable source = sourceCluster.factory.get(sourceTable.getName());
+        HTable target = this.factory.get(targetTable.getName());
 
         Scan scan = new Scan();
         scan.setCaching(GlobalConfig.instance().getBatchSizeForRead());
 
         ResultScanner scanner = source.getScanner(scan);
+        List<Put> puts = new ArrayList<Put>();
+
+        int batchSize = GlobalConfig.instance().getBatchSizeForWrite();
 
         boolean isValid;
+
         do {
             Result result = scanner.next();
 
             isValid = result != null;
             if (isValid) {
-                Collection<String> familiesToCreate = new HashSet<String>();
-
                 Put put = new Put(result.getRow());
-                for (KeyValue keyValue : result.list()) {
-                    put.add(keyValue);
-
-                    String columnFamily = Bytes.toStringBinary(keyValue.getFamily());
-                    if (!families.contains(columnFamily)) {
-                        familiesToCreate.add(columnFamily);
-                    }
+                for (KeyValue kv : result.list()) {
+                    put.add(kv);
                 }
 
-                if (!familiesToCreate.isEmpty()) {
-                    createFamilies(targetTable, familiesToCreate);
+                puts.add(put);
 
-                    families.addAll(familiesToCreate);
+                if (puts.size() == batchSize) {
+                    target.put(puts);
+                    puts.clear();
                 }
-
-                target.put(put);
 
                 for (HbaseActionListener listener : this.listeners) {
-                    listener.copyOperation(sourceCluster.serverName, sourceTable, this.serverName, targetTable, result);
+                    listener.copyOperation(sourceCluster.serverName, sourceTable.getName(), this.serverName, targetTable.getName(), result);
                 }
             }
         }
         while (isValid);
+
+        // add the last puts to the table.
+        if (!puts.isEmpty()) {
+            target.put(puts);
+        }
     }
 
     /**
@@ -346,8 +355,6 @@ public class Connection {
                 }
             }
             while (isValid);
-
-            writer.appendTrackedTimestampsToMetadata();
         }
         finally {
             writer.close();
@@ -356,8 +363,9 @@ public class Connection {
 
     /**
      * Flushes a in memory portion of the table into the HFile.
+     *
      * @param tableName The name of the table to flush.
-     * @throws IOException Error accessing hbase.
+     * @throws IOException          Error accessing hbase.
      * @throws InterruptedException
      */
     public void flushTable(String tableName) throws IOException, InterruptedException {
@@ -371,15 +379,15 @@ public class Connection {
      * @param path      The path to the HFile.
      * @throws IOException Error accessing hbase.
      */
-    public void loadTable(String tableName, String path) throws IOException {
+    public void loadTable(String tableName, String path) throws IOException, TableNotFoundException {
         FileSystem fs = FileSystem.getLocal(this.getConfiguration());
         HTable table = this.factory.get(tableName);
 
         HTableDescriptor td = this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(tableName));
 
-        Collection<String> families = new HashSet<String>();
+        Collection<ColumnFamily> families = new HashSet<ColumnFamily>();
         for (HColumnDescriptor column : td.getColumnFamilies()) {
-            families.add(column.getNameAsString());
+            families.add(new ColumnFamily(column));
         }
 
         StoreFile.Reader reader = new StoreFile.Reader(fs, new Path(path), new CacheConfig(this.getConfiguration()), DataBlockEncoding.NONE);
@@ -389,64 +397,69 @@ public class Connection {
             SchemaMetrics.configureGlobally(this.getConfiguration());
 
             // move to the first row.
-            scanner.seek(new KeyValue(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+            scanner.seek(new KeyValue(new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}));
+
+            Collection<ColumnFamily> familiesToCreate = new HashSet<ColumnFamily>();
 
             Put put = null;
-            Collection<String> familiesToCreate = new HashSet<String>();
+            List<Put> puts = new ArrayList<Put>();
 
             boolean isValid;
+            int batchSize = GlobalConfig.instance().getBatchSizeForWrite();
+
             do {
                 KeyValue kv = scanner.next();
 
                 isValid = kv != null;
                 if (isValid) {
-                    String columnFamily = Bytes.toStringBinary(kv.getFamily());
+                    ColumnFamily columnFamily = new ColumnFamily(Bytes.toStringBinary(kv.getFamily()));
                     if (!families.contains(columnFamily)) {
                         familiesToCreate.add(columnFamily);
                     }
 
                     if (put == null) {
                         put = new Put(kv.getRow());
+                        puts.add(put);
                     }
 
                     if (!Arrays.equals(put.getRow(), kv.getRow())) {
-                        if (!familiesToCreate.isEmpty()) {
-                            createFamilies(tableName, familiesToCreate);
-
-                            families.addAll(familiesToCreate);
-                            familiesToCreate.clear();
-                        }
-
-                        table.put(put);
-
                         for (HbaseActionListener listener : this.listeners) {
                             listener.loadOperation(tableName, path, put);
                         }
 
+                        if (puts.size() == batchSize) {
+                            if (!familiesToCreate.isEmpty()) {
+                                createFamilies(tableName, toDescriptors(familiesToCreate));
+
+                                families.addAll(familiesToCreate);
+                                familiesToCreate.clear();
+                            }
+
+                            table.put(puts);
+                            puts.clear();
+                        }
+
                         put = new Put(kv.getRow());
+                        puts.add(put);
                     }
 
                     put.add(kv);
                 }
-                else {
-                    // add the last put to the table.
-                    if (put != null) {
-                        if (!familiesToCreate.isEmpty()) {
-                            createFamilies(tableName, familiesToCreate);
-
-                            families.addAll(familiesToCreate);
-                            familiesToCreate.clear();
-                        }
-
-                        table.put(put);
-
-                        for (HbaseActionListener listener : this.listeners) {
-                            listener.loadOperation(tableName, path, put);
-                        }
-                    }
-                }
             }
             while (isValid);
+
+            // add the last put to the table.
+            if (!puts.isEmpty()) {
+                for (HbaseActionListener listener : this.listeners) {
+                    listener.loadOperation(tableName, path, put);
+                }
+
+                if (!familiesToCreate.isEmpty()) {
+                    createFamilies(tableName, toDescriptors(familiesToCreate));
+                }
+
+                table.put(puts);
+            }
         }
         finally {
             reader.close(false);
@@ -463,26 +476,25 @@ public class Connection {
     public void setRows(String tableName, Iterable<DataRow> rows) throws IOException, TableNotFoundException {
         HTableDescriptor td = this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(tableName));
 
-        Collection<String> families = new ArrayList<String>();
+        Collection<ColumnFamily> families = new ArrayList<ColumnFamily>();
         for (HColumnDescriptor column : td.getColumnFamilies()) {
-            families.add(column.getNameAsString());
+            families.add(new ColumnFamily(column));
         }
 
-        Collection<String> familiesToCreate = new HashSet<String>();
+        Collection<ColumnFamily> familiesToCreate = new HashSet<ColumnFamily>();
         List<Put> puts = new ArrayList<Put>();
 
         for (DataRow row : rows) {
             Put put = new Put(row.getKey().toByteArray());
 
             for (DataCell cell : row.getCells()) {
-                String[] parts = cell.getColumnName().split(":");
-                if (parts.length == 2) {
-                    if (!families.contains(parts[0])) {
-                        familiesToCreate.add(parts[0]);
+                if (!cell.isKey()) {
+                    if (!families.contains(cell.getColumn().getColumnFamily())) {
+                        familiesToCreate.add(cell.getColumn().getColumnFamily());
                     }
 
-                    byte[] family = Bytes.toBytesBinary(parts[0]);
-                    byte[] column = Bytes.toBytesBinary(parts[1]);
+                    byte[] family = Bytes.toBytesBinary(cell.getColumn().getFamily());
+                    byte[] column = Bytes.toBytesBinary(cell.getColumn().getName());
                     byte[] value = cell.getTypedValue().toByteArray();
 
                     put.add(family, column, value);
@@ -497,7 +509,7 @@ public class Connection {
         }
 
         if (!familiesToCreate.isEmpty()) {
-            createFamilies(tableName, familiesToCreate);
+            createFamilies(tableName, toDescriptors(familiesToCreate));
         }
 
         HTable table = this.factory.get(tableName);
@@ -514,23 +526,22 @@ public class Connection {
     public void setRow(String tableName, DataRow row) throws IOException, TableNotFoundException {
         HTableDescriptor td = this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(tableName));
 
-        Collection<String> families = new ArrayList<String>();
+        Collection<ColumnFamily> families = new ArrayList<ColumnFamily>();
         for (HColumnDescriptor column : td.getColumnFamilies()) {
-            families.add(column.getNameAsString());
+            families.add(new ColumnFamily(column));
         }
 
-        Collection<String> familiesToCreate = new HashSet<String>();
+        Collection<ColumnFamily> familiesToCreate = new HashSet<ColumnFamily>();
 
         Put put = new Put(row.getKey().toByteArray());
         for (DataCell cell : row.getCells()) {
-            String[] parts = cell.getColumnName().split(":");
-            if (parts.length == 2) {
-                if (!families.contains(parts[0])) {
-                    familiesToCreate.add(parts[0]);
+            if (!cell.isKey()) {
+                if (!families.contains(cell.getColumn().getColumnFamily())) {
+                    familiesToCreate.add(cell.getColumn().getColumnFamily());
                 }
 
-                byte[] family = Bytes.toBytesBinary(parts[0]);
-                byte[] column = Bytes.toBytesBinary(parts[1]);
+                byte[] family = Bytes.toBytesBinary(cell.getColumn().getFamily());
+                byte[] column = Bytes.toBytesBinary(cell.getColumn().getName());
                 byte[] value = cell.getTypedValue().toByteArray();
 
                 put.add(family, column, value);
@@ -538,7 +549,7 @@ public class Connection {
         }
 
         if (!familiesToCreate.isEmpty()) {
-            createFamilies(tableName, familiesToCreate);
+            createFamilies(tableName, toDescriptors(familiesToCreate));
         }
 
         HTable table = this.factory.get(tableName);
@@ -586,12 +597,12 @@ public class Connection {
      * @return A list of column family names.
      * @throws IOException Error accessing hbase.
      */
-    public Collection<String> getColumnFamilies(String tableName) throws IOException, TableNotFoundException {
-        Collection<String> columnFamilies = new ArrayList<String>();
+    public Collection<ColumnFamily> getColumnFamilies(String tableName) throws IOException, TableNotFoundException {
+        Collection<ColumnFamily> columnFamilies = new ArrayList<ColumnFamily>();
 
         HTableDescriptor td = this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(tableName));
         for (HColumnDescriptor column : td.getColumnFamilies()) {
-            columnFamilies.add(column.getNameAsString());
+            columnFamilies.add(new ColumnFamily(column));
         }
 
         return columnFamilies;
@@ -628,20 +639,34 @@ public class Connection {
      * @param families  A list of column families to add.
      * @throws IOException Error accessing hbase.
      */
-    private void createFamilies(String tableName, Iterable<String> families) throws IOException {
+    private void createFamilies(String tableName, Iterable<HColumnDescriptor> families) throws IOException {
         if (this.hbaseAdmin.isTableEnabled(tableName)) {
             this.hbaseAdmin.disableTable(tableName);
         }
 
-        for (String family : families) {
-            this.hbaseAdmin.addColumn(tableName, new HColumnDescriptor(family));
+        for (HColumnDescriptor family : families) {
+            this.hbaseAdmin.addColumn(tableName, family);
 
             for (HbaseActionListener listener : this.listeners) {
-                listener.columnOperation(tableName, family, "added");
+                listener.columnOperation(tableName, family.getNameAsString(), "added");
             }
         }
 
         this.hbaseAdmin.enableTable(tableName);
+    }
+
+    /**
+     * Converts column family to column descriptor.
+     *
+     * @param families A list of column families to convert.
+     * @return A list of column descriptors.
+     */
+    private static Iterable<HColumnDescriptor> toDescriptors(Iterable<ColumnFamily> families) {
+        Collection<HColumnDescriptor> descriptors = new ArrayList<HColumnDescriptor>();
+        for (ColumnFamily family : families) {
+            descriptors.add(family.toDescriptor());
+        }
+        return descriptors;
     }
     //endregion
 }

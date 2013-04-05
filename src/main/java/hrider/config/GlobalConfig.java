@@ -28,12 +28,14 @@ public class GlobalConfig extends PropertiesConfig {
     private static final String KEY_EXTERNAL_VIEWER_DELIMETER      = "global.externalViewerDelimiter";
     private static final String KEY_BATCH_READ_SIZE                = "global.batch.readSize";
     private static final String KEY_BATCH_WRITE_SIZE               = "global.batch.writeSize";
+    private static final String KEY_COMPILATION_FOLDER             = "global.compilation.folder";
 
     private static final String DEFAULT_DATE_FORMAT                    = "yyyy-MM-dd HH:mm:ss.SSS ZZ";
     private static final String DEFAULT_EXTERNAL_VIEWER_FILE_EXTENSION = ".csv";
     private static final String DEFAULT_EXTERNAL_VIEWER_DELIMETER      = ",";
     private static final String DEFAULT_BATCH_READ_SIZE                = "1000";
     private static final String DEFAULT_BATCH_WRITE_SIZE               = "100";
+    private static final String DEFAULT_COMPILATION_FOLDER             = "dynamic";
     //endregion
 
     //region Variables
@@ -102,6 +104,15 @@ public class GlobalConfig extends PropertiesConfig {
      */
     public int getBatchSizeForWrite() {
         return get(Integer.class, KEY_BATCH_WRITE_SIZE, DEFAULT_BATCH_WRITE_SIZE);
+    }
+
+    /**
+     * Gets a folder where the compiled files should be saved.
+     *
+     * @return A path to a folder.
+     */
+    public String getCompilationFolder() {
+        return get(String.class, KEY_COMPILATION_FOLDER, DEFAULT_COMPILATION_FOLDER);
     }
     //endregion
 }
