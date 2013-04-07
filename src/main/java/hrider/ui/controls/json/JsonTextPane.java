@@ -70,7 +70,7 @@ public class JsonTextPane extends JTextPane {
      */
     private static String formatJson(String json) {
         try {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
             return gson.toJson(new JsonParser().parse(json));
         }
         catch (Exception ignore) {
