@@ -85,7 +85,7 @@ public class FileExporter implements Exporter {
         for (ColumnQualifier column : columns) {
             DataCell cell = row.getCell(column);
             if (cell != null) {
-                formatter.append(cell.getTypedValue().getValue());
+                formatter.append(cell.getValue());
             }
             else {
                 formatter.append("");

@@ -1,9 +1,12 @@
 package hrider.reflection;
 
+import hrider.config.GlobalConfig;
+
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -27,8 +30,12 @@ import java.util.List;
  */
 public class Clazz {
 
+    //region Constructor
     private Clazz() {
     }
+    //endregion
+
+    //region Public Methods
 
     /**
      * Converts a primitive value represented as {@link String} to object.
@@ -38,7 +45,7 @@ public class Clazz {
      * @return A converted object.
      */
     @SuppressWarnings("unchecked")
-    public static Object primitiveToObject(Class type, String value) {
+    public static Object fromPrimitive(Class type, String value) {
         if (isPrimitive(type)) {
             if (value != null && !value.isEmpty()) {
                 String typeName = type.getSimpleName();
@@ -69,12 +76,114 @@ public class Clazz {
                 if ("String".equals(typeName)) {
                     return value;
                 }
+                if ("date".equalsIgnoreCase(typeName)) {
+                    if (isNumber(value)) {
+                        return new Date(Long.parseLong(value));
+                    }
+
+                    DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
+                    try {
+                        return df.parse(value);
+                    }
+                    catch (ParseException ignored) {
+                        return null;
+                    }
+                }
                 if (type.isEnum()) {
                     return Enum.valueOf(type, value);
                 }
             }
         }
         return null;
+    }
+
+    /**
+     * Converts a {@link String} to a number represented by {@link Integer} or {@link Long}.
+     *
+     * @param value The value to converters.
+     * @return A converted number if a conversion was successful or null otherwise.
+     */
+    public static Object toNumber(String value) {
+        if (isNumber(value)) {
+            return Long.parseLong(value);
+        }
+        return null;
+    }
+
+    /**
+     * Converts a {@link String} to a floating number represented by {@link Integer} or {@link Long}.
+     *
+     * @param value The value to converters.
+     * @return A converted number if a conversion was successful or null otherwise.
+     */
+    public static Object toDecimal(String value) {
+        if (isDecimal(value)) {
+            return Double.parseDouble(value);
+        }
+        return null;
+    }
+
+    /**
+     * Gets a value of the field.
+     *
+     * @param obj       The instance which field's value is to be retrieved.
+     * @param fieldName The name of the field that holds the value.
+     * @return A value extracted from the field.
+     * @throws IllegalAccessException Error accessing the field.
+     */
+    public static Object getValue(Object obj, String fieldName) throws NoSuchFieldException, IllegalAccessException {
+        return getValue(obj, obj.getClass().getDeclaredField(fieldName));
+    }
+
+    /**
+     * Gets a value of the field.
+     *
+     * @param obj   The instance which field's value is to be retrieved.
+     * @param field The field that holds the value.
+     * @return A value extracted from the field.
+     * @throws IllegalAccessException Error accessing the field.
+     */
+    public static Object getValue(Object obj, Field field) throws IllegalAccessException {
+        field.setAccessible(true);
+
+        String typeName = field.getType().getSimpleName();
+        if ("int".equals(typeName) || "Integer".equals(typeName)) {
+            return field.getInt(obj);
+        }
+        if ("long".equalsIgnoreCase(typeName)) {
+            return field.getLong(obj);
+        }
+        if ("boolean".equalsIgnoreCase(typeName)) {
+            return field.getBoolean(obj);
+        }
+        if ("byte".equalsIgnoreCase(typeName)) {
+            return field.getByte(obj);
+        }
+        if ("char".equals(typeName) || "Character".equals(typeName)) {
+            return field.getChar(obj);
+        }
+        if ("short".equalsIgnoreCase(typeName)) {
+            return field.getShort(obj);
+        }
+        if ("float".equalsIgnoreCase(typeName)) {
+            return field.getFloat(obj);
+        }
+        if ("double".equalsIgnoreCase(typeName)) {
+            return field.getDouble(obj);
+        }
+        return field.get(obj);
+    }
+
+    /**
+     * Sets a value to the field.
+     *
+     * @param obj       The instance which field is to be updated.
+     * @param fieldName The name of the field to be updated.
+     * @param value     The value to be set.
+     * @throws IllegalAccessException Error accessing the field.
+     */
+    public static void setValue(Object obj, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {
+        setValue(obj, obj.getClass().getDeclaredField(fieldName), value);
     }
 
     /**
@@ -116,45 +225,6 @@ public class Clazz {
         else {
             field.set(obj, value);
         }
-    }
-
-    /**
-     * Gets a value of the field.
-     *
-     * @param obj   The instance which field's value is to be retrieved.
-     * @param field The field that holds the value.
-     * @return A value extracted from the field.
-     * @throws IllegalAccessException Error accessing the field.
-     */
-    public static Object getValue(Object obj, Field field) throws IllegalAccessException {
-        field.setAccessible(true);
-
-        String typeName = field.getType().getSimpleName();
-        if ("int".equals(typeName) || "Integer".equals(typeName)) {
-            return field.getInt(obj);
-        }
-        if ("long".equalsIgnoreCase(typeName)) {
-            return field.getLong(obj);
-        }
-        if ("boolean".equalsIgnoreCase(typeName)) {
-            return field.getBoolean(obj);
-        }
-        if ("byte".equalsIgnoreCase(typeName)) {
-            return field.getByte(obj);
-        }
-        if ("char".equals(typeName) || "Character".equals(typeName)) {
-            return field.getChar(obj);
-        }
-        if ("short".equalsIgnoreCase(typeName)) {
-            return field.getShort(obj);
-        }
-        if ("float".equalsIgnoreCase(typeName)) {
-            return field.getFloat(obj);
-        }
-        if ("double".equalsIgnoreCase(typeName)) {
-            return field.getDouble(obj);
-        }
-        return field.get(obj);
     }
 
     /**
@@ -206,11 +276,90 @@ public class Clazz {
      * @return True if the string represents a number or false otherwise.
      */
     public static boolean isNumber(String value) {
-        for (char letter : value.toCharArray()) {
+        if (value == null) {
+            return false;
+        }
+
+        char[] array = value.toCharArray();
+        for (int i = 0 ; i < array.length ; i++) {
+            char letter = array[i];
             if (!Character.isDigit(letter)) {
-                return false;
+                if (i > 0 || letter != '-') {
+                    return false;
+                }
             }
         }
         return true;
     }
+
+    /**
+     * Checks whether the specified class represents a type that can hold a number.
+     *
+     * @param clazz The class to check.
+     * @return True if the specified type can hold the number or False otherwise.
+     */
+    public static boolean isNumber(Class<?> clazz) {
+        if (clazz == null) {
+            return false;
+        }
+
+        return clazz.equals(Integer.class) ||
+               clazz.equals(Long.class) ||
+               clazz.equals(Byte.class) ||
+               clazz.equals(Short.class);
+    }
+
+    /**
+     * Checks whether the string represents a floating number.
+     *
+     * @param value The string to check.
+     * @return True if the string represents a number or false otherwise.
+     */
+    public static boolean isDecimal(String value) {
+        if (value == null) {
+            return false;
+        }
+
+        boolean dotFound = false;
+
+        char[] array = value.toCharArray();
+        for (int i = 0 ; i < array.length ; i++) {
+            char letter = array[i];
+            if (!Character.isDigit(letter)) {
+                if (letter == '.') {
+                    if (dotFound) {
+                        return false;
+                    }
+                    if (i == 0 || i == array.length - 1) {
+                        return false;
+                    }
+                    if (!Character.isDigit(array[i - 1]) || !Character.isDigit(array[i + 1])) {
+                        return false;
+                    }
+                    dotFound = true;
+                }
+                if (letter == '-') {
+                    if (i > 0) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return dotFound;
+    }
+
+    /**
+     * Checks whether the specified class represents a type that can hold a number.
+     *
+     * @param clazz The class to check.
+     * @return True if the specified type can hold the number or False otherwise.
+     */
+    public static boolean isDecimal(Class<?> clazz) {
+        if (clazz == null) {
+            return false;
+        }
+
+        return clazz.equals(Float.class) || clazz.equals(Double.class);
+    }
+    //endregion
 }

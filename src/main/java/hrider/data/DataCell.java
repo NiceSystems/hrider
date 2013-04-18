@@ -1,5 +1,9 @@
 package hrider.data;
 
+import hrider.converters.TypeConverter;
+
+import java.io.Serializable;
+
 /**
  * Copyright (C) 2012 NICE Systems ltd.
  * <p/>
@@ -20,21 +24,25 @@ package hrider.data;
  *          <p/>
  *          This class represents a cell in the grid or a key/value pair of the hbase row.
  */
-public class DataCell {
+public class DataCell implements Serializable {
+
+    //region Constants
+    private static final long serialVersionUID = 387452287094391735L;
+    //endregion
 
     //region Variables
     /**
      * The row the current cell belongs to.
      */
-    private DataRow         row;
+    private DataRow           row;
     /**
      * The column (an hbase qualifier) where the cell is located.
      */
-    private ColumnQualifier column;
+    private ColumnQualifier   column;
     /**
      * The value of the cell.
      */
-    private TypedObject     typedValue;
+    private ConvertibleObject convertibleValue;
     //endregion
 
     //region Constructor
@@ -42,14 +50,14 @@ public class DataCell {
     /**
      * Initializes a new instance of the {@link DataCell} with parameters.
      *
-     * @param row        The owner of the cell.
-     * @param column     The name of the column/qualifier.
-     * @param typedValue The value.
+     * @param row              The owner of the cell.
+     * @param column           The name of the column/qualifier.
+     * @param convertibleValue The value.
      */
-    public DataCell(DataRow row, ColumnQualifier column, TypedObject typedValue) {
+    public DataCell(DataRow row, ColumnQualifier column, ConvertibleObject convertibleValue) {
         this.row = row;
         this.column = column;
-        this.typedValue = typedValue;
+        this.convertibleValue = convertibleValue;
     }
     //endregion
 
@@ -92,21 +100,57 @@ public class DataCell {
     }
 
     /**
-     * Gets a cell value.
+     * Gets cell's value.
      *
-     * @return A reference to the {@link TypedObject} that holds the value.
+     * @return A cell's value represented as a string.
      */
-    public TypedObject getTypedValue() {
-        return this.typedValue;
+    public String getValue() {
+        return this.convertibleValue.getValueAsString();
     }
 
     /**
-     * Sets a new cell value.
+     * Sets a new value for the cell.
      *
-     * @param typedValue A new cell value.
+     * @param value A new value to set.
      */
-    public void setTypedValue(TypedObject typedValue) {
-        this.typedValue = typedValue;
+    public void setValue(String value) {
+        this.convertibleValue.setValueAsString(value);
+    }
+
+    /**
+     * Gets cell's value as byte array.
+     *
+     * @return A cell's value represented as a byte array.
+     */
+    public byte[] getValueAsByteArray() {
+        return this.convertibleValue.getValue();
+    }
+
+    /**
+     * Gets cell's type.
+     *
+     * @return The cell's type.
+     */
+    public ColumnType getType() {
+        return this.convertibleValue.getType();
+    }
+
+    /**
+     * Sets a new object type for the cell.
+     *
+     * @param type A new object type.
+     */
+    public void setType(ColumnType type) {
+        this.convertibleValue.setType(type);
+    }
+
+    /**
+     * Sets new converter for column name.
+     *
+     * @param converter A new converter to set.
+     */
+    public void setColumnNameConverter(TypeConverter converter) {
+        this.column.setNameConverter(converter);
     }
 
     /**
@@ -115,11 +159,8 @@ public class DataCell {
      * @param value The value to check.
      * @return True if the cell contains the value or False otherwise.
      */
-    public boolean contains(Object value) {
-        if (this.typedValue.getValue() != null) {
-            return this.typedValue.getValue().equals(value);
-        }
-        return false;
+    public boolean hasValue(String value) {
+        return convertibleValue.isEqual(value);
     }
 
     /**
@@ -132,29 +173,19 @@ public class DataCell {
     }
 
     /**
-     * Converts a data represented as {@link String} to an actual type.
-     *
-     * @param data The data to convert.
-     * @return A converted data.
-     */
-    public Object toObject(String data) {
-        return this.typedValue.getType().toObject(data);
-    }
-
-    /**
      * Tries to understand the type of the value based on value itself.
      *
      * @return A guessed type if successful or null.
      */
-    public ObjectType guessType() {
-        return this.typedValue.guessType();
+    public ColumnType guessType() {
+        return this.convertibleValue.guessType();
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof DataCell) {
             DataCell cell = (DataCell)obj;
-            return cell.typedValue.equals(this.typedValue) &&
+            return cell.convertibleValue.equals(this.convertibleValue) &&
                    cell.row.equals(this.row) &&
                    cell.column.equals(this.column);
         }
@@ -163,12 +194,12 @@ public class DataCell {
 
     @Override
     public int hashCode() {
-        return this.typedValue.hashCode();
+        return this.convertibleValue.hashCode();
     }
 
     @Override
     public String toString() {
-        return this.typedValue.toString();
+        return this.convertibleValue.toString();
     }
     //endregion
 }

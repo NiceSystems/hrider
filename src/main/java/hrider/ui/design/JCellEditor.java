@@ -2,8 +2,8 @@ package hrider.ui.design;
 
 import com.michaelbaranov.microba.calendar.DatePicker;
 import hrider.config.GlobalConfig;
+import hrider.data.ColumnType;
 import hrider.data.DataCell;
-import hrider.data.ObjectType;
 import hrider.ui.ChangeTracker;
 import hrider.ui.controls.json.JsonEditor;
 import hrider.ui.controls.xml.XmlEditor;
@@ -11,7 +11,6 @@ import hrider.ui.controls.xml.XmlEditor;
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
-import java.beans.PropertyVetoException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -105,28 +104,28 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
     public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 
         this.editorType = EditorType.Text;
-        ObjectType type = ObjectType.String;
+        ColumnType type = ColumnType.String;
 
         // Check if the value contains information regarding its type.
         if (value instanceof DataCell) {
             this.cell = (DataCell)value;
-            type = this.cell.getTypedValue().getType();
+            type = this.cell.getType();
         }
         else {
             this.cell = null;
         }
 
         if (this.typeColumn != -1) {
-            type = (ObjectType)table.getValueAt(row, this.typeColumn);
+            type = (ColumnType)table.getValueAt(row, this.typeColumn);
         }
 
-        if (type == ObjectType.DateAsString || type == ObjectType.DateAsLong) {
+        if (type.equals(ColumnType.DateAsString) || type.equals(ColumnType.DateAsLong)) {
             this.editorType = EditorType.Date;
         }
-        else if (type == ObjectType.Xml) {
+        else if (type.equals(ColumnType.Xml)) {
             this.editorType = EditorType.Xml;
         }
-        else if (type == ObjectType.Json) {
+        else if (type.equals(ColumnType.Json)) {
             this.editorType = EditorType.Json;
         }
 
@@ -169,9 +168,8 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         }
 
         if (this.cell != null) {
-            Object value = this.cell.toObject(text);
-            if (value == null || !this.cell.contains(value)) {
-                this.cell.getTypedValue().setValue(value);
+            if (!this.cell.hasValue(text)) {
+                this.cell.setValue(text);
 
                 if (this.changeTracker != null) {
                     this.changeTracker.addChange(this.cell);
@@ -194,12 +192,14 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
     private void initializeEditor(Object value) {
         switch (this.editorType) {
             case Date:
-                try {
-                    if (this.cell != null) {
-                        this.dateEditor.setDate((Date)this.cell.getTypedValue().getValue());
+                if (this.cell != null) {
+                    DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
+                    try {
+                        Date date = df.parse(this.cell.getValue());
+                        this.dateEditor.setDate(date);
                     }
-                }
-                catch (PropertyVetoException ignore) {
+                    catch (Exception ignored) {
+                    }
                 }
                 break;
             case Text:

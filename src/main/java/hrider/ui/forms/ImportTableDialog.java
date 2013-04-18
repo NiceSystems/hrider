@@ -4,9 +4,11 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import hrider.config.GlobalConfig;
+import hrider.converters.TypeConverter;
 import hrider.data.*;
 import hrider.hbase.Connection;
 import hrider.hbase.HbaseActionListener;
+import hrider.ui.controls.WideComboBox;
 import hrider.ui.design.JTableModel;
 import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.Put;
@@ -64,15 +66,20 @@ public class ImportTableDialog extends JDialog {
     private JLabel            labelDelimiter;
     private DefaultTableModel tableModel;
     private boolean           canceled;
+    private TypeConverter     nameConverter;
     //endregion
 
     //region Constructor
     public ImportTableDialog(
-        final Connection connection, final String tableName, Iterable<TypedColumn> columns, final Collection<ColumnFamily> columnFamilies) {
+        final Connection connection, final String tableName, TypeConverter nameConverter, Iterable<TypedColumn> columns,
+        final Collection<ColumnFamily> columnFamilies) {
+
         setContentPane(this.contentPane);
         setModal(true);
         setTitle("Import table from file");
         getRootPane().setDefaultButton(this.btImport);
+
+        this.nameConverter = nameConverter;
 
         if (tableName != null) {
             this.tfTableName.setText(tableName);
@@ -87,10 +94,10 @@ public class ImportTableDialog extends JDialog {
         this.rowsTable.setRowHeight(this.rowsTable.getFont().getSize() + 8);
         this.rowsTable.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 
-        JComboBox comboBox = new JComboBox();
+        JComboBox comboBox = new WideComboBox();
 
-        for (ObjectType objectType : ObjectType.values()) {
-            comboBox.addItem(objectType);
+        for (ColumnType columnType : ColumnType.getTypes()) {
+            comboBox.addItem(columnType);
         }
 
         this.rowsTable.getColumn("Column Type").setCellEditor(new DefaultCellEditor(comboBox));
@@ -172,7 +179,7 @@ public class ImportTableDialog extends JDialog {
 
                         int rowIndex = getRowIndex(rowsTable, 1, column);
                         if (rowIndex == -1) {
-                            tableModel.addRow(new Object[]{column, ObjectType.String, null});
+                            tableModel.addRow(new Object[]{column, ColumnType.String, null});
                             rowIndex = tableModel.getRowCount() - 1;
                         }
 
@@ -342,7 +349,7 @@ public class ImportTableDialog extends JDialog {
                     throw new IllegalArgumentException("Column 'key' is missing in the file.");
                 }
 
-                Map<String, ObjectType> columnTypes = getColumnTypes();
+                Map<String, ColumnType> columnTypes = getColumnTypes();
                 Map<String, ColumnQualifier> columnQualifiers = getColumnQualifiers();
 
                 long readCount = 1;
@@ -362,21 +369,21 @@ public class ImportTableDialog extends JDialog {
                         String column = columns.get(i).trim();
                         String value = values[i].trim();
 
-                        ObjectType type = columnTypes.get(column);
+                        ColumnType type = columnTypes.get(column);
                         if (type == null) {
-                            type = ObjectType.String;
+                            type = ColumnType.String;
                         }
 
                         if (ColumnQualifier.isKey(column)) {
-                            row.setKey(new TypedObject(type, type.fromString(value)));
+                            row.setKey(new ConvertibleObject(type, type.toBytes(value)));
                         }
 
                         ColumnQualifier qualifier = columnQualifiers.get(column);
                         if (qualifier == null) {
-                            qualifier = new ColumnQualifier(column);
+                            qualifier = new ColumnQualifier(column, nameConverter);
                         }
 
-                        row.addCell(new DataCell(row, qualifier, new TypedObject(type, type.fromString(value))));
+                        row.addCell(new DataCell(row, qualifier, new ConvertibleObject(type, type.toBytes(value))));
                     }
 
                     if (row.getKey() != null) {
@@ -461,11 +468,11 @@ public class ImportTableDialog extends JDialog {
         }
     }
 
-    private Map<String, ObjectType> getColumnTypes() {
-        Map<String, ObjectType> columnTypes = new HashMap<String, ObjectType>();
+    private Map<String, ColumnType> getColumnTypes() {
+        Map<String, ColumnType> columnTypes = new HashMap<String, ColumnType>();
         for (int i = 0 ; i < this.rowsTable.getRowCount() ; i++) {
             String columnName = (String)this.rowsTable.getValueAt(i, 0);
-            ObjectType columnType = (ObjectType)this.rowsTable.getValueAt(i, 1);
+            ColumnType columnType = (ColumnType)this.rowsTable.getValueAt(i, 1);
 
             columnTypes.put(columnName, columnType);
         }

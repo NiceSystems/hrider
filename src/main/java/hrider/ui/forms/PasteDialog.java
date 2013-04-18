@@ -3,7 +3,7 @@ package hrider.ui.forms;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import hrider.data.DataRow;
-import hrider.data.TypedObject;
+import hrider.data.ConvertibleObject;
 import hrider.ui.ChangeTracker;
 import hrider.ui.design.JCellEditor;
 
@@ -44,12 +44,12 @@ public class PasteDialog extends JDialog {
     private JButton                   buttonCancel;
     private JTable                    table;
     private boolean                   okPressed;
-    private Map<TypedObject, DataRow> rows;
+    private Map<ConvertibleObject, DataRow> rows;
     //endregion
 
     //region Constructor
     public PasteDialog(ChangeTracker changeTracker, Iterable<DataRow> rows) {
-        this.rows = new HashMap<TypedObject, DataRow>();
+        this.rows = new HashMap<ConvertibleObject, DataRow>();
 
         setContentPane(this.contentPane);
         setModal(true);
@@ -132,20 +132,20 @@ public class PasteDialog extends JDialog {
     private void onOK() {
         boolean isValid = true;
 
-        Map<TypedObject, TypedObject> validKeys = new HashMap<TypedObject, TypedObject>();
+        Map<ConvertibleObject, ConvertibleObject> validKeys = new HashMap<ConvertibleObject, ConvertibleObject>();
 
         for (int i = 0 ; i < this.table.getRowCount() ; i++) {
             String value = (String)this.table.getValueAt(i, 1);
             if (value != null) {
-                TypedObject key = (TypedObject)this.table.getValueAt(i, 0);
+                ConvertibleObject key = (ConvertibleObject)this.table.getValueAt(i, 0);
                 try {
-                    Object obj = key.getType().toObject(value);
-                    validKeys.put(new TypedObject(key.getType(), obj), key);
+                    byte[] bytes = key.getType().toBytes(value);
+                    validKeys.put(new ConvertibleObject(key.getType(), bytes), key);
                 }
                 catch (Exception e) {
                     JOptionPane.showMessageDialog(
                         this.contentPane, String.format(
-                        "The new key for '%s' is in a wrong format; expected %s type.%sError: %s", key.getValue(), key.getType(), "\n", e.getMessage()),
+                        "The new key for '%s' is in a wrong format; expected %s type.%sError: %s", key.getValueAsString(), key.getType(), "\n", e.getMessage()),
                         "Error", JOptionPane.ERROR_MESSAGE);
 
                     isValid = false;
@@ -155,7 +155,7 @@ public class PasteDialog extends JDialog {
         }
 
         if (isValid) {
-            for (Map.Entry<TypedObject, TypedObject> entry : validKeys.entrySet()) {
+            for (Map.Entry<ConvertibleObject, ConvertibleObject> entry : validKeys.entrySet()) {
                 DataRow row = this.rows.get(entry.getValue());
                 row.setKey(entry.getKey());
             }

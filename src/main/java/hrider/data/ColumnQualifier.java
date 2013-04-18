@@ -1,5 +1,8 @@
 package hrider.data;
 
+import hrider.converters.TypeConverter;
+import org.apache.hadoop.hbase.util.Bytes;
+
 import java.io.Serializable;
 
 /**
@@ -25,50 +28,52 @@ import java.io.Serializable;
 public class ColumnQualifier implements Serializable {
 
     //region Constants
-    public final static ColumnQualifier KEY = new ColumnQualifier("key");
+    public final static ColumnQualifier KEY = new ColumnQualifier("key", ColumnType.BinaryString.getConverter());
     //endregion
 
     //region Variables
     private static final long serialVersionUID = 7851349292786398645L;
-    private String       name;
-    private ColumnFamily columnFamily;
+
+    private byte[]        name;
+    private ColumnFamily  columnFamily;
+    private TypeConverter nameConverter;
     //endregion
 
     //region Constructor
-    public ColumnQualifier(String name) {
-        this(name, null);
+    public ColumnQualifier(String name, TypeConverter nameConverter) {
+        this(nameConverter.toBytes(name), null, nameConverter);
     }
 
-    public ColumnQualifier(String name, ColumnFamily columnFamily) {
-        if (columnFamily == null) {
-            if (name.contains(":")) {
-                String[] parts = name.split(":");
+    public ColumnQualifier(String name, ColumnFamily columnFamily, TypeConverter nameConverter) {
+        this(nameConverter.toBytes(name), columnFamily, nameConverter);
+    }
 
-                this.name = parts[1];
-                this.columnFamily = new ColumnFamily(parts[0]);
-            }
-            else {
-                this.name = name;
-            }
-        }
-        else {
-            this.name = name;
-            this.columnFamily = columnFamily;
-        }
+    public ColumnQualifier(byte[] name, ColumnFamily columnFamily, TypeConverter nameConverter) {
+        this.name = name;
+        this.columnFamily = columnFamily;
+        this.nameConverter = nameConverter;
     }
     //endregion
 
     //region Public Properties
     public String getName() {
+        try {
+            return this.nameConverter.toString(this.name);
+        }
+        catch (Exception ignore) {
+            return ColumnType.BinaryString.toString(this.name);
+        }
+    }
+
+    public byte[] getNameAsByteArray() {
         return this.name;
     }
 
     public String getFullName() {
         if (this.columnFamily != null) {
-            return String.format("%s:%s", this.columnFamily, this.name);
+            return String.format("%s:%s", this.columnFamily, getName());
         }
-
-        return this.name;
+        return getName();
     }
 
     public String getFamily() {
@@ -81,11 +86,19 @@ public class ColumnQualifier implements Serializable {
     public ColumnFamily getColumnFamily() {
         return this.columnFamily;
     }
+
+    public TypeConverter getNameConverter() {
+        return nameConverter;
+    }
+
+    public void setNameConverter(TypeConverter nameConverter) {
+        this.nameConverter = nameConverter;
+    }
     //endregion
 
     //region Public Methods
     public static boolean isKey(String name) {
-        return KEY.name.equalsIgnoreCase(name);
+        return KEY.getName().equalsIgnoreCase(name);
     }
 
     public boolean isKey() {

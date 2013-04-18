@@ -18,7 +18,7 @@ package hrider.data;
  * @author Igor Cher
  * @version %I%, %G%
  *          <p/>
- *          The class represents a column with type. The type information is used to convert the value represented by an array of bytes to the actual object.
+ *          The class represents a column with type. The type information is used to converters the value represented by an array of bytes to the actual object.
  */
 public class TypedColumn {
 
@@ -30,7 +30,7 @@ public class TypedColumn {
     /**
      * The type of the column.
      */
-    private ObjectType      type;
+    private ColumnType type;
     //endregion
 
     //region Constructor
@@ -41,7 +41,7 @@ public class TypedColumn {
      * @param column     The qualifier of the column.
      * @param columnType The type of the column.
      */
-    public TypedColumn(ColumnQualifier column, ObjectType columnType) {
+    public TypedColumn(ColumnQualifier column, ColumnType columnType) {
         this.column = column;
         this.type = columnType;
     }
@@ -72,7 +72,7 @@ public class TypedColumn {
      *
      * @return The type of the column.
      */
-    public ObjectType getType() {
+    public ColumnType getType() {
         return this.type;
     }
 
@@ -81,7 +81,7 @@ public class TypedColumn {
      *
      * @param value A new column type.
      */
-    public void setType(ObjectType value) {
+    public void setType(ColumnType value) {
         this.type = value;
     }
     //endregion

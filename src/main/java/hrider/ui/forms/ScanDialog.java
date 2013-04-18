@@ -5,7 +5,7 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.michaelbaranov.microba.calendar.DatePicker;
 import hrider.config.GlobalConfig;
 import hrider.data.ColumnQualifier;
-import hrider.data.ObjectType;
+import hrider.data.ColumnType;
 import hrider.data.TypedColumn;
 import hrider.hbase.Operator;
 import hrider.hbase.Query;
@@ -75,11 +75,15 @@ public class ScanDialog extends JDialog {
             this.comboBoxOperator.addItem(operator);
         }
 
-        for (ObjectType objectType : ObjectType.values()) {
-            this.comboBoxStartKeyType.addItem(objectType);
-            this.comboBoxEndKeyType.addItem(objectType);
-            this.comboBoxWordType.addItem(objectType);
+        for (ColumnType columnType : ColumnType.getTypes()) {
+            this.comboBoxStartKeyType.addItem(columnType);
+            this.comboBoxEndKeyType.addItem(columnType);
+            this.comboBoxWordType.addItem(columnType);
         }
+
+        this.comboBoxStartKeyType.setSelectedItem(ColumnType.BinaryString);
+        this.comboBoxEndKeyType.setSelectedItem(ColumnType.BinaryString);
+        this.comboBoxWordType.setSelectedItem(ColumnType.String);
 
         fillForm(query);
 
@@ -136,11 +140,11 @@ public class ScanDialog extends JDialog {
             Query query = new Query();
 
             if (!this.textFieldStartKey.getText().trim().isEmpty()) {
-                query.setStartKey((ObjectType)this.comboBoxStartKeyType.getSelectedItem(), this.textFieldStartKey.getText().trim());
+                query.setStartKey((ColumnType)this.comboBoxStartKeyType.getSelectedItem(), this.textFieldStartKey.getText().trim());
             }
 
             if (!this.textFieldEndKey.getText().trim().isEmpty()) {
-                query.setEndKey((ObjectType)this.comboBoxEndKeyType.getSelectedItem(), this.textFieldEndKey.getText().trim());
+                query.setEndKey((ColumnType)this.comboBoxEndKeyType.getSelectedItem(), this.textFieldEndKey.getText().trim());
             }
 
             if (this.checkBoxUseDates.isSelected()) {
@@ -156,7 +160,7 @@ public class ScanDialog extends JDialog {
 
             if (!this.textFieldWord.getText().trim().isEmpty()) {
                 query.setWord(this.textFieldWord.getText().trim());
-                query.setWordType((ObjectType)this.comboBoxWordType.getSelectedItem());
+                query.setWordType((ColumnType)this.comboBoxWordType.getSelectedItem());
             }
 
             return query;

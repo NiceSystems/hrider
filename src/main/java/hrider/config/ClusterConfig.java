@@ -85,14 +85,14 @@ public class ClusterConfig extends PropertiesConfig {
     /**
      * Gets a configuration data related to the specified table and a corresponding column.
      *
-     * @param clazz  The class that represents the type of the data to be returned.
-     * @param table  The name of the table.
-     * @param column The name of the column.
-     * @param <T>    The type of the data to be returned.
+     * @param clazz The class that represents the type of the data to be returned.
+     * @param table The name of the table.
+     * @param key   The key to identify the data.
+     * @param <T>   The type of the data to be returned.
      * @return The data of the specified type.
      */
-    public <T> T getTableConfig(Class<T> clazz, String table, String column) {
-        return get(clazz, String.format("table.%s.%s", table, column));
+    public <T> T getTableConfig(Class<T> clazz, String table, String key) {
+        return get(clazz, String.format("table.%s.%s", table, key));
     }
 
     /**
@@ -123,12 +123,12 @@ public class ClusterConfig extends PropertiesConfig {
     /**
      * Sets a configuration data for the specified table and column.
      *
-     * @param table  The name of the table.
-     * @param column The name of the column.
-     * @param value  The data to set.
+     * @param table The name of the table.
+     * @param key   The identifier of the value.
+     * @param value The data to set.
      */
-    public void setTableConfig(String table, String column, String value) {
-        set(String.format("table.%s.%s", table, column), value);
+    public void setTableConfig(String table, String key, String value) {
+        set(String.format("table.%s.%s", table, key), value);
         save();
     }
 

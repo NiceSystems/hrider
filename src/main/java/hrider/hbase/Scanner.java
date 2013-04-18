@@ -1,6 +1,7 @@
 package hrider.hbase;
 
 import hrider.config.GlobalConfig;
+import hrider.converters.TypeConverter;
 import hrider.data.*;
 import hrider.ui.MessageHandler;
 import org.apache.hadoop.conf.Configuration;
@@ -10,7 +11,6 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
 import java.util.*;
@@ -58,7 +58,7 @@ public class Scanner {
     /**
      * The map of column types. The key is the name of the column and the value is the type of the objects within the column.
      */
-    private Map<String, ObjectType> columnTypes;
+    private Map<String, ColumnType> columnTypes;
     /**
      * A list of markers. The marker is used for pagination to mark where the previous scan has stopped.
      */
@@ -71,6 +71,10 @@ public class Scanner {
      * Indicates if this scanner should support only forward navigation.
      */
     private boolean                 forwardNavigateOnly;
+    /**
+     * Represents a converter for column names.
+     */
+    private TypeConverter           columnNameConverter;
     //endregion
 
     //region Constructor
@@ -164,7 +168,7 @@ public class Scanner {
      *
      * @return A map of column types.
      */
-    public Map<String, ObjectType> getColumnTypes() {
+    public Map<String, ColumnType> getColumnTypes() {
         return this.columnTypes;
     }
 
@@ -173,7 +177,7 @@ public class Scanner {
      *
      * @param columnTypes A new map of column types.
      */
-    public void setColumnTypes(Map<String, ObjectType> columnTypes) {
+    public void setColumnTypes(Map<String, ColumnType> columnTypes) {
         this.columnTypes = columnTypes;
     }
 
@@ -213,7 +217,7 @@ public class Scanner {
      * @param columnName The name of the column.
      * @param columnType The new column type.
      */
-    public void updateColumnType(String columnName, ObjectType columnType) {
+    public void updateColumnType(String columnName, ColumnType columnType) {
         Collection<DataRow> rows = this.current;
         if (rows != null) {
             for (DataRow row : rows) {
@@ -223,11 +227,27 @@ public class Scanner {
     }
 
     /**
+     * Updates converter for the column name.
+     *
+     * @param converter The new column name converter.
+     */
+    public void updateColumnNameConverter(TypeConverter converter) {
+        this.columnNameConverter = converter;
+
+        Collection<DataRow> rows = this.current;
+        if (rows != null) {
+            for (DataRow row : rows) {
+                row.updateColumnNameConverter(converter);
+            }
+        }
+    }
+
+    /**
      * Resets the cache.
      *
      * @param startKey The key the scan should start from. This parameter can be null.
      */
-    public void resetCurrent(TypedObject startKey) {
+    public void resetCurrent(ConvertibleObject startKey) {
         this.current = null;
         this.rowsCount = 0;
         this.lastRow = 0;
@@ -336,6 +356,12 @@ public class Scanner {
 
             this.lastRow -= this.current.size();
             this.current = peekMarker().rows;
+
+            updateColumnNameConverter(columnNameConverter);
+
+            for (Map.Entry<String, ColumnType> entry : this.columnTypes.entrySet()) {
+                updateColumnType(entry.getKey(), entry.getValue());
+            }
         }
         return this.current;
     }
@@ -404,13 +430,15 @@ public class Scanner {
      * @return A key of the last loaded row. Used to mark the current position for the next scan.
      * @throws IOException Error accessing hbase.
      */
-    protected TypedObject loadRows(ResultScanner scanner, long offset, int rowsNumber, Collection<DataRow> rows, Collection<ColumnQualifier> columns) throws
-        IOException {
-        ObjectType keyType = this.columnTypes.get(ColumnQualifier.KEY.getName());
+    protected ConvertibleObject loadRows(
+        ResultScanner scanner, long offset, int rowsNumber, Collection<DataRow> rows, Collection<ColumnQualifier> columns) throws IOException {
+        ColumnType keyType = this.columnTypes.get(ColumnQualifier.KEY.getName());
 
         int index = 0;
         boolean isValid;
-        TypedObject key = null;
+        ConvertibleObject key = null;
+
+        TypeConverter nameConverter = getColumnNameConverterInternal();
 
         HTable table = this.connection.getTableFactory().get(this.tableName);
         HTableDescriptor tableDescriptor = table.getTableDescriptor();
@@ -421,7 +449,7 @@ public class Scanner {
             isValid = result != null && rows.size() < rowsNumber;
             if (isValid && isValidRow(result)) {
                 if (index >= offset) {
-                    key = new TypedObject(keyType, result.getRow());
+                    key = new ConvertibleObject(keyType, result.getRow());
 
                     DataRow row = new DataRow(key);
                     row.addCell(new DataCell(row, ColumnQualifier.KEY, key));
@@ -431,9 +459,9 @@ public class Scanner {
                         HColumnDescriptor columnDescriptor = tableDescriptor.getFamily(familyEntry.getKey());
 
                         for (NavigableMap.Entry<byte[], NavigableMap<Long, byte[]>> qualifierEntry : familyEntry.getValue().entrySet()) {
-                            ColumnQualifier qualifier = new ColumnQualifier(Bytes.toStringBinary(qualifierEntry.getKey()), new ColumnFamily(columnDescriptor));
+                            ColumnQualifier qualifier = new ColumnQualifier(qualifierEntry.getKey(), new ColumnFamily(columnDescriptor), nameConverter);
 
-                            ObjectType columnType = ObjectType.String;
+                            ColumnType columnType = ColumnType.String;
                             String columnName = qualifier.getFullName();
 
                             if (this.columnTypes.containsKey(columnName)) {
@@ -441,7 +469,7 @@ public class Scanner {
                             }
 
                             for (NavigableMap.Entry<Long, byte[]> cell : qualifierEntry.getValue().entrySet()) {
-                                row.addCell(new DataCell(row, qualifier, new TypedObject(columnType, cell.getValue())));
+                                row.addCell(new DataCell(row, qualifier, new ConvertibleObject(columnType, cell.getValue())));
                             }
 
                             if (!columns.contains(qualifier)) {
@@ -480,6 +508,7 @@ public class Scanner {
         HTableDescriptor tableDescriptor = table.getTableDescriptor();
 
         ResultScanner scanner = table.getScanner(scan);
+        TypeConverter nameConverter = getColumnNameConverterInternal();
 
         Result row;
         int counter = 0;
@@ -492,7 +521,7 @@ public class Scanner {
                     HColumnDescriptor columnDescriptor = tableDescriptor.getFamily(familyEntry.getKey());
 
                     for (byte[] quantifier : familyEntry.getValue().keySet()) {
-                        ColumnQualifier columnQualifier = new ColumnQualifier(Bytes.toStringBinary(quantifier), new ColumnFamily(columnDescriptor));
+                        ColumnQualifier columnQualifier = new ColumnQualifier(quantifier, new ColumnFamily(columnDescriptor), nameConverter);
                         if (!columns.contains(columnQualifier)) {
                             columns.add(columnQualifier);
                         }
@@ -522,7 +551,7 @@ public class Scanner {
         scan.setCaching(itemsNumber);
 
         if (!this.markers.isEmpty()) {
-            scan.setStartRow(peekMarker().key.toByteArray());
+            scan.setStartRow(peekMarker().key.getValue());
         }
 
         if (this.forwardNavigateOnly) {
@@ -538,7 +567,7 @@ public class Scanner {
 
         columns.add(ColumnQualifier.KEY);
 
-        TypedObject lastKey = loadRows(scanner, offset, rowsNumber, rows, columns);
+        ConvertibleObject lastKey = loadRows(scanner, offset, rowsNumber, rows, columns);
         if (lastKey != null) {
             this.markers.push(new Marker(lastKey, rows, columns));
         }
@@ -569,6 +598,18 @@ public class Scanner {
         }
         return null;
     }
+
+    /**
+     * Gets configured column name converter or a default one.
+     *
+     * @return A type converter.
+     */
+    private TypeConverter getColumnNameConverterInternal() {
+        if (this.columnNameConverter != null) {
+            return this.columnNameConverter;
+        }
+        return ColumnType.BinaryString.getConverter();
+    }
     //endregion
 
     /**
@@ -581,7 +622,7 @@ public class Scanner {
         /**
          * The last key loaded from the previous batch of rows.
          */
-        private TypedObject                 key;
+        private ConvertibleObject           key;
         /**
          * A list of previously loaded rows.
          */
@@ -601,7 +642,7 @@ public class Scanner {
          * @param rows    A list of loaded rows.
          * @param columns A list of columns loaded from the rows.
          */
-        private Marker(TypedObject key, Collection<DataRow> rows, Collection<ColumnQualifier> columns) {
+        private Marker(ConvertibleObject key, Collection<DataRow> rows, Collection<ColumnQualifier> columns) {
             this.key = key;
             this.rows = rows;
             this.columns = columns;

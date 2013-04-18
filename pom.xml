@@ -14,7 +14,7 @@
 
     <repositories>
         <repository>
-            <id>local</id>
+            <id>localrepository</id>
             <url>file://${project.basedir}/repo</url>
         </repository>
         <repository>
@@ -90,6 +90,12 @@
             <groupId>com.intellij</groupId>
             <artifactId>forms_rt</artifactId>
             <version>7.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun</groupId>
+            <artifactId>tools</artifactId>
+            <scope>compile</scope>
+            <version>1.6</version>
         </dependency>
     </dependencies>
 
