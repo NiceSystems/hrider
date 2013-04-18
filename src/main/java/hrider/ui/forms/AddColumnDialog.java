@@ -4,6 +4,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import hrider.data.ColumnFamily;
 import hrider.data.ColumnQualifier;
+import hrider.data.ColumnType;
 import hrider.ui.design.JCellEditor;
 import hrider.ui.design.JTableModel;
 
@@ -13,7 +14,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Map;
@@ -256,7 +256,8 @@ public class AddColumnDialog extends JDialog {
 
     public ColumnQualifier getColumn() {
         if (this.okPressed) {
-            return new ColumnQualifier(this.columnNameTextField.getText().trim(), (ColumnFamily)this.comboBox.getSelectedItem());
+            return new ColumnQualifier(
+                this.columnNameTextField.getText(), (ColumnFamily)this.comboBox.getSelectedItem(), ColumnType.BinaryString.getConverter());
         }
         return null;
     }

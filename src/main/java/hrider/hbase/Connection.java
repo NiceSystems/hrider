@@ -485,7 +485,7 @@ public class Connection {
         List<Put> puts = new ArrayList<Put>();
 
         for (DataRow row : rows) {
-            Put put = new Put(row.getKey().toByteArray());
+            Put put = new Put(row.getKey().getValue());
 
             for (DataCell cell : row.getCells()) {
                 if (!cell.isKey()) {
@@ -495,7 +495,7 @@ public class Connection {
 
                     byte[] family = Bytes.toBytesBinary(cell.getColumn().getFamily());
                     byte[] column = Bytes.toBytesBinary(cell.getColumn().getName());
-                    byte[] value = cell.getTypedValue().toByteArray();
+                    byte[] value = cell.getValueAsByteArray();
 
                     put.add(family, column, value);
                 }
@@ -533,7 +533,7 @@ public class Connection {
 
         Collection<ColumnFamily> familiesToCreate = new HashSet<ColumnFamily>();
 
-        Put put = new Put(row.getKey().toByteArray());
+        Put put = new Put(row.getKey().getValue());
         for (DataCell cell : row.getCells()) {
             if (!cell.isKey()) {
                 if (!families.contains(cell.getColumn().getColumnFamily())) {
@@ -542,7 +542,7 @@ public class Connection {
 
                 byte[] family = Bytes.toBytesBinary(cell.getColumn().getFamily());
                 byte[] column = Bytes.toBytesBinary(cell.getColumn().getName());
-                byte[] value = cell.getTypedValue().toByteArray();
+                byte[] value = cell.getValueAsByteArray();
 
                 put.add(family, column, value);
             }
@@ -569,7 +569,7 @@ public class Connection {
      */
     public void deleteRow(String tableName, DataRow row) throws IOException {
         HTable table = this.factory.get(tableName);
-        table.delete(new Delete(row.getKey().toByteArray()));
+        table.delete(new Delete(row.getKey().getValue()));
 
         for (HbaseActionListener listener : this.listeners) {
             listener.rowOperation(tableName, row, "removed");
@@ -658,7 +658,7 @@ public class Connection {
     /**
      * Converts column family to column descriptor.
      *
-     * @param families A list of column families to convert.
+     * @param families A list of column families to converters.
      * @return A list of column descriptors.
      */
     private static Iterable<HColumnDescriptor> toDescriptors(Iterable<ColumnFamily> families) {

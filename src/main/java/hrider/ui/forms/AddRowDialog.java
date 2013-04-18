@@ -3,13 +3,13 @@ package hrider.ui.forms;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import hrider.data.*;
+import hrider.ui.controls.WideComboBox;
 import hrider.ui.design.JCellEditor;
 import hrider.ui.design.JCheckBoxRenderer;
 import hrider.ui.design.JTableModel;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -65,10 +65,10 @@ public class AddRowDialog extends JDialog {
         this.rowsTable.getColumn("Use").setCellEditor(new JCheckBoxRenderer(new CheckedRow(1, ColumnQualifier.KEY)));
         this.rowsTable.getColumn("Use").setPreferredWidth(20);
 
-        JComboBox comboBox = new JComboBox();
+        JComboBox comboBox = new WideComboBox();
 
-        for (ObjectType objectType : ObjectType.values()) {
-            comboBox.addItem(objectType);
+        for (ColumnType columnType : ColumnType.getTypes()) {
+            comboBox.addItem(columnType);
         }
 
         this.rowsTable.getColumn("Column Type").setCellEditor(new DefaultCellEditor(comboBox));
@@ -128,7 +128,7 @@ public class AddRowDialog extends JDialog {
 
                         int rowIndex = getRowIndex(rowsTable, 1, column);
                         if (rowIndex == -1) {
-                            tableModel.addRow(new Object[]{Boolean.TRUE, column, ObjectType.String, null});
+                            tableModel.addRow(new Object[]{Boolean.TRUE, column, ColumnType.String, null});
                             rowIndex = tableModel.getRowCount() - 1;
                         }
 
@@ -156,14 +156,14 @@ public class AddRowDialog extends JDialog {
                 boolean use = (Boolean)this.rowsTable.getValueAt(i, 0);
                 if (use) {
                     ColumnQualifier columnQualifier = (ColumnQualifier)this.rowsTable.getValueAt(i, 1);
-                    ObjectType columnType = (ObjectType)this.rowsTable.getValueAt(i, 2);
-                    Object value = columnType.fromString((String)this.rowsTable.getValueAt(i, 3));
+                    ColumnType columnType = (ColumnType)this.rowsTable.getValueAt(i, 2);
+                    byte[] value = columnType.toBytes((String)this.rowsTable.getValueAt(i, 3));
 
                     if (columnQualifier.isKey()) {
-                        row.setKey(new TypedObject(columnType, value));
+                        row.setKey(new ConvertibleObject(columnType, value));
                     }
 
-                    row.addCell(new DataCell(row, columnQualifier, new TypedObject(columnType, value)));
+                    row.addCell(new DataCell(row, columnQualifier, new ConvertibleObject(columnType, value)));
                 }
             }
             return row;
@@ -209,9 +209,9 @@ public class AddRowDialog extends JDialog {
                     if (use) {
                         value = (String)this.rowsTable.getValueAt(i, 3);
                         qualifier = (ColumnQualifier)this.rowsTable.getValueAt(i, 1);
-                        ObjectType valueType = (ObjectType)this.rowsTable.getValueAt(i, 2);
+                        ColumnType valueType = (ColumnType)this.rowsTable.getValueAt(i, 2);
 
-                        valueType.toObject(value);
+                        valueType.toBytes(value);
                     }
                 }
 

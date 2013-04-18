@@ -3,6 +3,7 @@ package hrider.ui;
 import hrider.data.DataCell;
 import hrider.data.DataRow;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -26,7 +27,11 @@ import java.util.Collection;
  *          <p/>
  *          This class represents a tracker for all changes performed on cells.
  */
-public class ChangeTracker {
+public class ChangeTracker implements Serializable {
+
+    //region Constants
+    private static final long serialVersionUID = -7106669090052759327L;
+    //endregion
 
     //region Variables
     /**

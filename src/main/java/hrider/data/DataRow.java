@@ -1,5 +1,8 @@
 package hrider.data;
 
+import hrider.converters.TypeConverter;
+
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,13 +26,17 @@ import java.util.Map;
  *          <p/>
  *          This class represents a row in the grid or an hbase row.
  */
-public class DataRow {
+public class DataRow implements Serializable {
+
+    //region Constants
+    private static final long serialVersionUID = 5158560383309065143L;
+    //endregion
 
     //region Variables
     /**
      * The row key.
      */
-    private TypedObject           key;
+    private ConvertibleObject     key;
     /**
      * The list of cells that belong to the row.
      */
@@ -50,7 +57,7 @@ public class DataRow {
      *
      * @param key The row key.
      */
-    public DataRow(TypedObject key) {
+    public DataRow(ConvertibleObject key) {
         this();
         this.key = key;
     }
@@ -63,7 +70,7 @@ public class DataRow {
      *
      * @return The key of the row.
      */
-    public TypedObject getKey() {
+    public ConvertibleObject getKey() {
         return this.key;
     }
 
@@ -72,7 +79,7 @@ public class DataRow {
      *
      * @param key The new key to set.
      */
-    public void setKey(TypedObject key) {
+    public void setKey(ConvertibleObject key) {
         this.key = key;
     }
 
@@ -88,6 +95,7 @@ public class DataRow {
 
     /**
      * Gets the cell according to the specified column qualifier.
+     *
      * @param columnQualifier The column qualifier to look for the cell.
      * @return The instance of the {@link DataCell} if found or null otherwise.
      */
@@ -147,11 +155,26 @@ public class DataRow {
      * @param columnName The name of the column which type should be updated.
      * @param columnType The new column type.
      */
-    public void updateColumnType(String columnName, ObjectType columnType) {
+    public void updateColumnType(String columnName, ColumnType columnType) {
         DataCell cell = getCell(columnName);
-        if (cell != null && cell.getTypedValue() != null) {
-            cell.getTypedValue().setType(columnType);
+        if (cell != null) {
+            cell.setType(columnType);
         }
+    }
+
+    /**
+     * Updates converter for the column name.
+     *
+     * @param converter The new column name converter.
+     */
+    public void updateColumnNameConverter(TypeConverter converter) {
+        Map<String, DataCell> map = new HashMap<String, DataCell>();
+        for (DataCell cell : this.cells.values()) {
+            cell.setColumnNameConverter(converter);
+
+            map.put(cell.getColumn().getFullName(), cell);
+        }
+        this.cells = map;
     }
 
     /**
@@ -162,7 +185,7 @@ public class DataRow {
     public Map<String, Object> toMap() {
         Map<String, Object> values = new HashMap<String, Object>();
         for (Map.Entry<String, DataCell> entry : this.cells.entrySet()) {
-            values.put(entry.getKey(), entry.getValue().getTypedValue().getValue());
+            values.put(entry.getKey(), entry.getValue().getValue());
         }
         return values;
     }

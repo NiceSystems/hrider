@@ -1,6 +1,6 @@
 package hrider.hbase;
 
-import hrider.data.ObjectType;
+import hrider.data.ColumnType;
 
 import java.util.Date;
 
@@ -35,7 +35,7 @@ public class Query {
      * The type of the start key. The key must be converted to byte array before it can be used in scanner. In order for the scan to match
      * the key it must be converted to the byte array according to its actual type otherwise we will have different byte arrays which will never match.
      */
-    private ObjectType startKeyType;
+    private ColumnType startKeyType;
     /**
      * A key where the can should stop.
      */
@@ -43,7 +43,7 @@ public class Query {
     /**
      * The type of the end key.
      */
-    private ObjectType endKeyType;
+    private ColumnType endKeyType;
     /**
      * The date to start the scan from. Each key/value pair in hbase has a timestamp.
      */
@@ -75,7 +75,7 @@ public class Query {
     /**
      * The type of the word.
      */
-    private ObjectType wordType;
+    private ColumnType wordType;
     //endregion
 
     //region Public Properties
@@ -96,7 +96,7 @@ public class Query {
      */
     public String getStartKeyAsString() {
         if (this.startKeyType != null) {
-            return this.startKeyType.fromByteArray(this.startKey).toString();
+            return this.startKeyType.toString(this.startKey);
         }
         return null;
     }
@@ -116,9 +116,9 @@ public class Query {
      * @param keyType The type of the key to set.
      * @param key     The key to set.
      */
-    public void setStartKey(ObjectType keyType, String key) {
+    public void setStartKey(ColumnType keyType, String key) {
         this.startKeyType = keyType;
-        this.startKey = keyType.fromString(key);
+        this.startKey = keyType.toBytes(key);
     }
 
     /**
@@ -126,7 +126,7 @@ public class Query {
      *
      * @return The start key type.
      */
-    public ObjectType getStartKeyType() {
+    public ColumnType getStartKeyType() {
         return this.startKeyType;
     }
 
@@ -135,7 +135,7 @@ public class Query {
      *
      * @param keyType A new start key type.
      */
-    public void setStartKeyType(ObjectType keyType) {
+    public void setStartKeyType(ColumnType keyType) {
         this.startKeyType = keyType;
     }
 
@@ -155,7 +155,7 @@ public class Query {
      */
     public String getEndKeyAsString() {
         if (this.endKeyType != null) {
-            return this.endKeyType.fromByteArray(this.endKey).toString();
+            return this.endKeyType.toString(this.endKey);
         }
         return null;
     }
@@ -175,9 +175,9 @@ public class Query {
      * @param keyType The key type.
      * @param key     The key.
      */
-    public void setEndKey(ObjectType keyType, String key) {
+    public void setEndKey(ColumnType keyType, String key) {
         this.endKeyType = keyType;
-        this.endKey = keyType.fromString(key);
+        this.endKey = keyType.toBytes(key);
     }
 
     /**
@@ -185,7 +185,7 @@ public class Query {
      *
      * @return The end key type.
      */
-    public ObjectType getEndKeyType() {
+    public ColumnType getEndKeyType() {
         return this.endKeyType;
     }
 
@@ -194,7 +194,7 @@ public class Query {
      *
      * @param keyType A new key type.
      */
-    public void setEndKeyType(ObjectType keyType) {
+    public void setEndKeyType(ColumnType keyType) {
         this.endKeyType = keyType;
     }
 
@@ -315,7 +315,7 @@ public class Query {
      * @return A byte array.
      */
     public byte[] getWordAsByteArray() {
-        return this.wordType.fromString(this.word);
+        return this.wordType.toBytes(this.word);
     }
 
     /**
@@ -337,7 +337,7 @@ public class Query {
      *
      * @return A type of the word.
      */
-    public ObjectType getWordType() {
+    public ColumnType getWordType() {
         return this.wordType;
     }
 
@@ -346,7 +346,7 @@ public class Query {
      *
      * @param wordType A new word type.
      */
-    public void setWordType(ObjectType wordType) {
+    public void setWordType(ColumnType wordType) {
         this.wordType = wordType;
     }
     //endregion

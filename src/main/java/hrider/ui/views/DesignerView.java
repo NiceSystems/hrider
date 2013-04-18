@@ -5,6 +5,8 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import hrider.config.ClusterConfig;
 import hrider.config.GlobalConfig;
+import hrider.converters.ConvertersLoader;
+import hrider.converters.TypeConverter;
 import hrider.data.*;
 import hrider.export.FileExporter;
 import hrider.filters.EmptyFilter;
@@ -14,12 +16,14 @@ import hrider.hbase.Connection;
 import hrider.hbase.HbaseActionListener;
 import hrider.hbase.Query;
 import hrider.hbase.QueryScanner;
+import hrider.io.PathHelper;
 import hrider.system.ClipboardData;
 import hrider.system.ClipboardListener;
 import hrider.system.InMemoryClipboard;
 import hrider.ui.ChangeTracker;
 import hrider.ui.ChangeTrackerListener;
 import hrider.ui.MessageHandler;
+import hrider.ui.controls.WideComboBox;
 import hrider.ui.design.JCellEditor;
 import hrider.ui.design.JCheckBoxRenderer;
 import hrider.ui.design.JTableModel;
@@ -66,58 +70,64 @@ import java.util.List;
  *          <p/>
  *          This class is a main view.
  */
+@SuppressWarnings({"MagicNumber", "AnonymousInnerClassWithTooManyMethods"})
 public class DesignerView {
 
     //region Variables
-    private JPanel                   topPanel;
-    private JList                    tablesList;
-    private DefaultListModel         tablesListModel;
-    private JTable                   rowsTable;
-    private JButton                  populateButton;
-    private JTable                   columnsTable;
-    private JButton                  updateRowButton;
-    private JButton                  deleteRowButton;
-    private JButton                  addRowButton;
-    private JButton                  truncateTableButton;
-    private JButton                  scanButton;
-    private JButton                  addTableButton;
-    private JButton                  deleteTableButton;
-    private JSpinner                 rowsNumberSpinner;
-    private JButton                  showPrevPageButton;
-    private JButton                  showNextPageButton;
-    private JLabel                   rowsNumberLabel;
-    private JLabel                   visibleRowsLabel;
-    private JButton                  checkAllButton;
-    private JButton                  copyRowButton;
-    private JButton                  pasteRowButton;
-    private JButton                  refreshTablesButton;
-    private JButton                  copyTableButton;
-    private JButton                  pasteTableButton;
-    private JButton                  uncheckAllButton;
-    private JSplitPane               topSplitPane;
-    private JSplitPane               innerSplitPane;
-    private JLabel                   columnsNumber;
-    private JLabel                   tablesNumber;
-    private JComboBox                tablesFilter;
-    private DefaultComboBoxModel     tablesFilterModel;
-    private JComboBox                columnsFilter;
-    private DefaultComboBoxModel     columnsFilterModel;
-    private JButton                  jumpButton;
-    private JButton                  openInViewerButton;
-    private JButton                  importTableButton;
-    private JButton                  exportTableButton;
-    private JButton                  refreshColumnsButton;
-    private JButton                  flushTableButton;
-    private JButton                  tableMetadataButton;
-    private DefaultTableModel        columnsTableModel;
-    private DefaultTableModel        rowsTableModel;
-    private Query                    lastQuery;
-    private QueryScanner             scanner;
-    private JPanel                   owner;
-    private Connection               connection;
-    private ChangeTracker            changeTracker;
-    private Map<String, TableColumn> rowsTableRemovedColumns;
-    private ClusterConfig            clusterConfig;
+    private JPanel                            topPanel;
+    private JList                             tablesList;
+    private DefaultListModel                  tablesListModel;
+    private JTable                            rowsTable;
+    private JButton                           populateButton;
+    private JTable                            columnsTable;
+    private JButton                           updateRowButton;
+    private JButton                           deleteRowButton;
+    private JButton                           addRowButton;
+    private JButton                           truncateTableButton;
+    private JButton                           scanButton;
+    private JButton                           addTableButton;
+    private JButton                           deleteTableButton;
+    private JSpinner                          rowsNumberSpinner;
+    private JButton                           showPrevPageButton;
+    private JButton                           showNextPageButton;
+    private JLabel                            rowsNumberLabel;
+    private JLabel                            visibleRowsLabel;
+    private JButton                           checkAllButton;
+    private JButton                           copyRowButton;
+    private JButton                           pasteRowButton;
+    private JButton                           refreshTablesButton;
+    private JButton                           copyTableButton;
+    private JButton                           pasteTableButton;
+    private JButton                           uncheckAllButton;
+    private JSplitPane                        topSplitPane;
+    private JSplitPane                        innerSplitPane;
+    private JLabel                            columnsNumber;
+    private JLabel                            tablesNumber;
+    private JComboBox                         tablesFilter;
+    private DefaultComboBoxModel              tablesFilterModel;
+    private JComboBox                         columnsFilter;
+    private DefaultComboBoxModel              columnsFilterModel;
+    private JButton                           jumpButton;
+    private JButton                           openInViewerButton;
+    private JButton                           importTableButton;
+    private JButton                           exportTableButton;
+    private JButton                           refreshColumnsButton;
+    private JButton                           flushTableButton;
+    private JButton                           tableMetadataButton;
+    private JButton                           addConverterButton;
+    private JButton                           editConverterButton;
+    private JButton                           deleteConverterButton;
+    private WideComboBox                      cmbColumnNameTypes;
+    private DefaultTableModel                 columnsTableModel;
+    private DefaultTableModel                 rowsTableModel;
+    private Query                             lastQuery;
+    private QueryScanner                      scanner;
+    private JPanel                            owner;
+    private Connection                        connection;
+    private ChangeTracker                     changeTracker;
+    private Map<ColumnQualifier, TableColumn> rowsTableRemovedColumns;
+    private ClusterConfig                     clusterConfig;
+    private JComboBox                         cmbColumnTypes;
     //endregion
 
     //region Constructor
@@ -126,7 +136,7 @@ public class DesignerView {
         this.owner = owner;
         this.connection = connection;
         this.changeTracker = new ChangeTracker();
-        this.rowsTableRemovedColumns = new HashMap<String, TableColumn>();
+        this.rowsTableRemovedColumns = new HashMap<ColumnQualifier, TableColumn>();
         this.clusterConfig = new ClusterConfig(this.connection.getServerName());
         this.clusterConfig.setConnection(connection.getConnectionDetails());
         this.tablesFilterModel = new DefaultComboBoxModel();
@@ -231,6 +241,30 @@ public class DesignerView {
                             columnsFilter.removeItem(selectedItem);
                             clusterConfig.setColumnsFilter(getSelectedTableName(), getFilters(columnsFilter));
                         }
+                    }
+                }
+            });
+
+        this.cmbColumnNameTypes.addItemListener(
+            new ItemListener() {
+                @Override
+                public void itemStateChanged(ItemEvent e) {
+                    if (e.getStateChange() == ItemEvent.SELECTED) {
+                        TypeConverter nameConverter = getColumnNameConverter();
+                        updateColumnNameConverter(nameConverter);
+
+                        boolean isEditable = nameConverter.isEditable();
+
+                        int row = columnsTable.getSelectedRow();
+                        if (row != -1) {
+                            ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
+                            isEditable |= type.isEditable();
+                        }
+
+                        clusterConfig.setTableConfig(getSelectedTableName(), "nameConverter", nameConverter.getName());
+
+                        editConverterButton.setEnabled(isEditable);
+                        deleteConverterButton.setEnabled(isEditable);
                     }
                 }
             });
@@ -395,7 +429,7 @@ public class DesignerView {
                                 // Update the column types according to the added row.
                                 for (DataCell cell : row.getCells()) {
                                     clusterConfig.setTableConfig(
-                                        getSelectedTableName(), cell.getColumn().getFullName(), cell.getTypedValue().getType().toString());
+                                        getSelectedTableName(), cell.getColumn().getFullName(), cell.getType().toString());
                                 }
 
                                 populateColumnsTable(true, row);
@@ -773,7 +807,9 @@ public class DesignerView {
                             columnFamilies = new ArrayList<ColumnFamily>();
                         }
 
-                        ImportTableDialog dialog = new ImportTableDialog(connection, tableName, getShownTypedColumns(), columnFamilies);
+                        ImportTableDialog dialog = new ImportTableDialog(
+                            connection, tableName, getColumnNameConverter(), getShownTypedColumns(), columnFamilies);
+
                         dialog.showDialog(topPanel);
                     }
                     catch (Exception ex) {
@@ -827,6 +863,101 @@ public class DesignerView {
                     populateColumnsTable(true);
                 }
             });
+
+        this.addConverterButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    clearError();
+
+                    CustomConverterDialog dialog = new CustomConverterDialog(null);
+                    if (dialog.showDialog(topPanel)) {
+                        ConvertersLoader.reload();
+
+                        reloadColumnTypes();
+                    }
+                }
+            });
+
+        this.editConverterButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    clearError();
+
+                    ColumnType columnType = getSelectedEditableColumnType();
+                    if (columnType != null) {
+                        CustomConverterDialog dialog = new CustomConverterDialog(columnType.getConverter());
+                        if (dialog.showDialog(topPanel)) {
+                            if (!columnType.getName().equals(dialog.getConverterName())) {
+                                ConvertersLoader.removeConverter(columnType.getName());
+                            }
+
+                            ConvertersLoader.reload();
+
+                            reloadColumnTypes();
+
+                            for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
+                                ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
+                                if (type.getName().equals(columnType.getName())) {
+                                    ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
+
+                                    type = ColumnType.fromName(type.getName());
+                                    columnsTable.setValueAt(type, row, 2);
+
+                                    updateColumnType(qualifier, type);
+                                }
+                            }
+
+                            if (lastQuery != null) {
+                                lastQuery.setStartKeyType(ColumnType.fromName(lastQuery.getStartKeyType().getName()));
+                                lastQuery.setEndKeyType(ColumnType.fromName(lastQuery.getEndKeyType().getName()));
+                                lastQuery.setWordType(ColumnType.fromName(lastQuery.getWordType().getName()));
+                            }
+                        }
+                    }
+                }
+            });
+
+        this.deleteConverterButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    clearError();
+
+                    ColumnType columnType = getSelectedEditableColumnType();
+                    if (columnType != null) {
+                        int decision = JOptionPane.showConfirmDialog(
+                            topPanel, String.format(
+                            "Are you sure you want to delete '%s' type?%sIt will be lost for good!", columnType.getName(), PathHelper.LINE_SEPARATOR),
+                            "Confirmation", JOptionPane.OK_CANCEL_OPTION);
+
+                        if (decision == JOptionPane.OK_OPTION) {
+                            ConvertersLoader.removeConverter(columnType.getName());
+
+                            reloadColumnTypes();
+
+                            for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
+                                ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
+                                if (type.getName().equals(columnType.getName())) {
+                                    ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
+
+                                    type = ColumnType.fromColumn(qualifier.getName());
+                                    columnsTable.setValueAt(type, row, 2);
+
+                                    updateColumnType(qualifier, type);
+                                }
+                            }
+
+                            if (lastQuery != null) {
+                                lastQuery.setStartKeyType(ColumnType.fromNameOrDefault(lastQuery.getStartKeyType().getName(), ColumnType.BinaryString));
+                                lastQuery.setEndKeyType(ColumnType.fromNameOrDefault(lastQuery.getEndKeyType().getName(), ColumnType.BinaryString));
+                                lastQuery.setWordType(ColumnType.fromNameOrDefault(lastQuery.getWordType().getName(), ColumnType.String));
+                            }
+                        }
+                    }
+                }
+            });
     }
     //endregion
 
@@ -842,7 +973,7 @@ public class DesignerView {
     /**
      * Gets the reference to the view.
      *
-     * @return A {@link javax.swing.JPanel} that contains the controls.
+     * @return A {@link JPanel} that contains the controls.
      */
     public JPanel getView() {
         return this.topPanel;
@@ -851,7 +982,7 @@ public class DesignerView {
     /**
      * Gets a reference to the class used to access the hbase.
      *
-     * @return A reference to the {@link hrider.hbase.Connection} class.
+     * @return A reference to the {@link Connection} class.
      */
     public Connection getConnection() {
         return this.connection;
@@ -919,7 +1050,7 @@ public class DesignerView {
      *
      * @param columnName The name of the column to look.
      * @param table      The table that should contain column.
-     * @return A reference to {@link javax.swing.table.TableColumn} if found or {@code null} otherwise.
+     * @return A reference to {@link TableColumn} if found or {@code null} otherwise.
      */
     private static TableColumn getColumn(String columnName, JTable table) {
         for (int i = 0 ; i < table.getColumnCount() ; i++) {
@@ -1041,6 +1172,14 @@ public class DesignerView {
                         fillComboBox(columnsFilter, clusterConfig.getColumnFilters(getSelectedTableName()));
                         setFilter(columnsFilter, currentFilter);
 
+                        String converterType = clusterConfig.getTableConfig(String.class, getSelectedTableName(), "nameConverter");
+                        if (converterType != null) {
+                            cmbColumnNameTypes.setSelectedItem(ColumnType.fromNameOrDefault(converterType, ColumnType.BinaryString));
+                        }
+                        else {
+                            cmbColumnNameTypes.setSelectedItem(ColumnType.BinaryString);
+                        }
+
                         populateColumnsTable(true);
                     }
                     else {
@@ -1062,6 +1201,7 @@ public class DesignerView {
                         checkAllButton.setEnabled(false);
                         uncheckAllButton.setEnabled(false);
                         refreshColumnsButton.setEnabled(false);
+                        cmbColumnNameTypes.setEnabled(false);
                     }
                 }
             });
@@ -1107,13 +1247,18 @@ public class DesignerView {
         this.columnsTable.getColumn("Show").setPreferredWidth(40);
         this.columnsTable.getColumn("Column Name").setPreferredWidth(110);
 
-        JComboBox comboBox = new JComboBox();
+        this.cmbColumnTypes = new WideComboBox();
 
-        for (ObjectType objectType : ObjectType.values()) {
-            comboBox.addItem(objectType);
+        for (ColumnType columnType : ColumnType.getTypes()) {
+            this.cmbColumnTypes.addItem(columnType);
         }
 
-        this.columnsTable.getColumn("Column Type").setCellEditor(new DefaultCellEditor(comboBox));
+        for (ColumnType columnType : ColumnType.getNameTypes()) {
+            this.cmbColumnNameTypes.addItem(columnType);
+        }
+
+        this.cmbColumnNameTypes.setSelectedItem(ColumnType.BinaryString);
+        this.columnsTable.getColumn("Column Type").setCellEditor(new DefaultCellEditor(this.cmbColumnTypes));
 
         this.columnsTable.getModel().addTableModelListener(
             new TableModelListener() {
@@ -1132,26 +1277,18 @@ public class DesignerView {
 
                         clusterConfig.setTableConfig(getSelectedTableName(), qualifier.getFullName(), "isShown", Boolean.toString(isShown));
 
-                        setRowsTableColumnVisible(qualifier.getFullName(), isShown);
+                        setRowsTableColumnVisible(qualifier, isShown);
                     }
                     else if ("Column Type".equals(columnName)) {
                         ColumnQualifier qualifier = (ColumnQualifier)model.getValueAt(e.getFirstRow(), 1);
-                        ObjectType type = (ObjectType)model.getValueAt(e.getFirstRow(), column);
+                        ColumnType type = (ColumnType)model.getValueAt(e.getFirstRow(), column);
 
-                        clusterConfig.setTableConfig(getSelectedTableName(), qualifier.getFullName(), type.toString());
+                        TypeConverter nameConverter = getColumnNameConverter();
 
-                        JTableModel.stopCellEditing(rowsTable);
+                        editConverterButton.setEnabled(type.isEditable() || nameConverter.isEditable());
+                        deleteConverterButton.setEnabled(type.isEditable() || nameConverter.isEditable());
 
-                        if (scanner != null) {
-                            try {
-                                scanner.updateColumnType(qualifier.getFullName(), type);
-                            }
-                            catch (Exception ex) {
-                                setError(String.format("The selected type '%s' does not match the data.", type), ex);
-                            }
-
-                            rowsTable.updateUI();
-                        }
+                        updateColumnType(qualifier, type);
                     }
                 }
             });
@@ -1166,6 +1303,23 @@ public class DesignerView {
                     if (row != -1 && column != -1) {
                         columnsTable.setToolTipText(String.valueOf(columnsTable.getValueAt(row, column)));
                     }
+                }
+            });
+
+        this.columnsTable.getSelectionModel().addListSelectionListener(
+            new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    boolean isEditable = getColumnNameConverter().isEditable();
+
+                    int row = columnsTable.getSelectedRow();
+                    if (row != -1) {
+                        ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
+                        isEditable |= type.isEditable();
+                    }
+
+                    editConverterButton.setEnabled(isEditable);
+                    deleteConverterButton.setEnabled(isEditable);
                 }
             });
     }
@@ -1326,6 +1480,8 @@ public class DesignerView {
                 this.checkAllButton.setEnabled(true);
                 this.uncheckAllButton.setEnabled(true);
                 this.refreshColumnsButton.setEnabled(true);
+                this.addConverterButton.setEnabled(true);
+                this.cmbColumnNameTypes.setEnabled(true);
             }
             else {
                 this.populateButton.setEnabled(false);
@@ -1335,6 +1491,8 @@ public class DesignerView {
                 this.checkAllButton.setEnabled(false);
                 this.uncheckAllButton.setEnabled(false);
                 this.refreshColumnsButton.setEnabled(false);
+                this.addConverterButton.setEnabled(false);
+                this.cmbColumnNameTypes.setEnabled(false);
             }
         }
         finally {
@@ -1344,7 +1502,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link hrider.ui.views.DesignerView#rowsNumberSpinner} control.
+     * in the {@link DesignerView#rowsNumberSpinner} control.
      *
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
      *                  {@link Direction#Forward} or {@link Direction#Backward}.
@@ -1355,7 +1513,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link hrider.ui.views.DesignerView#rowsNumberSpinner} control.
+     * in the {@link DesignerView#rowsNumberSpinner} control.
      *
      * @param offset    The first row to start loading from.
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
@@ -1373,7 +1531,7 @@ public class DesignerView {
             if (tableName != null) {
                 clearTable(rowsTable);
 
-                Map<String, ObjectType> columnTypes = getColumnTypes();
+                Map<String, ColumnType> columnTypes = getColumnTypes();
 
                 this.scanner.setColumnTypes(columnTypes);
                 this.scanner.setQuery(this.lastQuery);
@@ -1392,7 +1550,7 @@ public class DesignerView {
 
                 loadColumns(tableName, null);
                 loadRowsTableColumns(tableName);
-                loadRows(tableName, rows);
+                loadRows(rows);
 
                 this.enableDisablePagingButtons();
 
@@ -1431,21 +1589,20 @@ public class DesignerView {
     /**
      * Populates rows of the specified column. This method is used when the column which wasn't initially populated is checked.
      *
-     * @param tableName  The name of the table the column belongs to.
-     * @param columnName The name of the column which rows are need to be populated.
+     * @param qualifier The name of the column which rows are need to be populated.
      * @param rows       The data to populate.
      */
-    private void populateColumnOnRowsTable(String tableName, String columnName, Iterable<DataRow> rows) {
+    private void populateColumnOnRowsTable(ColumnQualifier qualifier, Iterable<DataRow> rows) {
 
         this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
             int rowIndex = 0;
-            int columnIndex = this.rowsTable.getColumnModel().getColumnIndex(columnName);
+            int columnIndex = this.rowsTable.getColumnModel().getColumnIndex(qualifier);
 
             for (DataRow row : rows) {
-                DataCell cell = row.getCell(columnName);
+                DataCell cell = row.getCell(qualifier);
                 if (cell == null) {
-                    cell = new DataCell(row, new ColumnQualifier(columnName), new TypedObject(getColumnType(tableName, columnName), null));
+                    cell = new DataCell(row, qualifier, new ConvertibleObject(getColumnType(qualifier.getFullName()), null));
                 }
 
                 if (rowIndex >= this.rowsTable.getRowCount()) {
@@ -1472,6 +1629,7 @@ public class DesignerView {
         try {
             if (this.scanner == null) {
                 this.scanner = connection.getScanner(tableName, null);
+                this.updateColumnNameConverter(getColumnNameConverter());
             }
 
             Filter filter;
@@ -1486,8 +1644,8 @@ public class DesignerView {
 
             if (row == null) {
                 this.scanner.setColumnTypes(
-                    new HashMap<String, ObjectType>() {{
-                        put(ColumnQualifier.KEY.getName(), ObjectType.String);
+                    new HashMap<String, ColumnType>() {{
+                        put(ColumnQualifier.KEY.getName(), ColumnType.String);
                     }});
 
                 row = this.scanner.getFirstRow();
@@ -1500,7 +1658,7 @@ public class DesignerView {
                     addColumnToColumnsTable(tableName, column, row);
                 }
 
-                setRowsTableColumnVisible(column.getFullName(), isColumnVisible && isShown(tableName, column.getFullName()));
+                setRowsTableColumnVisible(column, isColumnVisible && isShown(tableName, column.getFullName()));
             }
 
             this.columnsNumber.setText(String.format("%s of %s", this.columnsTableModel.getRowCount(), columns.size()));
@@ -1518,7 +1676,7 @@ public class DesignerView {
      * @param row       The row that might contain column type information.
      */
     private void addColumnToColumnsTable(String tableName, ColumnQualifier qualifier, DataRow row) {
-        ObjectType columnType = getColumnType(tableName, qualifier.getFullName());
+        ColumnType columnType = getSavedColumnType(tableName, qualifier.getFullName());
 
         if (columnType == null && row != null) {
             DataCell cell = row.getCell(qualifier);
@@ -1528,7 +1686,7 @@ public class DesignerView {
         }
 
         if (columnType == null) {
-            columnType = ObjectType.fromColumn(qualifier.getFullName());
+            columnType = ColumnType.fromColumn(qualifier.getFullName());
         }
 
         boolean isShown = isShown(tableName, qualifier.getFullName());
@@ -1548,7 +1706,7 @@ public class DesignerView {
 
             boolean isShown = (Boolean)this.columnsTableModel.getValueAt(i, 0);
             if (isShown) {
-                addColumnToRowsTable(tableName, qualifier.getFullName(), j++);
+                addColumnToRowsTable(tableName, qualifier, j++);
             }
         }
     }
@@ -1556,36 +1714,36 @@ public class DesignerView {
     /**
      * Shows or hides a column in rows table.
      *
-     * @param columnName The name of the column.
-     * @param isVisible  Indicates if the columns should be shown or hidden.
+     * @param qualifier The name of the column.
+     * @param isVisible Indicates if the columns should be shown or hidden.
      */
-    private void setRowsTableColumnVisible(String columnName, boolean isVisible) {
+    private void setRowsTableColumnVisible(ColumnQualifier qualifier, boolean isVisible) {
         if (this.rowsTable.getRowCount() > 0) {
             if (isVisible) {
-                TableColumn tableColumn = this.rowsTableRemovedColumns.get(columnName);
+                TableColumn tableColumn = this.rowsTableRemovedColumns.get(qualifier);
                 if (tableColumn != null) {
                     this.rowsTable.addColumn(tableColumn);
-                    this.rowsTableRemovedColumns.remove(columnName);
+                    this.rowsTableRemovedColumns.remove(qualifier);
 
-                    this.rowsTable.moveColumn(this.rowsTable.getColumnCount() - 1, getColumnIndex(columnName));
+                    this.rowsTable.moveColumn(this.rowsTable.getColumnCount() - 1, getColumnIndex(qualifier.getFullName()));
                 }
                 else {
-                    if (getColumn(columnName, this.rowsTable) == null) {
-                        addColumnToRowsTable(getSelectedTableName(), columnName, this.rowsTable.getColumnCount());
+                    if (getColumn(qualifier.getFullName(), this.rowsTable) == null) {
+                        addColumnToRowsTable(getSelectedTableName(), qualifier, this.rowsTable.getColumnCount());
 
                         if (this.scanner != null) {
-                            populateColumnOnRowsTable(getSelectedTableName(), columnName, this.scanner.current());
+                            populateColumnOnRowsTable(qualifier, this.scanner.current());
                         }
 
-                        this.rowsTable.moveColumn(this.rowsTable.getColumnCount() - 1, getColumnIndex(columnName));
+                        this.rowsTable.moveColumn(this.rowsTable.getColumnCount() - 1, getColumnIndex(qualifier.getFullName()));
                     }
                 }
             }
             else {
-                TableColumn tableColumn = getColumn(columnName, this.rowsTable);
+                TableColumn tableColumn = getColumn(qualifier.getFullName(), this.rowsTable);
                 if (tableColumn != null) {
                     this.rowsTable.removeColumn(tableColumn);
-                    this.rowsTableRemovedColumns.put(columnName, tableColumn);
+                    this.rowsTableRemovedColumns.put(qualifier, tableColumn);
                 }
             }
         }
@@ -1595,17 +1753,17 @@ public class DesignerView {
      * Adds a single column to the rows table.
      *
      * @param tableName   The name of the table the column belongs to.
-     * @param columnName  The name of the column to add.
+     * @param qualifier   The name of the column to add.
      * @param columnIndex The index the column should be added at.
      */
-    private void addColumnToRowsTable(String tableName, String columnName, int columnIndex) {
+    private void addColumnToRowsTable(String tableName, ColumnQualifier qualifier, int columnIndex) {
         TableColumn tableColumn = new TableColumn(columnIndex);
-        tableColumn.setIdentifier(columnName);
-        tableColumn.setHeaderValue(columnName);
-        tableColumn.setCellEditor(new JCellEditor(this.changeTracker, !ColumnQualifier.isKey(columnName)));
+        tableColumn.setIdentifier(qualifier);
+        tableColumn.setHeaderValue(qualifier);
+        tableColumn.setCellEditor(new JCellEditor(this.changeTracker, !ColumnQualifier.isKey(qualifier.getFullName())));
 
         try {
-            Integer width = this.clusterConfig.getTableConfig(Integer.class, tableName, columnName, "size");
+            Integer width = this.clusterConfig.getTableConfig(Integer.class, tableName, qualifier.getFullName(), "size");
             if (width != null) {
                 tableColumn.setPreferredWidth(width);
             }
@@ -1614,7 +1772,7 @@ public class DesignerView {
         }
 
         this.rowsTable.addColumn(tableColumn);
-        this.rowsTableModel.addColumn(columnName);
+        this.rowsTableModel.addColumn(qualifier);
     }
 
     /**
@@ -1622,8 +1780,10 @@ public class DesignerView {
      *
      * @param rows A list of rows to add.
      */
-    private void loadRows(String tableName, Iterable<DataRow> rows) {
+    private void loadRows(Iterable<DataRow> rows) {
         clearRows(this.rowsTable);
+
+        TypeConverter nameConverter = getColumnNameConverter();
 
         for (DataRow row : rows) {
             Collection<Object> values = new ArrayList<Object>(rowsTable.getColumnCount());
@@ -1631,7 +1791,7 @@ public class DesignerView {
                 String columnName = rowsTable.getColumnName(i);
                 DataCell cell = row.getCell(columnName);
                 if (cell == null) {
-                    cell = new DataCell(row, new ColumnQualifier(columnName), new TypedObject(getColumnType(tableName, columnName), null));
+                    cell = new DataCell(row, new ColumnQualifier(columnName, nameConverter), new ConvertibleObject(getColumnType(columnName), null));
                 }
                 values.add(cell);
             }
@@ -1680,6 +1840,7 @@ public class DesignerView {
     /**
      * Pastes rows from the clipboard into the rows table and into the hbase table that the rows table represents.
      */
+    @SuppressWarnings("OverlyNestedMethod")
     private void pasteRowsFromClipboard() {
         this.pasteRowButton.setEnabled(false);
 
@@ -1699,7 +1860,7 @@ public class DesignerView {
                                 // Update the column types according to the added row.
                                 for (DataCell cell : row.getCells()) {
                                     this.clusterConfig.setTableConfig(
-                                        getSelectedTableName(), cell.getColumn().getFullName(), cell.getTypedValue().getType().toString());
+                                        getSelectedTableName(), cell.getColumn().getFullName(), cell.getType().toString());
                                 }
 
                                 populateColumnsTable(true, row);
@@ -1715,8 +1876,8 @@ public class DesignerView {
                                 sortedRows, new Comparator<DataRow>() {
                                 @Override
                                 public int compare(DataRow o1, DataRow o2) {
-                                    byte[] a1 = o1.getKey().toByteArray();
-                                    byte[] a2 = o2.getKey().toByteArray();
+                                    byte[] a1 = o1.getKey().getValue();
+                                    byte[] a2 = o2.getKey().getValue();
 
                                     if (a1.length != a2.length) {
                                         return a1.length - a2.length;
@@ -1750,6 +1911,7 @@ public class DesignerView {
     /**
      * Pastes a table from the clipboard into the application and an hbase cluster.
      */
+    @SuppressWarnings("OverlyNestedMethod")
     private void pasteTableFromClipboard() {
         this.pasteTableButton.setEnabled(false);
 
@@ -1806,11 +1968,11 @@ public class DesignerView {
      *
      * @return A column names to column types map.
      */
-    private Map<String, ObjectType> getColumnTypes() {
-        Map<String, ObjectType> columnTypes = new HashMap<String, ObjectType>();
+    private Map<String, ColumnType> getColumnTypes() {
+        Map<String, ColumnType> columnTypes = new HashMap<String, ColumnType>();
         for (int i = 0 ; i < columnsTable.getRowCount() ; i++) {
             ColumnQualifier qualifier = (ColumnQualifier)columnsTableModel.getValueAt(i, 1);
-            columnTypes.put(qualifier.getFullName(), (ObjectType)columnsTableModel.getValueAt(i, 2));
+            columnTypes.put(qualifier.getFullName(), (ColumnType)columnsTableModel.getValueAt(i, 2));
         }
         return columnTypes;
     }
@@ -1827,7 +1989,7 @@ public class DesignerView {
             if (isShown) {
                 typedColumns.add(
                     new TypedColumn(
-                        (ColumnQualifier)this.columnsTableModel.getValueAt(i, 1), (ObjectType)this.columnsTableModel.getValueAt(i, 2)));
+                        (ColumnQualifier)this.columnsTableModel.getValueAt(i, 1), (ColumnType)this.columnsTableModel.getValueAt(i, 2)));
             }
         }
         return typedColumns;
@@ -1903,27 +2065,69 @@ public class DesignerView {
     }
 
     /**
-     * Gets a list of populated tables.
-     *
-     * @return A list of tables.
-     */
-    private List<String> getTables() {
-        List<String> tables = new ArrayList<String>();
-        for (int i = 0 ; i < this.tablesListModel.size() ; i++) {
-            tables.add(this.tablesListModel.getElementAt(i).toString());
-        }
-        return tables;
-    }
-
-    /**
      * Gets the type of the column from the configuration.
      *
      * @param tableName  The name of the table that contains the column.
      * @param columnName The name of the column.
      * @return The column type.
      */
-    private ObjectType getColumnType(String tableName, String columnName) {
-        return this.clusterConfig.getTableConfig(ObjectType.class, tableName, columnName);
+    private ColumnType getSavedColumnType(String tableName, String columnName) {
+        String columnType = this.clusterConfig.getTableConfig(String.class, tableName, columnName);
+        if (columnType != null) {
+            return ColumnType.fromName(columnType);
+        }
+        return null;
+    }
+
+    /**
+     * Gets the type of the column from the columns table.
+     *
+     * @param columnName The name of the column.
+     * @return The columns type
+     */
+    private ColumnType getColumnType(String columnName) {
+        for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
+            ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
+            if (qualifier.getFullName().endsWith(columnName)) {
+                return (ColumnType)columnsTable.getValueAt(row, 2);
+            }
+        }
+        return getSavedColumnType(getSelectedTableName(), columnName);
+    }
+
+    /**
+     * Gets type converter for the column names.
+     *
+     * @return A selected type converter.
+     */
+    private TypeConverter getColumnNameConverter() {
+        ColumnType type = (ColumnType)this.cmbColumnNameTypes.getSelectedItem();
+        if (type != null) {
+            return type.getConverter();
+        }
+        return ColumnType.BinaryString.getConverter();
+    }
+
+    /**
+     * Gets a column type that is currently selected and can be edited. The column type of the column name gets higher priority.
+     *
+     * @return A selected and editable column type if exists or null otherwise.
+     */
+    private ColumnType getSelectedEditableColumnType() {
+        ColumnType type = (ColumnType)this.cmbColumnNameTypes.getSelectedItem();
+        if (type != null && type.isEditable()) {
+            return type;
+        }
+
+        int row = columnsTable.getSelectedRow();
+        if (row != -1) {
+            type = (ColumnType)columnsTable.getValueAt(row, 2);
+            if (type.isEditable()) {
+                return type;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -1936,6 +2140,89 @@ public class DesignerView {
     private boolean isShown(String tableName, String columnName) {
         Boolean isShown = this.clusterConfig.getTableConfig(Boolean.class, tableName, columnName, "isShown");
         return isShown == null || isShown;
+    }
+
+    /**
+     * Reloads column types.
+     */
+    private void reloadColumnTypes() {
+        ColumnType selectedNameType = (ColumnType)this.cmbColumnNameTypes.getSelectedItem();
+
+        this.cmbColumnTypes.removeAllItems();
+        this.cmbColumnNameTypes.removeAllItems();
+
+        for (ColumnType columnType : ColumnType.getTypes()) {
+            this.cmbColumnTypes.addItem(columnType);
+        }
+
+        for (ColumnType columnType : ColumnType.getNameTypes()) {
+            this.cmbColumnNameTypes.addItem(columnType);
+        }
+
+        if (selectedNameType != null) {
+            this.cmbColumnNameTypes.setSelectedItem(selectedNameType);
+        }
+    }
+
+    /**
+     * Updates the type of the specified column including already loaded values to the rows table.
+     *
+     * @param qualifier The column to update.
+     * @param type      The new column type.
+     */
+    private void updateColumnType(ColumnQualifier qualifier, ColumnType type) {
+        clusterConfig.setTableConfig(getSelectedTableName(), qualifier.getFullName(), type.toString());
+
+        JTableModel.stopCellEditing(rowsTable);
+
+        if (scanner != null) {
+            try {
+                scanner.updateColumnType(qualifier.getFullName(), type);
+            }
+            catch (Exception ex) {
+                setError(String.format("The selected type '%s' does not match the data.", type), ex);
+            }
+
+            rowsTable.updateUI();
+        }
+    }
+
+    /**
+     * Updates converter for the column name.
+     *
+     * @param converter The new column name converter.
+     */
+    private void updateColumnNameConverter(TypeConverter converter) {
+        for (int col = 0 ; col < rowsTable.getColumnCount() ; col++) {
+            TableColumn column = rowsTable.getColumnModel().getColumn(col);
+
+            ColumnQualifier qualifier = (ColumnQualifier)column.getIdentifier();
+            qualifier.setNameConverter(converter);
+        }
+
+        rowsTable.updateUI();
+
+        for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
+            ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
+            qualifier.setNameConverter(converter);
+        }
+
+        if (scanner != null) {
+            scanner.updateColumnNameConverter(converter);
+        }
+
+        columnsTable.updateUI();
+
+        if (!rowsTableRemovedColumns.isEmpty()) {
+            Map<ColumnQualifier, TableColumn> removedColumns = new HashMap<ColumnQualifier, TableColumn>();
+            for (TableColumn column : rowsTableRemovedColumns.values()) {
+                ColumnQualifier qualifier = (ColumnQualifier)column.getIdentifier();
+                qualifier.setNameConverter(converter);
+
+                removedColumns.put(qualifier, column);
+            }
+            rowsTableRemovedColumns = removedColumns;
+        }
     }
 
     /**
@@ -2241,6 +2528,32 @@ public class DesignerView {
         columnsFilter.setMinimumSize(new Dimension(50, 20));
         columnsFilter.setPreferredSize(new Dimension(-1, -1));
         toolBar3.add(columnsFilter);
+        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
+        toolBar3.add(toolBar$Separator3);
+        scanButton = new JButton();
+        scanButton.setEnabled(false);
+        scanButton.setIcon(new ImageIcon(getClass().getResource("/images/search.png")));
+        scanButton.setMinimumSize(new Dimension(24, 24));
+        scanButton.setPreferredSize(new Dimension(24, 24));
+        scanButton.setText("");
+        scanButton.setToolTipText("Perform an advanced scan...");
+        toolBar3.add(scanButton);
+        jumpButton = new JButton();
+        jumpButton.setEnabled(false);
+        jumpButton.setIcon(new ImageIcon(getClass().getResource("/images/jump.png")));
+        jumpButton.setMinimumSize(new Dimension(24, 24));
+        jumpButton.setPreferredSize(new Dimension(24, 24));
+        jumpButton.setText("");
+        jumpButton.setToolTipText("Jump to a specific row number");
+        toolBar3.add(jumpButton);
+        populateButton = new JButton();
+        populateButton.setEnabled(false);
+        populateButton.setIcon(new ImageIcon(getClass().getResource("/images/populate.png")));
+        populateButton.setMinimumSize(new Dimension(24, 24));
+        populateButton.setPreferredSize(new Dimension(24, 24));
+        populateButton.setText("");
+        populateButton.setToolTipText("Populate rows for the selected columns");
+        toolBar3.add(populateButton);
         final JScrollPane scrollPane2 = new JScrollPane();
         scrollPane2.setDoubleBuffered(true);
         panel5.add(
@@ -2251,7 +2564,7 @@ public class DesignerView {
         columnsTable.setAutoResizeMode(1);
         scrollPane2.setViewportView(columnsTable);
         final JPanel panel7 = new JPanel();
-        panel7.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel7.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         panel5.add(
             panel7, new GridConstraints(
             2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
@@ -2261,12 +2574,12 @@ public class DesignerView {
         toolBar4.setFloatable(false);
         panel7.add(
             toolBar4, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
-            new Dimension(-1, 20), null, 0, false));
+            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+            null, new Dimension(-1, 20), null, 0, false));
         checkAllButton = new JButton();
         checkAllButton.setEnabled(false);
         checkAllButton.setIcon(new ImageIcon(getClass().getResource("/images/select.png")));
-        checkAllButton.setMaximumSize(new Dimension(27, 27));
+        checkAllButton.setMaximumSize(new Dimension(24, 24));
         checkAllButton.setMinimumSize(new Dimension(24, 24));
         checkAllButton.setPreferredSize(new Dimension(24, 24));
         checkAllButton.setText("");
@@ -2275,43 +2588,50 @@ public class DesignerView {
         uncheckAllButton = new JButton();
         uncheckAllButton.setEnabled(false);
         uncheckAllButton.setIcon(new ImageIcon(getClass().getResource("/images/unselect.png")));
-        uncheckAllButton.setMaximumSize(new Dimension(27, 27));
+        uncheckAllButton.setMaximumSize(new Dimension(24, 24));
         uncheckAllButton.setMinimumSize(new Dimension(24, 24));
         uncheckAllButton.setPreferredSize(new Dimension(24, 24));
         uncheckAllButton.setText("");
         uncheckAllButton.setToolTipText("Unselect all columns");
         toolBar4.add(uncheckAllButton);
-        final JToolBar toolBar5 = new JToolBar();
-        toolBar5.setBorderPainted(false);
-        toolBar5.setFloatable(false);
-        panel7.add(
-            toolBar5, new GridConstraints(
-            0, 1, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
-            new Dimension(-1, 20), null, 0, false));
-        scanButton = new JButton();
-        scanButton.setEnabled(false);
-        scanButton.setIcon(new ImageIcon(getClass().getResource("/images/search.png")));
-        scanButton.setMinimumSize(new Dimension(24, 24));
-        scanButton.setPreferredSize(new Dimension(24, 24));
-        scanButton.setText("");
-        scanButton.setToolTipText("Perform an advanced scan...");
-        toolBar5.add(scanButton);
-        jumpButton = new JButton();
-        jumpButton.setEnabled(false);
-        jumpButton.setIcon(new ImageIcon(getClass().getResource("/images/jump.png")));
-        jumpButton.setMinimumSize(new Dimension(24, 24));
-        jumpButton.setPreferredSize(new Dimension(24, 24));
-        jumpButton.setText("");
-        jumpButton.setToolTipText("Jump to a specific row number");
-        toolBar5.add(jumpButton);
-        populateButton = new JButton();
-        populateButton.setEnabled(false);
-        populateButton.setIcon(new ImageIcon(getClass().getResource("/images/populate.png")));
-        populateButton.setMinimumSize(new Dimension(24, 24));
-        populateButton.setPreferredSize(new Dimension(24, 24));
-        populateButton.setText("");
-        populateButton.setToolTipText("Populate rows for the selected columns");
-        toolBar5.add(populateButton);
+        final JToolBar.Separator toolBar$Separator4 = new JToolBar.Separator();
+        toolBar4.add(toolBar$Separator4);
+        cmbColumnNameTypes = new WideComboBox();
+        cmbColumnNameTypes.setEnabled(false);
+        cmbColumnNameTypes.setMaximumSize(new Dimension(120, 24));
+        cmbColumnNameTypes.setMinimumSize(new Dimension(50, 24));
+        cmbColumnNameTypes.setPreferredSize(new Dimension(-1, 24));
+        cmbColumnNameTypes.setToolTipText("Choose type to be used to convert column name");
+        toolBar4.add(cmbColumnNameTypes);
+        final JToolBar.Separator toolBar$Separator5 = new JToolBar.Separator();
+        toolBar4.add(toolBar$Separator5);
+        addConverterButton = new JButton();
+        addConverterButton.setEnabled(false);
+        addConverterButton.setIcon(new ImageIcon(getClass().getResource("/images/addConverter.png")));
+        addConverterButton.setMaximumSize(new Dimension(24, 24));
+        addConverterButton.setMinimumSize(new Dimension(24, 24));
+        addConverterButton.setPreferredSize(new Dimension(24, 24));
+        addConverterButton.setText("");
+        addConverterButton.setToolTipText("Add custom type converter");
+        toolBar4.add(addConverterButton);
+        editConverterButton = new JButton();
+        editConverterButton.setEnabled(false);
+        editConverterButton.setIcon(new ImageIcon(getClass().getResource("/images/editConverter.png")));
+        editConverterButton.setMaximumSize(new Dimension(24, 24));
+        editConverterButton.setMinimumSize(new Dimension(24, 24));
+        editConverterButton.setPreferredSize(new Dimension(24, 24));
+        editConverterButton.setText("");
+        editConverterButton.setToolTipText("Edit custom type converter");
+        toolBar4.add(editConverterButton);
+        deleteConverterButton = new JButton();
+        deleteConverterButton.setEnabled(false);
+        deleteConverterButton.setIcon(new ImageIcon(getClass().getResource("/images/deleteConverter.png")));
+        deleteConverterButton.setMaximumSize(new Dimension(24, 24));
+        deleteConverterButton.setMinimumSize(new Dimension(24, 24));
+        deleteConverterButton.setPreferredSize(new Dimension(24, 24));
+        deleteConverterButton.setText("");
+        deleteConverterButton.setToolTipText("Delete custom type converter");
+        toolBar4.add(deleteConverterButton);
         final JPanel panel8 = new JPanel();
         panel8.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel5.add(
@@ -2354,11 +2674,11 @@ public class DesignerView {
             label3, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
-        final JToolBar toolBar6 = new JToolBar();
-        toolBar6.setBorderPainted(false);
-        toolBar6.setFloatable(false);
+        final JToolBar toolBar5 = new JToolBar();
+        toolBar5.setBorderPainted(false);
+        toolBar5.setFloatable(false);
         panel10.add(
-            toolBar6, new GridConstraints(
+            toolBar5, new GridConstraints(
             0, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
             new Dimension(-1, 20), null, 0, false));
         openInViewerButton = new JButton();
@@ -2368,7 +2688,7 @@ public class DesignerView {
         openInViewerButton.setPreferredSize(new Dimension(24, 24));
         openInViewerButton.setText("");
         openInViewerButton.setToolTipText("Open rows in external viewer");
-        toolBar6.add(openInViewerButton);
+        toolBar5.add(openInViewerButton);
         addRowButton = new JButton();
         addRowButton.setEnabled(false);
         addRowButton.setIcon(new ImageIcon(getClass().getResource("/images/add.png")));
@@ -2376,7 +2696,7 @@ public class DesignerView {
         addRowButton.setPreferredSize(new Dimension(24, 24));
         addRowButton.setText("");
         addRowButton.setToolTipText("Create a new row");
-        toolBar6.add(addRowButton);
+        toolBar5.add(addRowButton);
         deleteRowButton = new JButton();
         deleteRowButton.setEnabled(false);
         deleteRowButton.setIcon(new ImageIcon(getClass().getResource("/images/delete.png")));
@@ -2384,7 +2704,7 @@ public class DesignerView {
         deleteRowButton.setPreferredSize(new Dimension(24, 24));
         deleteRowButton.setText("");
         deleteRowButton.setToolTipText("Delete selected rows");
-        toolBar6.add(deleteRowButton);
+        toolBar5.add(deleteRowButton);
         copyRowButton = new JButton();
         copyRowButton.setEnabled(false);
         copyRowButton.setIcon(new ImageIcon(getClass().getResource("/images/copy.png")));
@@ -2393,7 +2713,7 @@ public class DesignerView {
         copyRowButton.setPreferredSize(new Dimension(24, 24));
         copyRowButton.setText("");
         copyRowButton.setToolTipText("Copy selected rows to the clipboard");
-        toolBar6.add(copyRowButton);
+        toolBar5.add(copyRowButton);
         pasteRowButton = new JButton();
         pasteRowButton.setEnabled(false);
         pasteRowButton.setIcon(new ImageIcon(getClass().getResource("/images/paste.png")));
@@ -2402,7 +2722,7 @@ public class DesignerView {
         pasteRowButton.setPreferredSize(new Dimension(24, 24));
         pasteRowButton.setText("");
         pasteRowButton.setToolTipText("Paste rows from the clipboard");
-        toolBar6.add(pasteRowButton);
+        toolBar5.add(pasteRowButton);
         updateRowButton = new JButton();
         updateRowButton.setEnabled(false);
         updateRowButton.setIcon(new ImageIcon(getClass().getResource("/images/save.png")));
@@ -2410,12 +2730,12 @@ public class DesignerView {
         updateRowButton.setPreferredSize(new Dimension(24, 24));
         updateRowButton.setText("");
         updateRowButton.setToolTipText("Save all modified rows to the hbase");
-        toolBar6.add(updateRowButton);
-        final JToolBar toolBar7 = new JToolBar();
-        toolBar7.setBorderPainted(false);
-        toolBar7.setFloatable(false);
+        toolBar5.add(updateRowButton);
+        final JToolBar toolBar6 = new JToolBar();
+        toolBar6.setBorderPainted(false);
+        toolBar6.setFloatable(false);
         panel10.add(
-            toolBar7, new GridConstraints(
+            toolBar6, new GridConstraints(
             0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
             new Dimension(-1, 20), null, 0, false));
         rowsNumberSpinner = new JSpinner();
@@ -2423,24 +2743,24 @@ public class DesignerView {
         rowsNumberSpinner.setEnabled(true);
         rowsNumberSpinner.setMinimumSize(new Dimension(45, 24));
         rowsNumberSpinner.setPreferredSize(new Dimension(60, 24));
-        toolBar7.add(rowsNumberSpinner);
-        final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator3);
+        toolBar6.add(rowsNumberSpinner);
+        final JToolBar.Separator toolBar$Separator6 = new JToolBar.Separator();
+        toolBar6.add(toolBar$Separator6);
         visibleRowsLabel = new JLabel();
         visibleRowsLabel.setText("?");
-        toolBar7.add(visibleRowsLabel);
-        final JToolBar.Separator toolBar$Separator4 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator4);
+        toolBar6.add(visibleRowsLabel);
+        final JToolBar.Separator toolBar$Separator7 = new JToolBar.Separator();
+        toolBar6.add(toolBar$Separator7);
         final JLabel label4 = new JLabel();
         label4.setText("of");
-        toolBar7.add(label4);
-        final JToolBar.Separator toolBar$Separator5 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator5);
+        toolBar6.add(label4);
+        final JToolBar.Separator toolBar$Separator8 = new JToolBar.Separator();
+        toolBar6.add(toolBar$Separator8);
         rowsNumberLabel = new JLabel();
         rowsNumberLabel.setText("?");
-        toolBar7.add(rowsNumberLabel);
-        final JToolBar.Separator toolBar$Separator6 = new JToolBar.Separator();
-        toolBar7.add(toolBar$Separator6);
+        toolBar6.add(rowsNumberLabel);
+        final JToolBar.Separator toolBar$Separator9 = new JToolBar.Separator();
+        toolBar6.add(toolBar$Separator9);
         showPrevPageButton = new JButton();
         showPrevPageButton.setEnabled(false);
         showPrevPageButton.setIcon(new ImageIcon(getClass().getResource("/images/prev.png")));
@@ -2449,7 +2769,7 @@ public class DesignerView {
         showPrevPageButton.setPreferredSize(new Dimension(24, 24));
         showPrevPageButton.setText("");
         showPrevPageButton.setToolTipText("Go to the prvious page");
-        toolBar7.add(showPrevPageButton);
+        toolBar6.add(showPrevPageButton);
         showNextPageButton = new JButton();
         showNextPageButton.setEnabled(false);
         showNextPageButton.setIcon(new ImageIcon(getClass().getResource("/images/next.png")));
@@ -2458,7 +2778,7 @@ public class DesignerView {
         showNextPageButton.setPreferredSize(new Dimension(24, 24));
         showNextPageButton.setText("");
         showNextPageButton.setToolTipText("Go to the next page");
-        toolBar7.add(showNextPageButton);
+        toolBar6.add(showNextPageButton);
         final JScrollPane scrollPane3 = new JScrollPane();
         panel9.add(
             scrollPane3, new GridConstraints(

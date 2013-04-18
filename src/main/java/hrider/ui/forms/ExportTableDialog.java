@@ -5,8 +5,8 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import hrider.config.GlobalConfig;
 import hrider.data.ColumnQualifier;
+import hrider.data.ColumnType;
 import hrider.data.DataRow;
-import hrider.data.ObjectType;
 import hrider.data.TypedColumn;
 import hrider.export.FileExporter;
 import hrider.hbase.*;
@@ -90,7 +90,7 @@ public class ExportTableDialog extends JDialog {
                         try {
                             Collection<TypedColumn> columns = new ArrayList<TypedColumn>();
                             for (ColumnQualifier column : scanner.getColumns(100)) {
-                                columns.add(new TypedColumn(column, ObjectType.String));
+                                columns.add(new TypedColumn(column, ColumnType.String));
                             }
 
                             ScanDialog dialog = new ScanDialog(null, columns);
