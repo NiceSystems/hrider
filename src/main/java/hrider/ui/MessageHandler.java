@@ -1,5 +1,7 @@
 package hrider.ui;
 
+import hrider.io.Log;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -26,6 +28,8 @@ import java.util.Collection;
  */
 public class MessageHandler {
 
+    private final static Log logger = Log.getLogger(MessageHandler.class);
+
     /**
      * A list of registered listeners.
      */
@@ -45,6 +49,8 @@ public class MessageHandler {
      * @param ex      The exception.
      */
     public static void addError(String message, Exception ex) {
+        logger.error(ex, message);
+
         for (MessageHandlerListener listener : listeners) {
             listener.onError(message, ex);
         }
@@ -57,6 +63,8 @@ public class MessageHandler {
      * @param message The message to report.
      */
     public static void addInfo(String message) {
+        logger.info(message);
+
         for (MessageHandlerListener listener : listeners) {
             listener.onInfo(message);
         }

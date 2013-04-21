@@ -4,6 +4,7 @@ import com.michaelbaranov.microba.calendar.DatePicker;
 import hrider.config.GlobalConfig;
 import hrider.data.ColumnType;
 import hrider.data.DataCell;
+import hrider.io.Log;
 import hrider.ui.ChangeTracker;
 import hrider.ui.controls.json.JsonEditor;
 import hrider.ui.controls.xml.XmlEditor;
@@ -40,6 +41,7 @@ import java.util.Locale;
 public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
 
     //region Constants
+    private static final Log  logger           = Log.getLogger(JCellEditor.class);
     private static final long serialVersionUID = -2190137522499893284L;
     //endregion
 
@@ -198,7 +200,8 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
                         Date date = df.parse(this.cell.getValue());
                         this.dateEditor.setDate(date);
                     }
-                    catch (Exception ignored) {
+                    catch (Exception e) {
+                        logger.error(e, "Failed to convert value to Date.", value);
                     }
                 }
                 break;

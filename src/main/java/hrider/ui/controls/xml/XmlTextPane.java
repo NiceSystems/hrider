@@ -2,6 +2,7 @@ package hrider.ui.controls.xml;
 
 import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
+import hrider.io.Log;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -13,7 +14,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.io.Writer;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -38,7 +38,9 @@ import java.io.Writer;
 public class XmlTextPane extends JTextPane {
 
     //region Constants
+    private static final Log  logger           = Log.getLogger(XmlTextPane.class);
     private static final long serialVersionUID = 6270183148379328084L;
+    private static final int  LINE_WIDTH       = 500;
     //endregion
 
     //region Constructor
@@ -99,16 +101,17 @@ public class XmlTextPane extends JTextPane {
             OutputFormat format = new OutputFormat(document);
             format.setIndenting(true);
             format.setIndent(4);
-            format.setLineWidth(500);
+            format.setLineWidth(LINE_WIDTH);
 
-            Writer out = new StringWriter();
+            StringWriter out = new StringWriter();
 
             XMLSerializer serializer = new XMLSerializer(out, format);
             serializer.serialize(document);
 
             return out.toString();
         }
-        catch (Exception ignore) {
+        catch (Exception e) {
+            logger.error(e, "Failed to format XML '%s'.", xml);
             return xml;
         }
     }

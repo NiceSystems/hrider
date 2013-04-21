@@ -1,9 +1,10 @@
 package hrider.data;
 
 import hrider.converters.TypeConverter;
-import org.apache.hadoop.hbase.util.Bytes;
+import hrider.io.Log;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -32,6 +33,7 @@ public class ColumnQualifier implements Serializable {
     //endregion
 
     //region Variables
+    private static final Log  logger           = Log.getLogger(ColumnQualifier.class);
     private static final long serialVersionUID = 7851349292786398645L;
 
     private byte[]        name;
@@ -60,7 +62,8 @@ public class ColumnQualifier implements Serializable {
         try {
             return this.nameConverter.toString(this.name);
         }
-        catch (Exception ignore) {
+        catch (Exception e) {
+            logger.error(e, "Failed to convert byte array '%s' to string using '%s' converter.", Arrays.toString(this.name), this.nameConverter.getName());
             return ColumnType.BinaryString.toString(this.name);
         }
     }
