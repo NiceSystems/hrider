@@ -49,7 +49,9 @@ public class MessageHandler {
      * @param ex      The exception.
      */
     public static void addError(String message, Exception ex) {
-        logger.error(ex, message);
+        if (message != null && !message.isEmpty()) {
+            logger.error(ex, message);
+        }
 
         for (MessageHandlerListener listener : listeners) {
             listener.onError(message, ex);
@@ -63,7 +65,9 @@ public class MessageHandler {
      * @param message The message to report.
      */
     public static void addInfo(String message) {
-        logger.info(message);
+        if (message != null && !message.isEmpty()) {
+            logger.info(message);
+        }
 
         for (MessageHandlerListener listener : listeners) {
             listener.onInfo(message);

@@ -125,7 +125,7 @@ public class ColumnType implements Serializable {
      * @return The type of the column if found or a {@link ColumnType#String} as a default.
      */
     public static ColumnType fromColumn(String column) {
-        if ("timestamp".equalsIgnoreCase(column)) {
+        if (column.contains("timestamp")) {
             return DateAsLong;
         }
         if ("key".equalsIgnoreCase(column)) {
