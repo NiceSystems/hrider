@@ -1,5 +1,6 @@
 package hrider.config;
 
+import hrider.io.Log;
 import hrider.reflection.Clazz;
 
 import java.io.*;
@@ -28,9 +29,12 @@ import java.util.Properties;
  *          The base class for all configuration classes that are based on files represented as properties.
  *          This class also supports dynamic update of the configuration data meaning that a file is tracked for changes.
  */
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public abstract class PropertiesConfig {
 
     //region Variables
+    private final static Log logger = Log.getLogger(PropertiesConfig.class);
+
     private Properties properties;
     private File       file;
     //endregion
@@ -59,7 +63,7 @@ public abstract class PropertiesConfig {
             loadSystemProperties();
         }
         catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e, "Failed to load properties from the file '%s'", name);
         }
     }
     //endregion
@@ -107,6 +111,7 @@ public abstract class PropertiesConfig {
      * @param <T>          The type of the value.
      * @return A value of the requested property.
      */
+    @SuppressWarnings("unchecked")
     public <T> T get(Class<T> clazz, String name, String defaultValue) {
         String value = this.properties.getProperty(name, defaultValue);
         if (value != null && !value.isEmpty()) {
@@ -178,7 +183,7 @@ public abstract class PropertiesConfig {
         return new File("config/" + name + ".properties");
     }
 
-    private void loadProperties(File file) throws IOException {
+    private void loadProperties(File file) throws IOException, FileNotFoundException {
         if (file != null) {
             InputStream stream = null;
             try {

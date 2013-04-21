@@ -36,6 +36,7 @@ public class Clipboard {
 
     /**
      * Checks if the clipboard has text.
+     *
      * @return True if there is any text in the system clipboard or False otherwise.
      */
     public static boolean hasText() {
@@ -51,6 +52,7 @@ public class Clipboard {
 
     /**
      * Sets a provided text to the system clipboard.
+     *
      * @param text The text to set.
      */
     public static void setText(String text) {
@@ -59,12 +61,13 @@ public class Clipboard {
 
     /**
      * Gets a text from the system clipboard.
+     *
      * @return A text if there is any or a null.
      */
     public static String getText() {
         Transferable data = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
         try {
-            return  (String)data.getTransferData(DataFlavor.stringFlavor);
+            return (String)data.getTransferData(DataFlavor.stringFlavor);
         }
         catch (Exception ignore) {
             return null;

@@ -3,6 +3,7 @@ package hrider.ui.controls.json;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
+import hrider.io.Log;
 
 import javax.swing.*;
 
@@ -29,6 +30,7 @@ import javax.swing.*;
 public class JsonTextPane extends JTextPane {
 
     //region Constants
+    private static final Log  logger           = Log.getLogger(JsonTextPane.class);
     private static final long serialVersionUID = 6270183148379328084L;
     //endregion
 
@@ -41,6 +43,7 @@ public class JsonTextPane extends JTextPane {
 
     /**
      * Replaces the content of the text pane with the provided text.
+     *
      * @param t The text to set.
      */
     @Override
@@ -65,6 +68,7 @@ public class JsonTextPane extends JTextPane {
 
     /**
      * Formats JSON.
+     *
      * @param json A JSON to format.
      * @return A formatted JSON.
      */
@@ -73,7 +77,8 @@ public class JsonTextPane extends JTextPane {
             Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
             return gson.toJson(new JsonParser().parse(json));
         }
-        catch (Exception ignore) {
+        catch (Exception e) {
+            logger.error(e, "Failed to format json '%s'.", json);
             return json;
         }
     }

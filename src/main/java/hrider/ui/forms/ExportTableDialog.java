@@ -9,7 +9,11 @@ import hrider.data.ColumnType;
 import hrider.data.DataRow;
 import hrider.data.TypedColumn;
 import hrider.export.FileExporter;
-import hrider.hbase.*;
+import hrider.hbase.Connection;
+import hrider.hbase.HbaseActionListener;
+import hrider.hbase.QueryScanner;
+import hrider.hbase.Scanner;
+import hrider.io.Log;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 
@@ -43,6 +47,10 @@ import java.util.Collection;
  */
 public class ExportTableDialog extends JDialog {
 
+    //region Constants
+    private static final Log logger = Log.getLogger(ExportTableDialog.class);
+    //endregion
+
     //region Variables
     private JPanel     contentPane;
     private JButton    btExport;
@@ -56,7 +64,7 @@ public class ExportTableDialog extends JDialog {
     private JButton    btClose;
     private JButton    btExportWithQueryButton;
     private JComboBox  cmbFileType;
-    private JLabel labelDelimiter;
+    private JLabel     labelDelimiter;
     private String     filePath;
     private boolean    canceled;
     //endregion
@@ -209,7 +217,8 @@ public class ExportTableDialog extends JDialog {
                     try {
                         totalRowsCount.setText(String.valueOf(scanner.getRowsCount()));
                     }
-                    catch (Exception ignore) {
+                    catch (Exception e) {
+                        logger.error(e, "Failed to count rows number.");
                     }
                 }
             }).start();
