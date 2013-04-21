@@ -350,7 +350,7 @@ public class CustomConverterDialog extends JDialog {
         taImports.setText("import org.apache.hadoop.hbase.util.Bytes;");
         scrollPane2.setViewportView(taImports);
         final JLabel label2 = new JLabel();
-        label2.setText("public String toString(byte[] value) { // bytes to object conversion");
+        label2.setText("public String toString(byte[] value) { // bytes to string conversion");
         panel3.add(
             label2, new GridConstraints(
             2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
@@ -362,7 +362,7 @@ public class CustomConverterDialog extends JDialog {
             4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         final JLabel label4 = new JLabel();
-        label4.setText("public byte[] toBytes(String value) { // object to bytes conversion");
+        label4.setText("public byte[] toBytes(String value) { // string to bytes conversion");
         panel3.add(
             label4, new GridConstraints(
             5, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
