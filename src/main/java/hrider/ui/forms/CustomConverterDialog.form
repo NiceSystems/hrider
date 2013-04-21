@@ -106,7 +106,7 @@
             </constraints>
             <properties>
               <labelFor value="c6c39"/>
-              <text value="public String toString(byte[] value) { // bytes to object conversion"/>
+              <text value="public String toString(byte[] value) { // bytes to string conversion"/>
             </properties>
           </component>
           <component id="49006" class="javax.swing.JLabel">
@@ -123,7 +123,7 @@
             </constraints>
             <properties>
               <labelFor value="73f52"/>
-              <text value="public byte[] toBytes(String value) { // object to bytes conversion"/>
+              <text value="public byte[] toBytes(String value) { // string to bytes conversion"/>
             </properties>
           </component>
           <scrollpane id="f2699">
