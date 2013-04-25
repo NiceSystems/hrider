@@ -280,39 +280,44 @@ public class Connection {
         scan.setCaching(GlobalConfig.instance().getBatchSizeForRead());
 
         ResultScanner scanner = source.getScanner(scan);
-        List<Put> puts = new ArrayList<Put>();
+        try {
+            List<Put> puts = new ArrayList<Put>();
 
-        int batchSize = GlobalConfig.instance().getBatchSizeForWrite();
+            int batchSize = GlobalConfig.instance().getBatchSizeForWrite();
 
-        boolean isValid;
+            boolean isValid;
 
-        do {
-            Result result = scanner.next();
+            do {
+                Result result = scanner.next();
 
-            isValid = result != null;
-            if (isValid) {
-                Put put = new Put(result.getRow());
-                for (KeyValue kv : result.list()) {
-                    put.add(kv);
-                }
+                isValid = result != null;
+                if (isValid) {
+                    Put put = new Put(result.getRow());
+                    for (KeyValue kv : result.list()) {
+                        put.add(kv);
+                    }
 
-                puts.add(put);
+                    puts.add(put);
 
-                if (puts.size() == batchSize) {
-                    target.put(puts);
-                    puts.clear();
-                }
+                    if (puts.size() == batchSize) {
+                        target.put(puts);
+                        puts.clear();
+                    }
 
-                for (HbaseActionListener listener : this.listeners) {
-                    listener.copyOperation(sourceCluster.serverName, sourceTable.getName(), this.serverName, targetTable.getName(), result);
+                    for (HbaseActionListener listener : this.listeners) {
+                        listener.copyOperation(sourceCluster.serverName, sourceTable.getName(), this.serverName, targetTable.getName(), result);
+                    }
                 }
             }
-        }
-        while (isValid);
+            while (isValid);
 
-        // add the last puts to the table.
-        if (!puts.isEmpty()) {
-            target.put(puts);
+            // add the last puts to the table.
+            if (!puts.isEmpty()) {
+                target.put(puts);
+            }
+        }
+        finally {
+            scanner.close();
         }
     }
 
@@ -333,11 +338,13 @@ public class Connection {
         StoreFile.Writer writer = new StoreFile.WriterBuilder(
             this.getConfiguration(), new CacheConfig(cacheConfig), fs, HFile.DEFAULT_BLOCKSIZE).withFilePath(new Path(path)).build();
 
+        ResultScanner scanner = null;
+
         try {
             Scan scan = new Scan();
             scan.setCaching(GlobalConfig.instance().getBatchSizeForRead());
 
-            ResultScanner scanner = table.getScanner(scan);
+            scanner = table.getScanner(scan);
 
             boolean isValid;
             do {
@@ -357,6 +364,10 @@ public class Connection {
             while (isValid);
         }
         finally {
+            if (scanner != null) {
+                scanner.close();
+            }
+
             writer.close();
         }
     }
@@ -435,7 +446,7 @@ public class Connection {
                                 familiesToCreate.clear();
                             }
 
-                            table.put(puts);
+                            HTableUtil.bucketRsPut(table, puts);
                             puts.clear();
                         }
 
@@ -458,7 +469,7 @@ public class Connection {
                     createFamilies(tableName, toDescriptors(familiesToCreate));
                 }
 
-                table.put(puts);
+                HTableUtil.bucketRsPut(table, puts);
             }
         }
         finally {
@@ -513,7 +524,7 @@ public class Connection {
         }
 
         HTable table = this.factory.get(tableName);
-        table.put(puts);
+        HTableUtil.bucketRsPut(table, puts);
     }
 
     /**

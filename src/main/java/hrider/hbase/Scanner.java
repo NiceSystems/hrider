@@ -270,17 +270,22 @@ public class Scanner {
         HTable table = this.connection.getTableFactory().get(this.tableName);
         ResultScanner scanner = table.getScanner(scan);
 
-        Collection<DataRow> rows = new ArrayList<DataRow>();
-        Collection<ColumnQualifier> columns = new ArrayList<ColumnQualifier>();
+        try {
+            Collection<DataRow> rows = new ArrayList<DataRow>();
+            Collection<ColumnQualifier> columns = new ArrayList<ColumnQualifier>();
 
-        columns.add(ColumnQualifier.KEY);
+            columns.add(ColumnQualifier.KEY);
 
-        loadRows(scanner, 0, 1, rows, columns);
-        if (rows.isEmpty()) {
-            return null;
+            loadRows(scanner, 0, 1, rows, columns);
+            if (rows.isEmpty()) {
+                return null;
+            }
+
+            return rows.iterator().next();
         }
-
-        return rows.iterator().next();
+        finally {
+            scanner.close();
+        }
     }
 
     /**
@@ -381,14 +386,19 @@ public class Scanner {
             HTable table = this.connection.getTableFactory().get(this.tableName);
             ResultScanner scanner = table.getScanner(scan);
 
-            int count = 0;
-            for (Result rr = scanner.next() ; rr != null ; rr = scanner.next()) {
-                if (isValidRow(rr)) {
-                    ++count;
+            try {
+                int count = 0;
+                for (Result rr = scanner.next() ; rr != null ; rr = scanner.next()) {
+                    if (isValidRow(rr)) {
+                        ++count;
+                    }
                 }
-            }
 
-            this.rowsCount = count;
+                this.rowsCount = count;
+            }
+            finally {
+                scanner.close();
+            }
         }
         return this.rowsCount;
     }
@@ -508,32 +518,37 @@ public class Scanner {
         HTableDescriptor tableDescriptor = table.getTableDescriptor();
 
         ResultScanner scanner = table.getScanner(scan);
-        TypeConverter nameConverter = getColumnNameConverterInternal();
+        try {
+            TypeConverter nameConverter = getColumnNameConverterInternal();
 
-        Result row;
-        int counter = 0;
+            Result row;
+            int counter = 0;
 
-        do {
-            row = scanner.next();
-            if (row != null) {
-                NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> familyMap = row.getMap();
-                for (NavigableMap.Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> familyEntry : familyMap.entrySet()) {
-                    HColumnDescriptor columnDescriptor = tableDescriptor.getFamily(familyEntry.getKey());
+            do {
+                row = scanner.next();
+                if (row != null) {
+                    NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> familyMap = row.getMap();
+                    for (NavigableMap.Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> familyEntry : familyMap.entrySet()) {
+                        HColumnDescriptor columnDescriptor = tableDescriptor.getFamily(familyEntry.getKey());
 
-                    for (byte[] quantifier : familyEntry.getValue().keySet()) {
-                        ColumnQualifier columnQualifier = new ColumnQualifier(quantifier, new ColumnFamily(columnDescriptor), nameConverter);
-                        if (!columns.contains(columnQualifier)) {
-                            columns.add(columnQualifier);
+                        for (byte[] quantifier : familyEntry.getValue().keySet()) {
+                            ColumnQualifier columnQualifier = new ColumnQualifier(quantifier, new ColumnFamily(columnDescriptor), nameConverter);
+                            if (!columns.contains(columnQualifier)) {
+                                columns.add(columnQualifier);
+                            }
                         }
                     }
                 }
+
+                counter++;
             }
+            while (row != null && counter < rowsNumber);
 
-            counter++;
+            return columns;
         }
-        while (row != null && counter < rowsNumber);
-
-        return columns;
+        finally {
+            scanner.close();
+        }
     }
 
     /**
@@ -562,17 +577,22 @@ public class Scanner {
         HTable table = this.connection.getTableFactory().get(this.tableName);
         ResultScanner scanner = table.getScanner(scan);
 
-        Collection<DataRow> rows = new ArrayList<DataRow>();
-        Collection<ColumnQualifier> columns = new ArrayList<ColumnQualifier>();
+        try {
+            Collection<DataRow> rows = new ArrayList<DataRow>();
+            Collection<ColumnQualifier> columns = new ArrayList<ColumnQualifier>();
 
-        columns.add(ColumnQualifier.KEY);
+            columns.add(ColumnQualifier.KEY);
 
-        ConvertibleObject lastKey = loadRows(scanner, offset, rowsNumber, rows, columns);
-        if (lastKey != null) {
-            this.markers.push(new Marker(lastKey, rows, columns));
+            ConvertibleObject lastKey = loadRows(scanner, offset, rowsNumber, rows, columns);
+            if (lastKey != null) {
+                this.markers.push(new Marker(lastKey, rows, columns));
+            }
+
+            return rows;
         }
-
-        return rows;
+        finally {
+            scanner.close();
+        }
     }
 
     /**
