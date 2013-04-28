@@ -34,9 +34,7 @@ local.properties
 
 target/
 .idea/
-config/
 logs/
-converters/
 *.iml
 
 # project specific
