@@ -32,6 +32,8 @@ import java.awt.event.*;
 public class ConnectionDetailsDialog extends JDialog {
 
     //region Variables
+    private static final long serialVersionUID = 4254076848011995814L;
+
     private JPanel            contentPane;
     private JButton           buttonConnect;
     private JButton           buttonCancel;
@@ -104,34 +106,34 @@ public class ConnectionDetailsDialog extends JDialog {
 
     //region Private Methods
     private void onOK() {
-        this.contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
         this.connectionDetails = new ConnectionDetails() {{
             setZookeeper(
                 new ServerDetails(
                     ConnectionDetailsDialog.this.zooKeeperServer.getText(), ConnectionDetailsDialog.this.zooKeeperPort.getValue().toString()));
         }};
 
+        this.contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        boolean canConnect = false;
+
         try {
-
-            ConnectionManager.create(this.connectionDetails);
-
-            GlobalConfig.instance().set("connection.zookeeper.defaultPort", this.zooKeeperPort.getValue().toString());
-            GlobalConfig.instance().save();
-
-            dispose();
-        }
-        catch (Exception ex) {
-            JOptionPane.showMessageDialog(
-                this, String.format(
-                "%s\n\nMake sure you have access to all nodes of the cluster you try\nto connect to. In case you don't, map the nodes in your hosts file.",
-                ex.getMessage()), "Failed to connect...", JOptionPane.ERROR_MESSAGE);
-
-            ConnectionManager.release(this.connectionDetails);
-            this.connectionDetails = null;
+            canConnect = this.connectionDetails.canConnect();
         }
         finally {
             this.contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        }
+
+        if (canConnect) {
+            dispose();
+        }
+        else {
+            JOptionPane.showMessageDialog(
+                ConnectionDetailsDialog.this,
+                "Failed to connect to hbase.\n\nMake sure you have access to all hadoop nodes\nIn case you don't, map the nodes in your hosts file.",
+                "Connection failed...", JOptionPane.ERROR_MESSAGE);
+
+            ConnectionManager.release(connectionDetails);
+            connectionDetails = null;
         }
     }
 
@@ -159,16 +161,16 @@ public class ConnectionDetailsDialog extends JDialog {
         contentPane = new JPanel();
         contentPane.setLayout(new GridLayoutManager(2, 1, new Insets(10, 10, 10, 10), -1, -1));
         final JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridLayoutManager(2, 1, new Insets(5, 0, 0, 0), -1, -1));
+        panel1.setLayout(new GridLayoutManager(2, 2, new Insets(5, 0, 0, 0), -1, -1));
         contentPane.add(
             panel1, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             1, null, null, null, 0, false));
         final JPanel panel2 = new JPanel();
-        panel2.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1, true, false));
+        panel2.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
         panel1.add(
             panel2, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            1, 1, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         buttonConnect = new JButton();
         buttonConnect.setText("Connect");
@@ -185,7 +187,7 @@ public class ConnectionDetailsDialog extends JDialog {
         final JSeparator separator1 = new JSeparator();
         panel1.add(
             separator1, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
+            0, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
             null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridLayoutManager(1, 4, new Insets(0, 0, 0, 0), -1, -1));

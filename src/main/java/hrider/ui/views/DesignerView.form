@@ -716,6 +716,14 @@
                               <text value="?"/>
                             </properties>
                           </component>
+                          <component id="c6e69" class="javax.swing.JLabel" binding="rowsNumberIcon">
+                            <constraints/>
+                            <properties>
+                              <icon value="images/busy.gif"/>
+                              <text value=""/>
+                              <visible value="false"/>
+                            </properties>
+                          </component>
                           <component id="c1d57" class="javax.swing.JToolBar$Separator">
                             <constraints/>
                             <properties/>

@@ -57,6 +57,8 @@ public abstract class PropertiesConfig {
                     folder.mkdirs();
                 }
                 this.file.createNewFile();
+
+                onFileCreated();
             }
 
             loadProperties(this.file);
@@ -175,6 +177,12 @@ public abstract class PropertiesConfig {
                 }
             }
         }
+    }
+    //endregion
+
+    //region Protected Methods
+    protected void onFileCreated() {
+
     }
     //endregion
 

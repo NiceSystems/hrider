@@ -2,8 +2,6 @@ package hrider.config;
 
 import hrider.io.PathHelper;
 
-import java.io.File;
-
 /**
  * Copyright (C) 2012 NICE Systems ltd.
  * <p/>
@@ -32,7 +30,8 @@ public class GlobalConfig extends PropertiesConfig {
     private static final String KEY_EXTERNAL_VIEWER_DELIMETER      = "global.externalViewerDelimiter";
     private static final String KEY_BATCH_READ_SIZE                = "global.batch.readSize";
     private static final String KEY_BATCH_WRITE_SIZE               = "global.batch.writeSize";
-    private static final String KEY_COMPILATION_FOLDER             = "global.compilation.folder";
+    private static final String KEY_CONNECTION_CHECK_TIMEOUT       = "global.connection.check.timeout";
+    private static final String KEY_ROW_COUNT_OPERATION_TIMEOUT    = "global.operation.timeout.rowCount";
     private static final String KEY_CONVERTERS_CLASSES_FOLDER      = "global.converters.classes.folder";
     private static final String KEY_CONVERTERS_CODE_FOLDER         = "global.converters.code.folder";
 
@@ -41,7 +40,8 @@ public class GlobalConfig extends PropertiesConfig {
     private static final String DEFAULT_EXTERNAL_VIEWER_DELIMETER      = ",";
     private static final String DEFAULT_BATCH_READ_SIZE                = "1000";
     private static final String DEFAULT_BATCH_WRITE_SIZE               = "100";
-    private static final String DEFAULT_COMPILATION_FOLDER             = "dynamic";
+    private static final String DEFAULT_CONNECTION_CHECK_TIMEOUT       = "5000";
+    private static final String DEFAULT_ROW_COUNT_OPERATION_TIMEOUT    = "30000";
     private static final String DEFAULT_CONVERTERS_CLASSES_FOLDER      = "converters/classes";
     private static final String DEFAULT_CONVERTERS_CODE_FOLDER         = "converters/code";
     //endregion
@@ -115,12 +115,21 @@ public class GlobalConfig extends PropertiesConfig {
     }
 
     /**
-     * Gets a folder where the compiled files should be saved.
+     * Gets an amount of time to wait for hbase connection during check.
      *
-     * @return A path to a folder.
+     * @return An amount of time to wait.
      */
-    public String getCompilationFolder() {
-        return PathHelper.append(PathHelper.getCurrentFolder(), get(String.class, KEY_COMPILATION_FOLDER, DEFAULT_COMPILATION_FOLDER));
+    public long getConnectionCheckTimeout() {
+        return get(Long.class, KEY_CONNECTION_CHECK_TIMEOUT, DEFAULT_CONNECTION_CHECK_TIMEOUT);
+    }
+
+    /**
+     * Gets an amount of time to wait before stopping row count operation.
+     *
+     * @return An amount of time to wait.
+     */
+    public long getRowCountTimeout() {
+        return get(Long.class, KEY_ROW_COUNT_OPERATION_TIMEOUT, DEFAULT_ROW_COUNT_OPERATION_TIMEOUT);
     }
 
     /**
@@ -139,6 +148,21 @@ public class GlobalConfig extends PropertiesConfig {
      */
     public String getConvertersCodeFolder() {
         return PathHelper.append(PathHelper.getCurrentFolder(), get(String.class, KEY_CONVERTERS_CODE_FOLDER, DEFAULT_CONVERTERS_CODE_FOLDER));
+    }
+    //endregion
+
+    //region Protected Methods
+    @Override
+    protected void onFileCreated() {
+        set(KEY_ROW_COUNT_OPERATION_TIMEOUT, DEFAULT_ROW_COUNT_OPERATION_TIMEOUT);
+        set(KEY_BATCH_READ_SIZE, DEFAULT_BATCH_READ_SIZE);
+        set(KEY_BATCH_WRITE_SIZE, DEFAULT_BATCH_WRITE_SIZE);
+        set(KEY_CONNECTION_CHECK_TIMEOUT, DEFAULT_CONNECTION_CHECK_TIMEOUT);
+        set(KEY_DATE_FORMAT, DEFAULT_DATE_FORMAT);
+        set(KEY_EXTERNAL_VIEWER_DELIMETER, DEFAULT_EXTERNAL_VIEWER_DELIMETER);
+        set(KEY_EXTERNAL_VIEWER_FILE_EXTENSION, DEFAULT_EXTERNAL_VIEWER_FILE_EXTENSION);
+
+        save();
     }
     //endregion
 }

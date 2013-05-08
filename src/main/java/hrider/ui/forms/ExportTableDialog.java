@@ -3,6 +3,8 @@ package hrider.ui.forms;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import hrider.actions.*;
+import hrider.actions.Action;
 import hrider.config.GlobalConfig;
 import hrider.data.ColumnQualifier;
 import hrider.data.ColumnType;
@@ -210,18 +212,25 @@ public class ExportTableDialog extends JDialog {
                 }
             }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-        new Thread(
-            new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        totalRowsCount.setText(String.valueOf(scanner.getRowsCount()));
-                    }
-                    catch (Exception e) {
-                        logger.error(e, "Failed to count rows number.");
-                    }
+        RunnableAction.run(
+            "export table rows count", new Action<Object>() {
+            @Override
+            public Object run() throws IOException {
+                long totalNumberOfRows = scanner.getRowsCount(GlobalConfig.instance().getRowCountTimeout());
+                if (totalNumberOfRows == scanner.getCalculatedRowsCount()) {
+                    totalRowsCount.setText(String.valueOf(totalNumberOfRows));
                 }
-            }).start();
+                else {
+                    totalRowsCount.setText("more than " + totalNumberOfRows);
+                }
+                return null;
+            }
+
+            @Override
+            public void onError(Exception ex) {
+                logger.error(ex, "Failed to count rows number.");
+            }
+        });
     }
     //endregion
 

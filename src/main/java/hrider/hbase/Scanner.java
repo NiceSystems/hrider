@@ -4,6 +4,7 @@ import hrider.config.GlobalConfig;
 import hrider.converters.TypeConverter;
 import hrider.data.*;
 import hrider.ui.MessageHandler;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -139,6 +140,15 @@ public class Scanner {
      */
     public String getTableName() {
         return this.tableName;
+    }
+
+    /**
+     * Gets the previously calculated rows count.
+     *
+     * @return A number of rows in the table.
+     */
+    public long getCalculatedRowsCount() {
+        return this.rowsCount;
     }
 
     /**
@@ -378,7 +388,7 @@ public class Scanner {
      * @return A total number of rows in the table.
      * @throws IOException Error accessing hbase.
      */
-    public synchronized long getRowsCount() throws IOException {
+    public synchronized long getRowsCount(long timeout) throws IOException {
         if (this.rowsCount == 0) {
             Scan scan = getScanner();
             scan.setCaching(GlobalConfig.instance().getBatchSizeForRead());
@@ -386,17 +396,25 @@ public class Scanner {
             HTable table = this.connection.getTableFactory().get(this.tableName);
             ResultScanner scanner = table.getScanner(scan);
 
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
+
             try {
                 int count = 0;
                 for (Result rr = scanner.next() ; rr != null ; rr = scanner.next()) {
                     if (isValidRow(rr)) {
                         ++count;
                     }
+
+                    if (stopWatch.getTime() > timeout) {
+                        return count;
+                    }
                 }
 
                 this.rowsCount = count;
             }
             finally {
+                stopWatch.stop();
                 scanner.close();
             }
         }

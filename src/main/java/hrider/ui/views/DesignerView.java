@@ -3,6 +3,8 @@ package hrider.ui.views;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import hrider.actions.Action;
+import hrider.actions.RunnableAction;
 import hrider.config.ClusterConfig;
 import hrider.config.GlobalConfig;
 import hrider.converters.ConvertersLoader;
@@ -105,8 +107,10 @@ public class DesignerView {
     private JLabel                            tablesNumber;
     private JComboBox                         tablesFilter;
     private DefaultComboBoxModel              tablesFilterModel;
+    private ItemListener                      tablesFilterListener;
     private JComboBox                         columnsFilter;
     private DefaultComboBoxModel              columnsFilterModel;
+    private ItemListener                      columnsFilterListener;
     private JButton                           jumpButton;
     private JButton                           openInViewerButton;
     private JButton                           importTableButton;
@@ -118,6 +122,7 @@ public class DesignerView {
     private JButton                           editConverterButton;
     private JButton                           deleteConverterButton;
     private WideComboBox                      cmbColumnNameTypes;
+    private JLabel rowsNumberIcon;
     private DefaultTableModel                 columnsTableModel;
     private DefaultTableModel                 rowsTableModel;
     private Query                             lastQuery;
@@ -128,6 +133,7 @@ public class DesignerView {
     private Map<ColumnQualifier, TableColumn> rowsTableRemovedColumns;
     private ClusterConfig                     clusterConfig;
     private JComboBox                         cmbColumnTypes;
+    private RunnableAction                    rowsCountAction;
     //endregion
 
     //region Constructor
@@ -144,7 +150,7 @@ public class DesignerView {
         this.columnsFilterModel = new DefaultComboBoxModel();
         this.columnsFilter.setModel(this.columnsFilterModel);
 
-        fillComboBox(tablesFilter, this.clusterConfig.getTableFilters());
+        fillComboBox(tablesFilter, null, this.clusterConfig.getTableFilters());
 
         String tableFilter = this.clusterConfig.getSelectedTableFilter();
         if (tableFilter != null) {
@@ -175,17 +181,18 @@ public class DesignerView {
 
         this.rowsNumberSpinner.setModel(new SpinnerNumberModel(100, 1, 10000, 100));
 
-        this.tablesFilter.addItemListener(
-            new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    if (e.getStateChange() == ItemEvent.SELECTED) {
-                        clusterConfig.setSelectedTableFilter((String)e.getItem());
+        this.tablesFilterListener = new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    clusterConfig.setSelectedTableFilter((String)e.getItem());
 
-                        loadTables();
-                    }
+                    loadTables();
                 }
-            });
+            }
+        };
+
+        this.tablesFilter.addItemListener(this.tablesFilterListener);
 
         this.tablesFilter.getEditor().addActionListener(
             new ActionListener() {
@@ -210,17 +217,18 @@ public class DesignerView {
                 }
             });
 
-        this.columnsFilter.addItemListener(
-            new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    if (e.getStateChange() == ItemEvent.SELECTED) {
-                        clusterConfig.setSelectedColumnFilter(getSelectedTableName(), (String)e.getItem());
+        this.columnsFilterListener = new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    clusterConfig.setSelectedColumnFilter(getSelectedTableName(), (String)e.getItem());
 
-                        populateColumnsTable(false);
-                    }
+                    populateColumnsTable(false);
                 }
-            });
+            }
+        };
+
+        this.columnsFilter.addItemListener(this.columnsFilterListener);
 
         this.columnsFilter.getEditor().addActionListener(
             new ActionListener() {
@@ -973,7 +981,7 @@ public class DesignerView {
     /**
      * Gets the reference to the view.
      *
-     * @return A {@link JPanel} that contains the controls.
+     * @return A {@link javax.swing.JPanel} that contains the controls.
      */
     public JPanel getView() {
         return this.topPanel;
@@ -982,7 +990,7 @@ public class DesignerView {
     /**
      * Gets a reference to the class used to access the hbase.
      *
-     * @return A reference to the {@link Connection} class.
+     * @return A reference to the {@link hrider.hbase.Connection} class.
      */
     public Connection getConnection() {
         return this.connection;
@@ -1050,7 +1058,7 @@ public class DesignerView {
      *
      * @param columnName The name of the column to look.
      * @param table      The table that should contain column.
-     * @return A reference to {@link TableColumn} if found or {@code null} otherwise.
+     * @return A reference to {@link javax.swing.table.TableColumn} if found or {@code null} otherwise.
      */
     private static TableColumn getColumn(String columnName, JTable table) {
         for (int i = 0 ; i < table.getColumnCount() ; i++) {
@@ -1154,54 +1162,60 @@ public class DesignerView {
             new ListSelectionListener() {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
-                    int selectedIndices = tablesList.getSelectedIndices().length;
+                    if (!e.getValueIsAdjusting()) {
+                        if (rowsCountAction != null) {
+                            rowsCountAction.abort();
+                        }
 
-                    flushTableButton.setEnabled(selectedIndices > 0);
-                    deleteTableButton.setEnabled(selectedIndices > 0);
-                    truncateTableButton.setEnabled(selectedIndices > 0);
+                        int selectedIndices = tablesList.getSelectedIndices().length;
 
-                    if (selectedIndices == 1) {
-                        copyTableButton.setEnabled(true);
-                        exportTableButton.setEnabled(true);
-                        tableMetadataButton.setEnabled(true);
+                        flushTableButton.setEnabled(selectedIndices > 0);
+                        deleteTableButton.setEnabled(selectedIndices > 0);
+                        truncateTableButton.setEnabled(selectedIndices > 0);
 
-                        scanner = null;
+                        if (selectedIndices == 1) {
+                            copyTableButton.setEnabled(true);
+                            exportTableButton.setEnabled(true);
+                            tableMetadataButton.setEnabled(true);
 
-                        String currentFilter = clusterConfig.getSelectedColumnFilter(getSelectedTableName());
+                            scanner = null;
 
-                        fillComboBox(columnsFilter, clusterConfig.getColumnFilters(getSelectedTableName()));
-                        setFilter(columnsFilter, currentFilter);
+                            String currentFilter = clusterConfig.getSelectedColumnFilter(getSelectedTableName());
 
-                        String converterType = clusterConfig.getTableConfig(String.class, getSelectedTableName(), "nameConverter");
-                        if (converterType != null) {
-                            cmbColumnNameTypes.setSelectedItem(ColumnType.fromNameOrDefault(converterType, ColumnType.BinaryString));
+                            fillComboBox(columnsFilter, columnsFilterListener, clusterConfig.getColumnFilters(getSelectedTableName()));
+                            setFilter(columnsFilter, columnsFilterListener, currentFilter);
+
+                            String converterType = clusterConfig.getTableConfig(String.class, getSelectedTableName(), "nameConverter");
+                            if (converterType != null) {
+                                cmbColumnNameTypes.setSelectedItem(ColumnType.fromNameOrDefault(converterType, ColumnType.BinaryString));
+                            }
+                            else {
+                                cmbColumnNameTypes.setSelectedItem(ColumnType.BinaryString);
+                            }
+
+                            populateColumnsTable(true);
                         }
                         else {
-                            cmbColumnNameTypes.setSelectedItem(ColumnType.BinaryString);
+                            clearRows(columnsTable);
+                            clearTable(rowsTable);
+
+                            enableDisablePagingButtons();
+
+                            copyTableButton.setEnabled(false);
+                            exportTableButton.setEnabled(false);
+                            tableMetadataButton.setEnabled(false);
+                            rowsNumberLabel.setText("?");
+                            visibleRowsLabel.setText("?");
+                            pasteRowButton.setEnabled(false);
+                            populateButton.setEnabled(false);
+                            jumpButton.setEnabled(false);
+                            scanButton.setEnabled(false);
+                            addRowButton.setEnabled(false);
+                            checkAllButton.setEnabled(false);
+                            uncheckAllButton.setEnabled(false);
+                            refreshColumnsButton.setEnabled(false);
+                            cmbColumnNameTypes.setEnabled(false);
                         }
-
-                        populateColumnsTable(true);
-                    }
-                    else {
-                        clearRows(columnsTable);
-                        clearTable(rowsTable);
-
-                        enableDisablePagingButtons();
-
-                        copyTableButton.setEnabled(false);
-                        exportTableButton.setEnabled(false);
-                        tableMetadataButton.setEnabled(false);
-                        rowsNumberLabel.setText("?");
-                        visibleRowsLabel.setText("?");
-                        pasteRowButton.setEnabled(false);
-                        populateButton.setEnabled(false);
-                        jumpButton.setEnabled(false);
-                        scanButton.setEnabled(false);
-                        addRowButton.setEnabled(false);
-                        checkAllButton.setEnabled(false);
-                        uncheckAllButton.setEnabled(false);
-                        refreshColumnsButton.setEnabled(false);
-                        cmbColumnNameTypes.setEnabled(false);
                     }
                 }
             });
@@ -1502,7 +1516,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link DesignerView#rowsNumberSpinner} control.
+     * in the {@link hrider.ui.views.DesignerView#rowsNumberSpinner} control.
      *
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
      *                  {@link Direction#Forward} or {@link Direction#Backward}.
@@ -1513,7 +1527,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link DesignerView#rowsNumberSpinner} control.
+     * in the {@link hrider.ui.views.DesignerView#rowsNumberSpinner} control.
      *
      * @param offset    The first row to start loading from.
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
@@ -1557,23 +1571,34 @@ public class DesignerView {
                 this.visibleRowsLabel.setText(String.format("%s - %s", this.scanner.getLastRow() - rows.size() + 1, this.scanner.getLastRow()));
                 this.rowsNumberSpinner.setEnabled(this.scanner.getLastRow() <= getPageSize());
 
-                // To get the number of rows can take the time.
-                Thread thread = new Thread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                long totalNumberOfRows = scanner.getRowsCount();
-                                rowsNumberLabel.setText(String.valueOf(totalNumberOfRows));
+                this.rowsCountAction = RunnableAction.run(
+                    tableName + "-rowsCount", new Action<Boolean>() {
 
-                                enableDisablePagingButtons();
-                            }
-                            catch (Exception e) {
-                                setError("Failed to get the number of rows in the table.", e);
-                            }
+                    @Override
+                    public Boolean run() throws IOException {
+                        rowsNumberIcon.setVisible(true);
+                        rowsNumberLabel.setVisible(false);
+
+                        long totalNumberOfRows = scanner.getRowsCount(GlobalConfig.instance().getRowCountTimeout());
+                        if (totalNumberOfRows == scanner.getCalculatedRowsCount()) {
+                            rowsNumberLabel.setText(String.valueOf(totalNumberOfRows));
                         }
-                    });
-                thread.start();
+                        else {
+                            rowsNumberLabel.setText("more than " + totalNumberOfRows);
+                        }
+
+                        rowsNumberIcon.setVisible(false);
+                        rowsNumberLabel.setVisible(true);
+
+                        enableDisablePagingButtons();
+                        return true;
+                    }
+
+                    @Override
+                    public void onError(Exception ex) {
+                        setError("Failed to get the number of rows in the table.", ex);
+                    }
+                });
             }
 
             this.openInViewerButton.setEnabled(this.rowsTable.getRowCount() > 0);
@@ -1590,7 +1615,7 @@ public class DesignerView {
      * Populates rows of the specified column. This method is used when the column which wasn't initially populated is checked.
      *
      * @param qualifier The name of the column which rows are need to be populated.
-     * @param rows       The data to populate.
+     * @param rows      The data to populate.
      */
     private void populateColumnOnRowsTable(ColumnQualifier qualifier, Iterable<DataRow> rows) {
 
@@ -2239,9 +2264,17 @@ public class DesignerView {
      * @param comboBox A combo box to be set.
      * @param value    A value to be selected on the combo box.
      */
-    private static void setFilter(JComboBox comboBox, String value) {
+    private static void setFilter(JComboBox comboBox, ItemListener listener, String value) {
+        if (listener != null) {
+            comboBox.removeItemListener(listener);
+        }
+
         comboBox.setSelectedItem(value);
         comboBox.setToolTipText(value);
+
+        if (listener != null) {
+            comboBox.addItemListener(listener);
+        }
     }
 
     /**
@@ -2250,14 +2283,22 @@ public class DesignerView {
      * @param comboBox A combo box to fill.
      * @param values   A list of values to add.
      */
-    private static void fillComboBox(JComboBox comboBox, Iterable<String> values) {
+    private static void fillComboBox(JComboBox comboBox, ItemListener listener, Iterable<String> values) {
         if (values != null) {
+            if (listener != null) {
+                comboBox.removeItemListener(listener);
+            }
+
             comboBox.removeAllItems();
 
             comboBox.addItem("");
 
             for (String value : values) {
                 comboBox.addItem(value);
+            }
+
+            if (listener != null) {
+                comboBox.addItemListener(listener);
             }
         }
     }
@@ -2759,6 +2800,11 @@ public class DesignerView {
         rowsNumberLabel = new JLabel();
         rowsNumberLabel.setText("?");
         toolBar6.add(rowsNumberLabel);
+        rowsNumberIcon = new JLabel();
+        rowsNumberIcon.setIcon(new ImageIcon(getClass().getResource("/images/busy.gif")));
+        rowsNumberIcon.setText("");
+        rowsNumberIcon.setVisible(false);
+        toolBar6.add(rowsNumberIcon);
         final JToolBar.Separator toolBar$Separator9 = new JToolBar.Separator();
         toolBar6.add(toolBar$Separator9);
         showPrevPageButton = new JButton();
