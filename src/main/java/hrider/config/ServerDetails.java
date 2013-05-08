@@ -1,5 +1,7 @@
 package hrider.config;
 
+import java.io.Serializable;
+
 /**
  * Copyright (C) 2012 NICE Systems ltd.
  * <p/>
@@ -20,7 +22,11 @@ package hrider.config;
  *          <p/>
  *          This class represents a details of the server to connect to..
  */
-public class ServerDetails {
+public class ServerDetails implements Serializable {
+
+    //region Constants
+    private static final long serialVersionUID = -407779299748851910L;
+    //endregion
 
     //region Variables
     /**
@@ -37,6 +43,7 @@ public class ServerDetails {
 
     /**
      * Initializes a new instance of the {@link ServerDetails} class.
+     *
      * @param host The server name.
      * @param port The server port.
      */
@@ -50,6 +57,7 @@ public class ServerDetails {
 
     /**
      * Gets the name of the server.
+     *
      * @return The name of the server.
      */
     public String getHost() {
@@ -58,6 +66,7 @@ public class ServerDetails {
 
     /**
      * Sets a new server name.
+     *
      * @param host A new server name.
      */
     public void setHost(String host) {
@@ -66,6 +75,7 @@ public class ServerDetails {
 
     /**
      * Gets a port.
+     *
      * @return An {@link Integer} representing the port.
      */
     public String getPort() {
@@ -74,6 +84,7 @@ public class ServerDetails {
 
     /**
      * Sets a new port.
+     *
      * @param port A new port.
      */
     public void setPort(String port) {

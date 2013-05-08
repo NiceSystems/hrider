@@ -1,10 +1,13 @@
 package hrider.config;
 
+import hrider.actions.Action;
+import hrider.actions.RunnableAction;
 import hrider.hbase.ConnectionManager;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -26,7 +29,11 @@ import java.io.IOException;
  *          <p/>
  *          This class represents a data to be used to connect to the hbase and zookeeper nodes.
  */
-public class ConnectionDetails {
+public class ConnectionDetails implements Serializable {
+
+    //region Constants
+    private static final long serialVersionUID = -5808921673890223877L;
+    //endregion
 
     //region Variables
     private ServerDetails zookeeper;
@@ -44,13 +51,17 @@ public class ConnectionDetails {
 
     //region Public Methods
     public boolean canConnect() {
-        try {
-            ConnectionManager.create(this);
-            return true;
-        }
-        catch (IOException ignore) {
-            return false;
-        }
+        Boolean result = RunnableAction.runAndWait(
+            this.zookeeper.getHost(), new Action<Boolean>() {
+
+            @Override
+            public Boolean run() throws IOException {
+                ConnectionManager.create(ConnectionDetails.this);
+                return true;
+            }
+        }, GlobalConfig.instance().getConnectionCheckTimeout());
+
+        return result != null ? result : false;
     }
 
     public Configuration createConfig() {

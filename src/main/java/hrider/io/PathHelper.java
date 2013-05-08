@@ -42,7 +42,6 @@ public class PathHelper {
     //endregion
 
     //region Public Methods
-
     /**
      * Gets current folder of the executing process.
      *
@@ -59,11 +58,14 @@ public class PathHelper {
      * @return A new path if the provided path contained extension or an original path otherwise.
      */
     public static String getPathWithoutExtension(String path) {
-        int index = path.lastIndexOf('.');
+        String normalisedPath = expand(path);
+
+        int index = normalisedPath.lastIndexOf('.');
         if (index != -1) {
-            return path.substring(0, index);
+            normalisedPath = normalisedPath.substring(0, index);
         }
-        return path;
+
+        return normalisedPath;
     }
 
     /**
@@ -73,19 +75,16 @@ public class PathHelper {
      * @return A new path if the provided path contained media or an original path otherwise.
      */
     public static String getPathWithoutMedia(String path) {
-        int index = path.indexOf(':' + FILE_SEPARATOR);
+        String normalisedPath = expand(path);
+
+        int index = normalisedPath.indexOf(':' + FILE_SEPARATOR);
         if (index != -1) {
-            return path.substring(index + 1 + FILE_SEPARATOR.length());
+            normalisedPath = normalisedPath.substring(index + 1 + FILE_SEPARATOR.length());
         }
-        return path;
+
+        return normalisedPath;
     }
 
-    /**
-     * Replaces environment variables in the path by their values.
-     *
-     * @param path The path to expand.
-     * @return A new path if the provided path contained any environment variables or an original path otherwise.
-     */
     public static String expand(String path) {
         String expandedPath = path;
         if (expandedPath != null) {
@@ -97,23 +96,21 @@ public class PathHelper {
                 if (expVar != null) {
                     expandedPath = expandedPath.replace(String.format("${%s}", envVar), expVar);
                 }
+
+                expVar = System.getProperty(envVar);
+                if (expVar != null) {
+                    expandedPath = expandedPath.replace(String.format("${%s}", envVar), expVar);
+                }
             }
         }
-        return expandedPath;
+        return normalise(expandedPath);
     }
 
-    /**
-     * Appends one path ot another. Ensures there is only one separator between the path's.
-     *
-     * @param path1 A base path.
-     * @param path2 A path to append to the base path.
-     * @return A new combined path.
-     */
     public static String append(String path1, String path2) {
         StringBuilder path = new StringBuilder();
 
         if (path1 != null) {
-            String normalisedPath = expand(normalise(path1));
+            String normalisedPath = expand(path1);
             path.append(normalisedPath);
 
             if (!normalisedPath.endsWith(FILE_SEPARATOR)) {
@@ -122,7 +119,7 @@ public class PathHelper {
         }
 
         if (path2 != null) {
-            String normalisedPath = expand(normalise(path2));
+            String normalisedPath = expand(path2);
             if (path.length() > 0) {
                 if (normalisedPath.startsWith(FILE_SEPARATOR)) {
                     path.append(normalisedPath.substring(FILE_SEPARATOR.length()));
@@ -139,15 +136,9 @@ public class PathHelper {
         return path.toString();
     }
 
-    /**
-     * Gets a parent folder in the path
-     *
-     * @param path The path to get the parent folder from.
-     * @return The path to the parent folder.
-     */
     public static String getParent(String path) {
         if (path != null) {
-            String normalisedPath = expand(normalise(path));
+            String normalisedPath = expand(path);
             if (normalisedPath.endsWith(FILE_SEPARATOR)) {
                 normalisedPath = normalisedPath.substring(0, normalisedPath.length() - FILE_SEPARATOR.length());
             }
@@ -157,18 +148,13 @@ public class PathHelper {
                 return normalisedPath.substring(0, index);
             }
         }
+
         return null;
     }
 
-    /**
-     * Gets a child path.
-     *
-     * @param path The path to get the child path from.
-     * @return The path to the child folder or file.
-     */
     public static String getLeaf(String path) {
         if (path != null) {
-            String normalisedPath = expand(normalise(path));
+            String normalisedPath = expand(path);
             if (normalisedPath.endsWith(FILE_SEPARATOR)) {
                 normalisedPath = normalisedPath.substring(0, normalisedPath.length() - FILE_SEPARATOR.length());
             }
@@ -178,15 +164,10 @@ public class PathHelper {
                 return normalisedPath.substring(index + 1);
             }
         }
+
         return null;
     }
 
-    /**
-     * Normalizes the slashes in the path. If path contains both slashes '/' and '\' the method changes them to the one used by the current system.
-     *
-     * @param path The path to normalize.
-     * @return A normalized path.
-     */
     public static String normalise(String path) {
         if (path != null) {
             String normalizedPath = path;
@@ -194,12 +175,13 @@ public class PathHelper {
             try {
                 normalizedPath = normalizedPath.replace("\\", FILE_SEPARATOR);
 
-                if (normalizedPath.startsWith(FILE_SEPARATOR)) {
-                    normalizedPath = normalizedPath.substring(FILE_SEPARATOR.length());
-                }
-
                 if (!normalizedPath.startsWith("file:")) {
-                    normalizedPath = "file:/" + normalizedPath;
+                    if (normalizedPath.startsWith(FILE_SEPARATOR)) {
+                        normalizedPath = "file:" + normalizedPath;
+                    }
+                    else {
+                        normalizedPath = "file:/" + normalizedPath;
+                    }
                 }
 
                 URI uri = new URI(normalizedPath);
@@ -207,6 +189,10 @@ public class PathHelper {
             }
             catch (URISyntaxException e) {
                 logger.warn(e, "Path is not valid URI: '%s'", normalizedPath);
+            }
+
+            if (normalizedPath.startsWith(FILE_SEPARATOR)) {
+                normalizedPath = normalizedPath.substring(FILE_SEPARATOR.length());
             }
 
             return normalizedPath;
