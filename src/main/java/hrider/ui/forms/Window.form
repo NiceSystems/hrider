@@ -3,7 +3,7 @@
   <grid id="27dc6" binding="topPanel" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="4" left="4" bottom="4" right="4"/>
     <constraints>
-      <xy x="20" y="20" width="865" height="483"/>
+      <xy x="20" y="20" width="777" height="486"/>
     </constraints>
     <properties>
       <minimumSize width="650" height="450"/>
@@ -91,29 +91,49 @@
           </tabbedpane>
         </children>
       </grid>
-      <scrollpane id="1ddd4">
+      <grid id="b97f0" binding="actionPanel" layout-manager="FlowLayout" hgap="2" vgap="0" flow-align="0">
         <constraints>
-          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="7" anchor="2" fill="1" indent="0" use-parent-layout="false">
-            <preferred-size width="-1" height="24"/>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="2" fill="1" indent="0" use-parent-layout="false">
+            <minimum-size width="-1" height="34"/>
+            <preferred-size width="-1" height="34"/>
           </grid>
         </constraints>
-        <properties>
-          <horizontalScrollBarPolicy value="30"/>
-          <verticalScrollBarPolicy value="20"/>
-        </properties>
+        <properties/>
         <border type="etched"/>
         <children>
-          <component id="d2cac" class="javax.swing.JTextArea" binding="statusLabel">
+          <component id="d9d01" class="javax.swing.JButton" binding="copyToClipboard">
             <constraints/>
             <properties>
-              <background color="-986896"/>
-              <editable value="false"/>
-              <lineWrap value="true"/>
-              <wrapStyleWord value="true"/>
+              <icon value="images/copy.png"/>
+              <label value=""/>
+              <margin top="0" left="0" bottom="0" right="0"/>
+              <text value=""/>
+            </properties>
+          </component>
+          <component id="78b73" class="javax.swing.JLabel" binding="actionLabel1">
+            <constraints/>
+            <properties>
+              <focusable value="false"/>
+              <text value=""/>
+            </properties>
+          </component>
+          <component id="3a653" class="hrider.ui.controls.JLinkButton" binding="actionLabel2">
+            <constraints/>
+            <properties>
+              <focusPainted value="false"/>
+              <focusable value="false"/>
+              <margin top="0" left="0" bottom="0" right="0"/>
+            </properties>
+          </component>
+          <component id="ff38c" class="javax.swing.JLabel" binding="actionLabel3">
+            <constraints/>
+            <properties>
+              <focusable value="false"/>
+              <text value=""/>
             </properties>
           </component>
         </children>
-      </scrollpane>
+      </grid>
     </children>
   </grid>
 </form>

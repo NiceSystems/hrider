@@ -75,6 +75,18 @@ public class MessageHandler {
     }
 
     /**
+     * This method is called by the component that wants to report to the user additional information with the option to perform
+     * an action.
+     *
+     * @param action The action to execute if clicked.
+     */
+    public static void addAction(UIAction action) {
+        for (MessageHandlerListener listener : listeners) {
+            listener.onAction(action);
+        }
+    }
+
+    /**
      * Adds a listener to the list of registered listeners.
      *
      * @param listener A listener to add.

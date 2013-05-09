@@ -183,6 +183,17 @@ public class Connection {
     }
 
     /**
+     * Checks whether the specified table is enabled.
+     *
+     * @param tableName The name of the table to check.
+     * @return True if the table is enabled or False otherwise.
+     * @throws IOException Error accessing hbase.
+     */
+    public boolean tableEnabled(String tableName) throws IOException {
+        return tableName != null && this.hbaseAdmin.isTableEnabled(tableName);
+    }
+
+    /**
      * Creates a new table or modifies an existing one in the hbase cluster.
      *
      * @param tableName The name of the table to create.
@@ -381,6 +392,16 @@ public class Connection {
      */
     public void flushTable(String tableName) throws IOException, InterruptedException {
         this.hbaseAdmin.flush(tableName);
+    }
+
+    /**
+     * Enables the table.
+     *
+     * @param tableName The name of the table to enable.
+     * @throws IOException Error accessing hbase.
+     */
+    public void enableTable(String tableName) throws IOException {
+        this.hbaseAdmin.enableTable(tableName);
     }
 
     /**
