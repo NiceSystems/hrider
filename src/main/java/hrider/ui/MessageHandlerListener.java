@@ -36,4 +36,11 @@ public interface MessageHandlerListener {
      * @param ex      An exception.
      */
     void onError(String message, Exception ex);
+
+    /**
+     * The method is called when a component wants to show the user message with the action.
+     *
+     * @param action The action to execute if clicked.
+     */
+    void onAction(UIAction action);
 }

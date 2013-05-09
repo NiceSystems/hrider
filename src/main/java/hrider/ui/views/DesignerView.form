@@ -55,7 +55,7 @@
                     </properties>
                     <border type="none"/>
                     <children>
-                      <component id="400e6" class="javax.swing.JButton" binding="refreshTablesButton">
+                      <component id="400e6" class="javax.swing.JButton" binding="tableRefresh">
                         <constraints/>
                         <properties>
                           <enabled value="true"/>
@@ -72,7 +72,7 @@
                         <constraints/>
                         <properties/>
                       </component>
-                      <component id="35c80" class="javax.swing.JComboBox" binding="tablesFilter">
+                      <component id="35c80" class="javax.swing.JComboBox" binding="tableFilters">
                         <constraints/>
                         <properties>
                           <alignmentX value="0.0"/>
@@ -132,10 +132,10 @@
                     </clientProperties>
                     <border type="none"/>
                     <children>
-                      <component id="870b4" class="javax.swing.JButton" binding="addTableButton">
+                      <component id="870b4" class="javax.swing.JButton" binding="tableAdd">
                         <constraints/>
                         <properties>
-                          <enabled value="false"/>
+                          <enabled value="true"/>
                           <horizontalAlignment value="0"/>
                           <icon value="images/add-table.png"/>
                           <maximumSize width="24" height="24"/>
@@ -145,7 +145,7 @@
                           <toolTipText value="Create a new table"/>
                         </properties>
                       </component>
-                      <component id="4bb65" class="javax.swing.JButton" binding="deleteTableButton">
+                      <component id="4bb65" class="javax.swing.JButton" binding="tableDelete">
                         <constraints/>
                         <properties>
                           <enabled value="false"/>
@@ -158,7 +158,7 @@
                           <toolTipText value="Delete selected table(s)"/>
                         </properties>
                       </component>
-                      <component id="13d99" class="javax.swing.JButton" binding="truncateTableButton">
+                      <component id="13d99" class="javax.swing.JButton" binding="tableTruncate">
                         <constraints/>
                         <properties>
                           <enabled value="false"/>
@@ -171,7 +171,7 @@
                           <toolTipText value="Truncate selected table(s)"/>
                         </properties>
                       </component>
-                      <component id="57be3" class="javax.swing.JButton" binding="copyTableButton">
+                      <component id="57be3" class="javax.swing.JButton" binding="tableCopy">
                         <constraints/>
                         <properties>
                           <enabled value="false"/>
@@ -183,7 +183,7 @@
                           <toolTipText value="Copy table information to the clipboard"/>
                         </properties>
                       </component>
-                      <component id="712e6" class="javax.swing.JButton" binding="pasteTableButton">
+                      <component id="712e6" class="javax.swing.JButton" binding="tablePaste">
                         <constraints/>
                         <properties>
                           <enabled value="false"/>
@@ -195,7 +195,7 @@
                           <toolTipText value="Paste table from the clipboard"/>
                         </properties>
                       </component>
-                      <component id="7b48a" class="javax.swing.JButton" binding="exportTableButton">
+                      <component id="7b48a" class="javax.swing.JButton" binding="tableExport">
                         <constraints/>
                         <properties>
                           <enabled value="false"/>
@@ -207,10 +207,10 @@
                           <toolTipText value="Export table to the file"/>
                         </properties>
                       </component>
-                      <component id="4d46" class="javax.swing.JButton" binding="importTableButton">
+                      <component id="4d46" class="javax.swing.JButton" binding="tableImport">
                         <constraints/>
                         <properties>
-                          <enabled value="false"/>
+                          <enabled value="true"/>
                           <icon value="images/db-import.png"/>
                           <maximumSize width="24" height="24"/>
                           <minimumSize width="24" height="24"/>
@@ -219,7 +219,7 @@
                           <toolTipText value="Import table from the file"/>
                         </properties>
                       </component>
-                      <component id="2f79e" class="javax.swing.JButton" binding="flushTableButton">
+                      <component id="2f79e" class="javax.swing.JButton" binding="tableFlush">
                         <constraints/>
                         <properties>
                           <enabled value="false"/>
@@ -229,10 +229,10 @@
                           <minimumSize width="24" height="24"/>
                           <preferredSize width="24" height="24"/>
                           <text value=""/>
-                          <toolTipText value="Forse hbase to flush table to HFile"/>
+                          <toolTipText value="Force hbase to flush table to HFile"/>
                         </properties>
                       </component>
-                      <component id="188" class="javax.swing.JButton" binding="tableMetadataButton">
+                      <component id="188" class="javax.swing.JButton" binding="tableMetadata">
                         <constraints/>
                         <properties>
                           <enabled value="false"/>
@@ -328,7 +328,7 @@
                         </properties>
                         <border type="none"/>
                         <children>
-                          <component id="3bd37" class="javax.swing.JButton" binding="refreshColumnsButton">
+                          <component id="3bd37" class="javax.swing.JButton" binding="columnRefresh">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -345,7 +345,7 @@
                             <constraints/>
                             <properties/>
                           </component>
-                          <component id="c93fa" class="javax.swing.JComboBox" binding="columnsFilter">
+                          <component id="c93fa" class="javax.swing.JComboBox" binding="columnFilters">
                             <constraints/>
                             <properties>
                               <alignmentX value="0.0"/>
@@ -360,7 +360,7 @@
                             <constraints/>
                             <properties/>
                           </component>
-                          <component id="39ac7" class="javax.swing.JButton" binding="scanButton">
+                          <component id="39ac7" class="javax.swing.JButton" binding="columnScan">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -371,7 +371,7 @@
                               <toolTipText value="Perform an advanced scan..."/>
                             </properties>
                           </component>
-                          <component id="83a5f" class="javax.swing.JButton" binding="jumpButton">
+                          <component id="83a5f" class="javax.swing.JButton" binding="columnJump">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -382,7 +382,7 @@
                               <toolTipText value="Jump to a specific row number"/>
                             </properties>
                           </component>
-                          <component id="f67dd" class="javax.swing.JButton" binding="populateButton">
+                          <component id="f67dd" class="javax.swing.JButton" binding="columnPopulate">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -434,7 +434,7 @@
                         </properties>
                         <border type="none"/>
                         <children>
-                          <component id="bf0ee" class="javax.swing.JButton" binding="checkAllButton" default-binding="true">
+                          <component id="bf0ee" class="javax.swing.JButton" binding="columnCheck">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -446,7 +446,7 @@
                               <toolTipText value="Select all columns"/>
                             </properties>
                           </component>
-                          <component id="5328d" class="javax.swing.JButton" binding="uncheckAllButton">
+                          <component id="5328d" class="javax.swing.JButton" binding="columnUncheck">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -462,7 +462,7 @@
                             <constraints/>
                             <properties/>
                           </component>
-                          <component id="dcf2c" class="hrider.ui.controls.WideComboBox" binding="cmbColumnNameTypes">
+                          <component id="dcf2c" class="hrider.ui.controls.WideComboBox" binding="columnConverters">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -476,7 +476,7 @@
                             <constraints/>
                             <properties/>
                           </component>
-                          <component id="608e4" class="javax.swing.JButton" binding="addConverterButton">
+                          <component id="608e4" class="javax.swing.JButton" binding="columnAddConverter">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -488,7 +488,7 @@
                               <toolTipText value="Add custom type converter"/>
                             </properties>
                           </component>
-                          <component id="cf98d" class="javax.swing.JButton" binding="editConverterButton">
+                          <component id="cf98d" class="javax.swing.JButton" binding="columnEditConverter">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -500,7 +500,7 @@
                               <toolTipText value="Edit custom type converter"/>
                             </properties>
                           </component>
-                          <component id="a0ec4" class="javax.swing.JButton" binding="deleteConverterButton">
+                          <component id="a0ec4" class="javax.swing.JButton" binding="columnDeleteConverter">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -595,7 +595,7 @@
                         </properties>
                         <border type="none"/>
                         <children>
-                          <component id="f323f" class="javax.swing.JButton" binding="openInViewerButton">
+                          <component id="f323f" class="javax.swing.JButton" binding="rowOpen">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -606,7 +606,7 @@
                               <toolTipText value="Open rows in external viewer"/>
                             </properties>
                           </component>
-                          <component id="28107" class="javax.swing.JButton" binding="addRowButton">
+                          <component id="28107" class="javax.swing.JButton" binding="rowAdd">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -617,7 +617,7 @@
                               <toolTipText value="Create a new row"/>
                             </properties>
                           </component>
-                          <component id="3cb0e" class="javax.swing.JButton" binding="deleteRowButton">
+                          <component id="3cb0e" class="javax.swing.JButton" binding="rowDelete">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -628,7 +628,7 @@
                               <toolTipText value="Delete selected rows"/>
                             </properties>
                           </component>
-                          <component id="d0926" class="javax.swing.JButton" binding="copyRowButton" default-binding="true">
+                          <component id="d0926" class="javax.swing.JButton" binding="rowCopy">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -640,7 +640,7 @@
                               <toolTipText value="Copy selected rows to the clipboard"/>
                             </properties>
                           </component>
-                          <component id="f52ff" class="javax.swing.JButton" binding="pasteRowButton">
+                          <component id="f52ff" class="javax.swing.JButton" binding="rowPaste">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -652,7 +652,7 @@
                               <toolTipText value="Paste rows from the clipboard"/>
                             </properties>
                           </component>
-                          <component id="14c3d" class="javax.swing.JButton" binding="updateRowButton">
+                          <component id="14c3d" class="javax.swing.JButton" binding="rowSave">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -677,7 +677,7 @@
                         </properties>
                         <border type="none"/>
                         <children>
-                          <component id="e96c8" class="javax.swing.JSpinner" binding="rowsNumberSpinner">
+                          <component id="e96c8" class="javax.swing.JSpinner" binding="rowsNumber">
                             <constraints/>
                             <properties>
                               <doubleBuffered value="true"/>
@@ -690,7 +690,7 @@
                             <constraints/>
                             <properties/>
                           </component>
-                          <component id="b62" class="javax.swing.JLabel" binding="visibleRowsLabel">
+                          <component id="b62" class="javax.swing.JLabel" binding="rowsVisible">
                             <constraints/>
                             <properties>
                               <text value="?"/>
@@ -710,7 +710,7 @@
                             <constraints/>
                             <properties/>
                           </component>
-                          <component id="50ab7" class="javax.swing.JLabel" binding="rowsNumberLabel">
+                          <component id="50ab7" class="javax.swing.JLabel" binding="rowsTotal">
                             <constraints/>
                             <properties>
                               <text value="?"/>
@@ -728,7 +728,7 @@
                             <constraints/>
                             <properties/>
                           </component>
-                          <component id="fb67c" class="javax.swing.JButton" binding="showPrevPageButton">
+                          <component id="fb67c" class="javax.swing.JButton" binding="rowsPrev">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>
@@ -740,7 +740,7 @@
                               <toolTipText value="Go to the prvious page"/>
                             </properties>
                           </component>
-                          <component id="24c1c" class="javax.swing.JButton" binding="showNextPageButton">
+                          <component id="24c1c" class="javax.swing.JButton" binding="rowsNext">
                             <constraints/>
                             <properties>
                               <enabled value="false"/>

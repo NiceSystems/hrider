@@ -2,6 +2,7 @@ package hrider.ui.forms;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
 import hrider.config.ClusterConfig;
 import hrider.config.ConnectionDetails;
 import hrider.config.PropertiesConfig;
@@ -9,11 +10,13 @@ import hrider.config.ViewConfig;
 import hrider.data.DataTable;
 import hrider.hbase.Connection;
 import hrider.hbase.ConnectionManager;
+import hrider.system.Clipboard;
 import hrider.system.ClipboardData;
 import hrider.system.InMemoryClipboard;
 import hrider.ui.MessageHandler;
 import hrider.ui.MessageHandlerListener;
 import hrider.ui.TabClosedListener;
+import hrider.ui.UIAction;
 import hrider.ui.controls.JCloseButton;
 import hrider.ui.controls.JLinkButton;
 import hrider.ui.views.DesignerView;
@@ -23,6 +26,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -52,10 +57,16 @@ public class Window {
 
     //region Variables
     private JPanel                       topPanel;
-    private JTextArea                    statusLabel;
     private JTabbedPane                  tabbedPane;
     private JLinkButton                  connectToCluster;
+    private JPanel                       actionPanel;
+    private JLabel                       actionLabel1;
+    private JLinkButton                  actionLabel2;
+    private JLabel                       actionLabel3;
+    private JButton                      copyToClipboard;
     private boolean                      canceled;
+    private UIAction                     uiAction;
+    private String                       lastError;
     private Map<Component, DesignerView> viewMap;
     //endregion
 
@@ -63,23 +74,86 @@ public class Window {
     public Window() {
         this.viewMap = new HashMap<Component, DesignerView>();
 
+        Font font = this.actionLabel1.getFont();
+        this.actionLabel1.setFont(font.deriveFont(font.getStyle() | ~Font.BOLD));
+        this.actionLabel2.setFont(font.deriveFont(font.getStyle() | ~Font.BOLD));
+        this.actionLabel3.setFont(font.deriveFont(font.getStyle() | ~Font.BOLD));
+
         MessageHandler.addListener(
             new MessageHandlerListener() {
                 @Override
                 public void onInfo(String message) {
-                    statusLabel.setText(message);
-                    statusLabel.paintImmediately(statusLabel.getBounds());
+                    lastError = null;
+                    uiAction = null;
+
+                    copyToClipboard.setVisible(false);
+
+                    actionLabel1.setText(message);
+
+                    // this trick allows to keep all labels on the same level. The empty text on the link button moves all labels up for a couple of pixels.
+                    actionLabel2.setText(" ");
+                    actionLabel2.setLinkColor(new Color(240, 240, 240)); // the control color which is not visible.
+
+                    actionLabel3.setText("");
                 }
 
                 @Override
                 public void onError(String message, Exception ex) {
-                    String error = message;
+                    uiAction = null;
+
+                    copyToClipboard.setVisible(true);
+
+                    String error = ' ' + message;
+                    lastError = error;
+
                     if (ex != null) {
-                        error += ": " + ex.toString();
+                        StringWriter sw = new StringWriter();
+                        PrintWriter pw = new PrintWriter(sw);
+
+                        ex.printStackTrace(pw);
+
+                        lastError += ": " + sw.toString();
+                        error += ": " + ex.getMessage();
+
+                        pw.close();
                     }
 
-                    statusLabel.setText(error);
-                    statusLabel.paintImmediately(statusLabel.getBounds());
+                    actionLabel1.setText(error);
+                    actionLabel2.setText(" ");
+                    actionLabel2.setLinkColor(new Color(240, 240, 240));
+                    actionLabel3.setText("");
+                }
+
+                @Override
+                public void onAction(UIAction action) {
+                    lastError = null;
+                    uiAction = action;
+
+                    copyToClipboard.setVisible(false);
+
+                    String[] messageParts = action.getFormattedMessage();
+                    if (messageParts.length > 0) {
+                        actionLabel1.setText(messageParts[0]);
+                    }
+                    else {
+                        actionLabel1.setText("");
+                    }
+
+                    if (messageParts.length > 1) {
+                        actionLabel2.setText(messageParts[1]);
+                        actionLabel2.setLinkColor(new Color(0, 0, 255)); // the blue link color.
+                    }
+                    else {
+                        actionLabel2.setText(" ");
+                        actionLabel2.setLinkColor(new Color(240, 240, 240));
+                    }
+
+                    if (messageParts.length > 2) {
+                        actionLabel3.setText(messageParts[2]);
+                    }
+                    else {
+                        actionLabel3.setText("");
+                    }
                 }
             });
 
@@ -96,6 +170,26 @@ public class Window {
                         catch (IOException ex) {
                             MessageHandler.addError(String.format("Failed to connect to %s.", connectionDetails.getZookeeper().getHost()), ex);
                         }
+                    }
+                }
+            });
+
+        this.actionLabel2.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (uiAction != null) {
+                        uiAction.execute();
+                    }
+                }
+            });
+
+        this.copyToClipboard.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (lastError != null) {
+                        Clipboard.setText(lastError);
                     }
                 }
             });
@@ -289,7 +383,7 @@ public class Window {
     /**
      * Shows a connection dialog.
      *
-     * @return A reference to {@link ConnectionDetails} class that contains all required information to connect to the cluster.
+     * @return A reference to {@link hrider.config.ConnectionDetails} class that contains all required information to connect to the cluster.
      */
     private ConnectionDetails showDialog() {
         ConnectionDetailsDialog dialog = new ConnectionDetailsDialog();
@@ -363,20 +457,33 @@ public class Window {
         tabbedPane = new JTabbedPane();
         tabbedPane.setTabLayoutPolicy(1);
         panel4.add(tabbedPane, BorderLayout.CENTER);
-        final JScrollPane scrollPane1 = new JScrollPane();
-        scrollPane1.setHorizontalScrollBarPolicy(30);
-        scrollPane1.setVerticalScrollBarPolicy(20);
+        actionPanel = new JPanel();
+        actionPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 2, 0));
         topPanel.add(
-            scrollPane1, new GridConstraints(
+            actionPanel, new GridConstraints(
             2, 0, 1, 1, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_HORIZONTAL,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, new Dimension(-1, 24), null, 0, false));
-        scrollPane1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), null));
-        statusLabel = new JTextArea();
-        statusLabel.setBackground(new Color(-986896));
-        statusLabel.setEditable(false);
-        statusLabel.setLineWrap(true);
-        statusLabel.setWrapStyleWord(true);
-        scrollPane1.setViewportView(statusLabel);
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 34),
+            new Dimension(-1, 34), null, 0, false));
+        actionPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), null));
+        copyToClipboard = new JButton();
+        copyToClipboard.setIcon(new ImageIcon(getClass().getResource("/images/copy.png")));
+        copyToClipboard.setLabel("");
+        copyToClipboard.setMargin(new Insets(0, 0, 0, 0));
+        copyToClipboard.setText("");
+        actionPanel.add(copyToClipboard);
+        actionLabel1 = new JLabel();
+        actionLabel1.setFocusable(false);
+        actionLabel1.setText("");
+        actionPanel.add(actionLabel1);
+        actionLabel2 = new JLinkButton();
+        actionLabel2.setFocusPainted(false);
+        actionLabel2.setFocusable(false);
+        actionLabel2.setMargin(new Insets(0, 0, 0, 0));
+        actionPanel.add(actionLabel2);
+        actionLabel3 = new JLabel();
+        actionLabel3.setFocusable(false);
+        actionLabel3.setText("");
+        actionPanel.add(actionLabel3);
     }
 
     /**

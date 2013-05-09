@@ -25,11 +25,9 @@ import hrider.system.InMemoryClipboard;
 import hrider.ui.ChangeTracker;
 import hrider.ui.ChangeTrackerListener;
 import hrider.ui.MessageHandler;
+import hrider.ui.UIAction;
 import hrider.ui.controls.WideComboBox;
-import hrider.ui.design.JCellEditor;
-import hrider.ui.design.JCheckBoxRenderer;
-import hrider.ui.design.JTableModel;
-import hrider.ui.design.ResizeableTableHeader;
+import hrider.ui.design.*;
 import hrider.ui.forms.*;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
@@ -80,49 +78,49 @@ public class DesignerView {
     private JList                             tablesList;
     private DefaultListModel                  tablesListModel;
     private JTable                            rowsTable;
-    private JButton                           populateButton;
+    private JButton                           columnPopulate;
     private JTable                            columnsTable;
-    private JButton                           updateRowButton;
-    private JButton                           deleteRowButton;
-    private JButton                           addRowButton;
-    private JButton                           truncateTableButton;
-    private JButton                           scanButton;
-    private JButton                           addTableButton;
-    private JButton                           deleteTableButton;
-    private JSpinner                          rowsNumberSpinner;
-    private JButton                           showPrevPageButton;
-    private JButton                           showNextPageButton;
-    private JLabel                            rowsNumberLabel;
-    private JLabel                            visibleRowsLabel;
-    private JButton                           checkAllButton;
-    private JButton                           copyRowButton;
-    private JButton                           pasteRowButton;
-    private JButton                           refreshTablesButton;
-    private JButton                           copyTableButton;
-    private JButton                           pasteTableButton;
-    private JButton                           uncheckAllButton;
+    private JButton                           rowSave;
+    private JButton                           rowDelete;
+    private JButton                           rowAdd;
+    private JButton                           tableTruncate;
+    private JButton                           columnScan;
+    private JButton                           tableAdd;
+    private JButton                           tableDelete;
+    private JSpinner                          rowsNumber;
+    private JButton                           rowsPrev;
+    private JButton                           rowsNext;
+    private JLabel                            rowsTotal;
+    private JLabel                            rowsVisible;
+    private JButton                           columnCheck;
+    private JButton                           rowCopy;
+    private JButton                           rowPaste;
+    private JButton                           tableRefresh;
+    private JButton                           tableCopy;
+    private JButton                           tablePaste;
+    private JButton                           columnUncheck;
     private JSplitPane                        topSplitPane;
     private JSplitPane                        innerSplitPane;
     private JLabel                            columnsNumber;
     private JLabel                            tablesNumber;
-    private JComboBox                         tablesFilter;
+    private JComboBox                         tableFilters;
     private DefaultComboBoxModel              tablesFilterModel;
     private ItemListener                      tablesFilterListener;
-    private JComboBox                         columnsFilter;
+    private JComboBox                         columnFilters;
     private DefaultComboBoxModel              columnsFilterModel;
     private ItemListener                      columnsFilterListener;
-    private JButton                           jumpButton;
-    private JButton                           openInViewerButton;
-    private JButton                           importTableButton;
-    private JButton                           exportTableButton;
-    private JButton                           refreshColumnsButton;
-    private JButton                           flushTableButton;
-    private JButton                           tableMetadataButton;
-    private JButton                           addConverterButton;
-    private JButton                           editConverterButton;
-    private JButton                           deleteConverterButton;
-    private WideComboBox                      cmbColumnNameTypes;
-    private JLabel rowsNumberIcon;
+    private JButton                           columnJump;
+    private JButton                           rowOpen;
+    private JButton                           tableImport;
+    private JButton                           tableExport;
+    private JButton                           columnRefresh;
+    private JButton                           tableFlush;
+    private JButton                           tableMetadata;
+    private JButton                           columnAddConverter;
+    private JButton                           columnEditConverter;
+    private JButton                           columnDeleteConverter;
+    private WideComboBox                      columnConverters;
+    private JLabel                            rowsNumberIcon;
     private DefaultTableModel                 columnsTableModel;
     private DefaultTableModel                 rowsTableModel;
     private Query                             lastQuery;
@@ -146,23 +144,23 @@ public class DesignerView {
         this.clusterConfig = new ClusterConfig(this.connection.getServerName());
         this.clusterConfig.setConnection(connection.getConnectionDetails());
         this.tablesFilterModel = new DefaultComboBoxModel();
-        this.tablesFilter.setModel(this.tablesFilterModel);
+        this.tableFilters.setModel(this.tablesFilterModel);
         this.columnsFilterModel = new DefaultComboBoxModel();
-        this.columnsFilter.setModel(this.columnsFilterModel);
+        this.columnFilters.setModel(this.columnsFilterModel);
 
-        fillComboBox(tablesFilter, null, this.clusterConfig.getTableFilters());
+        fillComboBox(tableFilters, null, this.clusterConfig.getTableFilters());
 
         String tableFilter = this.clusterConfig.getSelectedTableFilter();
         if (tableFilter != null) {
-            this.tablesFilter.setSelectedItem(tableFilter);
+            this.tableFilters.setSelectedItem(tableFilter);
         }
 
         InMemoryClipboard.addListener(
             new ClipboardListener() {
                 @Override
                 public void onChanged(ClipboardData data) {
-                    pasteTableButton.setEnabled(hasTableInClipboard());
-                    pasteRowButton.setEnabled(hasRowsInClipboard());
+                    tablePaste.setEnabled(hasTableInClipboard());
+                    rowPaste.setEnabled(hasRowsInClipboard());
                 }
             });
 
@@ -179,7 +177,7 @@ public class DesignerView {
         dividerContainer.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
         dividerContainer.setLayout(new BorderLayout());
 
-        this.rowsNumberSpinner.setModel(new SpinnerNumberModel(100, 1, 10000, 100));
+        this.rowsNumber.setModel(new SpinnerNumberModel(100, 1, 10000, 100));
 
         this.tablesFilterListener = new ItemListener() {
             @Override
@@ -192,26 +190,26 @@ public class DesignerView {
             }
         };
 
-        this.tablesFilter.addItemListener(this.tablesFilterListener);
+        this.tableFilters.addItemListener(this.tablesFilterListener);
 
-        this.tablesFilter.getEditor().addActionListener(
+        this.tableFilters.getEditor().addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    String item = (String)tablesFilter.getEditor().getItem();
+                    String item = (String)tableFilters.getEditor().getItem();
                     if (item != null && !item.isEmpty()) {
                         if (tablesFilterModel.getIndexOf(item) == -1) {
-                            tablesFilter.addItem(item);
+                            tableFilters.addItem(item);
                         }
 
-                        tablesFilter.setSelectedItem(item);
-                        clusterConfig.setTablesFilter(getFilters(tablesFilter));
+                        tableFilters.setSelectedItem(item);
+                        clusterConfig.setTablesFilter(getFilters(tableFilters));
                     }
                     else {
-                        Object selectedItem = tablesFilter.getSelectedItem();
+                        Object selectedItem = tableFilters.getSelectedItem();
                         if (selectedItem != null) {
-                            tablesFilter.removeItem(selectedItem);
-                            clusterConfig.setTablesFilter(getFilters(tablesFilter));
+                            tableFilters.removeItem(selectedItem);
+                            clusterConfig.setTablesFilter(getFilters(tableFilters));
                         }
                     }
                 }
@@ -228,32 +226,32 @@ public class DesignerView {
             }
         };
 
-        this.columnsFilter.addItemListener(this.columnsFilterListener);
+        this.columnFilters.addItemListener(this.columnsFilterListener);
 
-        this.columnsFilter.getEditor().addActionListener(
+        this.columnFilters.getEditor().addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    String item = (String)columnsFilter.getEditor().getItem();
+                    String item = (String)columnFilters.getEditor().getItem();
                     if (item != null && !item.isEmpty()) {
                         if (columnsFilterModel.getIndexOf(item) == -1) {
-                            columnsFilter.addItem(item);
+                            columnFilters.addItem(item);
                         }
 
-                        columnsFilter.setSelectedItem(item);
-                        clusterConfig.setColumnsFilter(getSelectedTableName(), getFilters(columnsFilter));
+                        columnFilters.setSelectedItem(item);
+                        clusterConfig.setColumnsFilter(getSelectedTableName(), getFilters(columnFilters));
                     }
                     else {
-                        Object selectedItem = columnsFilter.getSelectedItem();
+                        Object selectedItem = columnFilters.getSelectedItem();
                         if (selectedItem != null) {
-                            columnsFilter.removeItem(selectedItem);
-                            clusterConfig.setColumnsFilter(getSelectedTableName(), getFilters(columnsFilter));
+                            columnFilters.removeItem(selectedItem);
+                            clusterConfig.setColumnsFilter(getSelectedTableName(), getFilters(columnFilters));
                         }
                     }
                 }
             });
 
-        this.cmbColumnNameTypes.addItemListener(
+        this.columnConverters.addItemListener(
             new ItemListener() {
                 @Override
                 public void itemStateChanged(ItemEvent e) {
@@ -271,8 +269,8 @@ public class DesignerView {
 
                         clusterConfig.setTableConfig(getSelectedTableName(), "nameConverter", nameConverter.getName());
 
-                        editConverterButton.setEnabled(isEditable);
-                        deleteConverterButton.setEnabled(isEditable);
+                        columnEditConverter.setEnabled(isEditable);
+                        columnDeleteConverter.setEnabled(isEditable);
                     }
                 }
             });
@@ -316,7 +314,7 @@ public class DesignerView {
                 }
             });
 
-        this.jumpButton.addActionListener(
+        this.columnJump.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -340,7 +338,7 @@ public class DesignerView {
                 }
             });
 
-        this.populateButton.addActionListener(
+        this.columnPopulate.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -352,7 +350,7 @@ public class DesignerView {
                 }
             });
 
-        this.scanButton.addActionListener(
+        this.columnScan.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -368,7 +366,7 @@ public class DesignerView {
                 }
             });
 
-        this.openInViewerButton.addActionListener(
+        this.rowOpen.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -410,7 +408,7 @@ public class DesignerView {
                 }
             });
 
-        this.addRowButton.addActionListener(
+        this.rowAdd.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -457,7 +455,7 @@ public class DesignerView {
                 }
             });
 
-        this.deleteRowButton.addActionListener(
+        this.rowDelete.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -497,7 +495,7 @@ public class DesignerView {
             });
 
 
-        this.copyRowButton.addActionListener(
+        this.rowCopy.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -509,7 +507,7 @@ public class DesignerView {
                 }
             });
 
-        this.pasteRowButton.addActionListener(
+        this.rowPaste.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -521,7 +519,7 @@ public class DesignerView {
                 }
             });
 
-        this.updateRowButton.addActionListener(
+        this.rowSave.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -547,7 +545,7 @@ public class DesignerView {
                             }
 
                             changeTracker.clear();
-                            updateRowButton.setEnabled(changeTracker.hasChanges());
+                            rowSave.setEnabled(changeTracker.hasChanges());
                         }
                         finally {
                             owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -556,7 +554,7 @@ public class DesignerView {
                 }
             });
 
-        this.addTableButton.addActionListener(
+        this.tableAdd.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -570,7 +568,7 @@ public class DesignerView {
 
                             Filter filter;
 
-                            String value = (String)tablesFilter.getSelectedItem();
+                            String value = (String)tableFilters.getSelectedItem();
                             if (value == null || value.isEmpty()) {
                                 filter = new EmptyFilter();
                             }
@@ -593,7 +591,7 @@ public class DesignerView {
                 }
             });
 
-        this.deleteTableButton.addActionListener(
+        this.tableDelete.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -622,7 +620,7 @@ public class DesignerView {
                 }
             });
 
-        this.truncateTableButton.addActionListener(
+        this.tableTruncate.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -657,7 +655,7 @@ public class DesignerView {
                 }
             });
 
-        this.showPrevPageButton.addActionListener(
+        this.rowsPrev.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -667,7 +665,7 @@ public class DesignerView {
                 }
             });
 
-        this.showNextPageButton.addActionListener(
+        this.rowsNext.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -677,7 +675,7 @@ public class DesignerView {
                 }
             });
 
-        this.checkAllButton.addActionListener(
+        this.columnCheck.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -695,7 +693,7 @@ public class DesignerView {
                 }
             });
 
-        this.uncheckAllButton.addActionListener(
+        this.columnUncheck.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -713,7 +711,7 @@ public class DesignerView {
                 }
             });
 
-        this.flushTableButton.addActionListener(
+        this.tableFlush.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -741,7 +739,7 @@ public class DesignerView {
                 }
             });
 
-        this.refreshTablesButton.addActionListener(
+        this.tableRefresh.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -751,7 +749,7 @@ public class DesignerView {
                 }
             });
 
-        this.copyTableButton.addActionListener(
+        this.tableCopy.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -761,7 +759,7 @@ public class DesignerView {
                 }
             });
 
-        this.pasteTableButton.addActionListener(
+        this.tablePaste.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -771,7 +769,7 @@ public class DesignerView {
                 }
             });
 
-        this.exportTableButton.addActionListener(
+        this.tableExport.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -797,7 +795,7 @@ public class DesignerView {
                 }
             });
 
-        this.importTableButton.addActionListener(
+        this.tableImport.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -829,7 +827,7 @@ public class DesignerView {
                 }
             });
 
-        this.tableMetadataButton.addActionListener(
+        this.tableMetadata.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -861,7 +859,7 @@ public class DesignerView {
                 }
             });
 
-        this.refreshColumnsButton.addActionListener(
+        this.columnRefresh.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -872,7 +870,7 @@ public class DesignerView {
                 }
             });
 
-        this.addConverterButton.addActionListener(
+        this.columnAddConverter.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -887,7 +885,7 @@ public class DesignerView {
                 }
             });
 
-        this.editConverterButton.addActionListener(
+        this.columnEditConverter.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -927,7 +925,7 @@ public class DesignerView {
                 }
             });
 
-        this.deleteConverterButton.addActionListener(
+        this.columnDeleteConverter.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -981,7 +979,7 @@ public class DesignerView {
     /**
      * Gets the reference to the view.
      *
-     * @return A {@link javax.swing.JPanel} that contains the controls.
+     * @return A {@link JPanel} that contains the controls.
      */
     public JPanel getView() {
         return this.topPanel;
@@ -990,7 +988,7 @@ public class DesignerView {
     /**
      * Gets a reference to the class used to access the hbase.
      *
-     * @return A reference to the {@link hrider.hbase.Connection} class.
+     * @return A reference to the {@link Connection} class.
      */
     public Connection getConnection() {
         return this.connection;
@@ -1058,7 +1056,7 @@ public class DesignerView {
      *
      * @param columnName The name of the column to look.
      * @param table      The table that should contain column.
-     * @return A reference to {@link javax.swing.table.TableColumn} if found or {@code null} otherwise.
+     * @return A reference to {@link TableColumn} if found or {@code null} otherwise.
      */
     private static TableColumn getColumn(String columnName, JTable table) {
         for (int i = 0 ; i < table.getColumnCount() ; i++) {
@@ -1073,7 +1071,7 @@ public class DesignerView {
      * Clears the previously set error messages.
      */
     private static void clearError() {
-        MessageHandler.addError("", null);
+        MessageHandler.addInfo("");
     }
 
     /**
@@ -1096,21 +1094,21 @@ public class DesignerView {
     }
 
     /**
+     * Sets the action.
+     *
+     * @param action The action to set.
+     */
+    private static void setAction(UIAction action) {
+        MessageHandler.addAction(action);
+    }
+
+    /**
      * Loads the table names.
      */
     private void loadTables() {
         Object selectedTable = this.tablesList.getSelectedValue();
 
         clearError();
-
-        this.refreshTablesButton.setEnabled(false);
-        this.addTableButton.setEnabled(false);
-        this.deleteTableButton.setEnabled(false);
-        this.truncateTableButton.setEnabled(false);
-        this.copyTableButton.setEnabled(false);
-        this.exportTableButton.setEnabled(false);
-        this.tableMetadataButton.setEnabled(false);
-        this.importTableButton.setEnabled(false);
 
         this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
@@ -1119,7 +1117,7 @@ public class DesignerView {
 
             Filter filter;
 
-            String value = (String)tablesFilter.getSelectedItem();
+            String value = (String)tableFilters.getSelectedItem();
             if (value == null || value.isEmpty()) {
                 filter = new EmptyFilter();
             }
@@ -1135,8 +1133,8 @@ public class DesignerView {
                 }
             }
 
-            this.addTableButton.setEnabled(true);
-            this.importTableButton.setEnabled(true);
+            toggleTableControls();
+
             this.tablesNumber.setText(String.format("%s of %s", this.tablesListModel.getSize(), tables.size()));
             this.tablesList.setSelectedValue(selectedTable, true);
         }
@@ -1144,7 +1142,6 @@ public class DesignerView {
             setError("Failed to connect to hadoop: ", ex);
         }
         finally {
-            this.refreshTablesButton.setEnabled(true);
             this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
     }
@@ -1153,10 +1150,9 @@ public class DesignerView {
      * Initializes a table list used to present all available tables in the hbase cluster.
      */
     private void initializeTablesList() {
-        this.pasteTableButton.setEnabled(hasTableInClipboard());
-
         this.tablesListModel = new DefaultListModel();
         this.tablesList.setModel(this.tablesListModel);
+        this.tablesList.setCellRenderer(new JListRenderer(this.connection));
 
         this.tablesList.addListSelectionListener(
             new ListSelectionListener() {
@@ -1167,30 +1163,29 @@ public class DesignerView {
                             rowsCountAction.abort();
                         }
 
-                        int selectedIndices = tablesList.getSelectedIndices().length;
+                        toggleTableControls();
 
-                        flushTableButton.setEnabled(selectedIndices > 0);
-                        deleteTableButton.setEnabled(selectedIndices > 0);
-                        truncateTableButton.setEnabled(selectedIndices > 0);
+                        boolean populate = false;
+                        int[] selectedIndices = tablesList.getSelectedIndices();
 
-                        if (selectedIndices == 1) {
-                            copyTableButton.setEnabled(true);
-                            exportTableButton.setEnabled(true);
-                            tableMetadataButton.setEnabled(true);
+                        if (selectedIndices.length == 1) {
+                            populate = tableEnabled(getSelectedTableName());
+                        }
 
+                        if (populate) {
                             scanner = null;
 
                             String currentFilter = clusterConfig.getSelectedColumnFilter(getSelectedTableName());
 
-                            fillComboBox(columnsFilter, columnsFilterListener, clusterConfig.getColumnFilters(getSelectedTableName()));
-                            setFilter(columnsFilter, columnsFilterListener, currentFilter);
+                            fillComboBox(columnFilters, columnsFilterListener, clusterConfig.getColumnFilters(getSelectedTableName()));
+                            setFilter(columnFilters, columnsFilterListener, currentFilter);
 
                             String converterType = clusterConfig.getTableConfig(String.class, getSelectedTableName(), "nameConverter");
                             if (converterType != null) {
-                                cmbColumnNameTypes.setSelectedItem(ColumnType.fromNameOrDefault(converterType, ColumnType.BinaryString));
+                                columnConverters.setSelectedItem(ColumnType.fromNameOrDefault(converterType, ColumnType.BinaryString));
                             }
                             else {
-                                cmbColumnNameTypes.setSelectedItem(ColumnType.BinaryString);
+                                columnConverters.setSelectedItem(ColumnType.BinaryString);
                             }
 
                             populateColumnsTable(true);
@@ -1199,49 +1194,70 @@ public class DesignerView {
                             clearRows(columnsTable);
                             clearTable(rowsTable);
 
-                            enableDisablePagingButtons();
+                            togglePagingControls();
+                            toggleColumnControls(false);
+                            toggleRowControls(false);
 
-                            copyTableButton.setEnabled(false);
-                            exportTableButton.setEnabled(false);
-                            tableMetadataButton.setEnabled(false);
-                            rowsNumberLabel.setText("?");
-                            visibleRowsLabel.setText("?");
-                            pasteRowButton.setEnabled(false);
-                            populateButton.setEnabled(false);
-                            jumpButton.setEnabled(false);
-                            scanButton.setEnabled(false);
-                            addRowButton.setEnabled(false);
-                            checkAllButton.setEnabled(false);
-                            uncheckAllButton.setEnabled(false);
-                            refreshColumnsButton.setEnabled(false);
-                            cmbColumnNameTypes.setEnabled(false);
+                            rowsTotal.setText("?");
+                            rowsVisible.setText("?");
+
+                            if (selectedIndices.length == 1) {
+                                setAction(
+                                    new UIAction() {
+                                        @Override
+                                        public void execute() {
+                                            String tableName = getSelectedTableName();
+
+                                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                                            try {
+                                                connection.enableTable(tableName);
+
+                                                tablesList.clearSelection();
+                                                tablesList.setSelectedValue(tableName, true);
+
+                                                setInfo(String.format("The '%s' table has been successfully enabled.", tableName));
+                                            }
+                                            catch (Exception ex) {
+                                                setError(String.format("Failed to enable table '%s'", tableName), ex);
+                                            }
+                                            finally {
+                                                owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                                            }
+                                        }
+
+                                        @Override
+                                        public String[] getFormattedMessage() {
+                                            return new String[]{
+                                                "The selected table is disabled, do you want to", "enable", "it?"
+                                            };
+                                        }
+                                    });
+                            }
                         }
                     }
                 }
             });
 
         this.tablesList.addKeyListener(
-            new
-
-                KeyAdapter() {
-                    @Override
-                    public void keyReleased(KeyEvent e) {
-                        if (e.isControlDown()) {
-                            if (e.getKeyCode() == KeyEvent.VK_C) {
-                                clearError();
-                                if (copyTableButton.isEnabled()) {
-                                    copyTableToClipboard();
-                                }
+            new KeyAdapter() {
+                @Override
+                public void keyReleased(KeyEvent e) {
+                    if (e.isControlDown()) {
+                        if (e.getKeyCode() == KeyEvent.VK_C) {
+                            clearError();
+                            if (tableCopy.isEnabled()) {
+                                copyTableToClipboard();
                             }
-                            else if (e.getKeyCode() == KeyEvent.VK_V) {
-                                clearError();
-                                if (pasteTableButton.isEnabled()) {
-                                    pasteTableFromClipboard();
-                                }
+                        }
+                        else if (e.getKeyCode() == KeyEvent.VK_V) {
+                            clearError();
+                            if (tablePaste.isEnabled()) {
+                                pasteTableFromClipboard();
                             }
                         }
                     }
-                });
+                }
+            });
     }
 
     /**
@@ -1268,10 +1284,10 @@ public class DesignerView {
         }
 
         for (ColumnType columnType : ColumnType.getNameTypes()) {
-            this.cmbColumnNameTypes.addItem(columnType);
+            this.columnConverters.addItem(columnType);
         }
 
-        this.cmbColumnNameTypes.setSelectedItem(ColumnType.BinaryString);
+        this.columnConverters.setSelectedItem(ColumnType.BinaryString);
         this.columnsTable.getColumn("Column Type").setCellEditor(new DefaultCellEditor(this.cmbColumnTypes));
 
         this.columnsTable.getModel().addTableModelListener(
@@ -1299,8 +1315,8 @@ public class DesignerView {
 
                         TypeConverter nameConverter = getColumnNameConverter();
 
-                        editConverterButton.setEnabled(type.isEditable() || nameConverter.isEditable());
-                        deleteConverterButton.setEnabled(type.isEditable() || nameConverter.isEditable());
+                        columnEditConverter.setEnabled(type.isEditable() || nameConverter.isEditable());
+                        columnDeleteConverter.setEnabled(type.isEditable() || nameConverter.isEditable());
 
                         updateColumnType(qualifier, type);
                     }
@@ -1332,8 +1348,8 @@ public class DesignerView {
                         isEditable |= type.isEditable();
                     }
 
-                    editConverterButton.setEnabled(isEditable);
-                    deleteConverterButton.setEnabled(isEditable);
+                    columnEditConverter.setEnabled(isEditable);
+                    columnDeleteConverter.setEnabled(isEditable);
                 }
             });
     }
@@ -1353,8 +1369,7 @@ public class DesignerView {
             new ListSelectionListener() {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
-                    deleteRowButton.setEnabled(true);
-                    copyRowButton.setEnabled(true);
+                    toggleRowControls(true);
                 }
             });
 
@@ -1379,7 +1394,7 @@ public class DesignerView {
                         if (e.getKeyCode() == KeyEvent.VK_C) {
                             clearError();
 
-                            if (copyRowButton.isEnabled()) {
+                            if (rowCopy.isEnabled()) {
                                 JTableModel.stopCellEditing(rowsTable);
                                 copySelectedRowsToClipboard();
                             }
@@ -1387,7 +1402,7 @@ public class DesignerView {
                         else if (e.getKeyCode() == KeyEvent.VK_V) {
                             clearError();
 
-                            if (pasteRowButton.isEnabled()) {
+                            if (rowPaste.isEnabled()) {
                                 JTableModel.stopCellEditing(rowsTable);
                                 pasteRowsFromClipboard();
                             }
@@ -1402,9 +1417,8 @@ public class DesignerView {
                 public void propertyChange(PropertyChangeEvent evt) {
                     if ("model".equals(evt.getPropertyName())) {
                         changeTracker.clear();
-                        updateRowButton.setEnabled(changeTracker.hasChanges());
-                        deleteRowButton.setEnabled(false);
-                        copyRowButton.setEnabled(false);
+
+                        toggleRowControls(false);
                     }
                 }
             });
@@ -1443,7 +1457,7 @@ public class DesignerView {
                 public void onCellChanged(DataCell cell) {
                     clearError();
 
-                    updateRowButton.setEnabled(changeTracker.hasChanges());
+                    rowSave.setEnabled(changeTracker.hasChanges());
                 }
             });
     }
@@ -1473,41 +1487,19 @@ public class DesignerView {
             if (clearRows) {
                 clearTable(rowsTable);
 
-                this.rowsNumberLabel.setText("?");
-                this.visibleRowsLabel.setText("?");
-                this.rowsNumberSpinner.setEnabled(true);
-                this.pasteRowButton.setEnabled(hasRowsInClipboard());
+                this.rowsTotal.setText("?");
+                this.rowsVisible.setText("?");
+                this.rowsNumber.setEnabled(true);
             }
-
-            enableDisablePagingButtons();
 
             String tableName = getSelectedTableName();
             if (tableName != null) {
                 loadColumns(tableName, row);
             }
 
-            if (this.columnsTableModel.getRowCount() > 0) {
-                this.populateButton.setEnabled(true);
-                this.jumpButton.setEnabled(true);
-                this.scanButton.setEnabled(true);
-                this.addRowButton.setEnabled(true);
-                this.checkAllButton.setEnabled(true);
-                this.uncheckAllButton.setEnabled(true);
-                this.refreshColumnsButton.setEnabled(true);
-                this.addConverterButton.setEnabled(true);
-                this.cmbColumnNameTypes.setEnabled(true);
-            }
-            else {
-                this.populateButton.setEnabled(false);
-                this.jumpButton.setEnabled(false);
-                this.scanButton.setEnabled(false);
-                this.addRowButton.setEnabled(false);
-                this.checkAllButton.setEnabled(false);
-                this.uncheckAllButton.setEnabled(false);
-                this.refreshColumnsButton.setEnabled(false);
-                this.addConverterButton.setEnabled(false);
-                this.cmbColumnNameTypes.setEnabled(false);
-            }
+            togglePagingControls();
+            toggleColumnControls(columnsTableModel.getRowCount() > 0);
+            toggleRowControls(rowsTableModel.getRowCount() > 0);
         }
         finally {
             this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -1516,7 +1508,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link hrider.ui.views.DesignerView#rowsNumberSpinner} control.
+     * in the {@link DesignerView#rowsNumber} control.
      *
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
      *                  {@link Direction#Forward} or {@link Direction#Backward}.
@@ -1527,7 +1519,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link hrider.ui.views.DesignerView#rowsNumberSpinner} control.
+     * in the {@link DesignerView#rowsNumber} control.
      *
      * @param offset    The first row to start loading from.
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
@@ -1538,8 +1530,6 @@ public class DesignerView {
         this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
             JTableModel.stopCellEditing(columnsTable);
-
-            this.rowsNumberSpinner.setEnabled(true);
 
             String tableName = getSelectedTableName();
             if (tableName != null) {
@@ -1566,10 +1556,10 @@ public class DesignerView {
                 loadRowsTableColumns(tableName);
                 loadRows(rows);
 
-                this.enableDisablePagingButtons();
+                this.togglePagingControls();
 
-                this.visibleRowsLabel.setText(String.format("%s - %s", this.scanner.getLastRow() - rows.size() + 1, this.scanner.getLastRow()));
-                this.rowsNumberSpinner.setEnabled(this.scanner.getLastRow() <= getPageSize());
+                this.rowsVisible.setText(String.format("%s - %s", this.scanner.getLastRow() - rows.size() + 1, this.scanner.getLastRow()));
+                this.rowsNumber.setEnabled(this.scanner.getLastRow() <= getPageSize());
 
                 this.rowsCountAction = RunnableAction.run(
                     tableName + "-rowsCount", new Action<Boolean>() {
@@ -1577,20 +1567,21 @@ public class DesignerView {
                     @Override
                     public Boolean run() throws IOException {
                         rowsNumberIcon.setVisible(true);
-                        rowsNumberLabel.setVisible(false);
+                        rowsTotal.setVisible(false);
 
                         long totalNumberOfRows = scanner.getRowsCount(GlobalConfig.instance().getRowCountTimeout());
                         if (totalNumberOfRows == scanner.getCalculatedRowsCount()) {
-                            rowsNumberLabel.setText(String.valueOf(totalNumberOfRows));
+                            rowsTotal.setText(String.valueOf(totalNumberOfRows));
                         }
                         else {
-                            rowsNumberLabel.setText("more than " + totalNumberOfRows);
+                            rowsTotal.setText("more than " + totalNumberOfRows);
                         }
 
                         rowsNumberIcon.setVisible(false);
-                        rowsNumberLabel.setVisible(true);
+                        rowsTotal.setVisible(true);
 
-                        enableDisablePagingButtons();
+                        togglePagingControls();
+
                         return true;
                     }
 
@@ -1601,7 +1592,7 @@ public class DesignerView {
                 });
             }
 
-            this.openInViewerButton.setEnabled(this.rowsTable.getRowCount() > 0);
+            toggleRowControls(rowsTableModel.getRowCount() > 0);
         }
         catch (Exception ex) {
             setError("Failed to fill rows: ", ex);
@@ -1659,7 +1650,7 @@ public class DesignerView {
 
             Filter filter;
 
-            String value = (String)columnsFilter.getSelectedItem();
+            String value = (String)columnFilters.getSelectedItem();
             if (value == null || value.isEmpty()) {
                 filter = new EmptyFilter();
             }
@@ -1867,8 +1858,6 @@ public class DesignerView {
      */
     @SuppressWarnings("OverlyNestedMethod")
     private void pasteRowsFromClipboard() {
-        this.pasteRowButton.setEnabled(false);
-
         ClipboardData<DataTable> clipboardData = InMemoryClipboard.getData();
         if (clipboardData != null) {
             DataTable table = clipboardData.getData();
@@ -1938,7 +1927,7 @@ public class DesignerView {
      */
     @SuppressWarnings("OverlyNestedMethod")
     private void pasteTableFromClipboard() {
-        this.pasteTableButton.setEnabled(false);
+        this.tablePaste.setEnabled(false);
 
         ClipboardData<DataTable> clipboardData = InMemoryClipboard.getData();
         if (clipboardData != null) {
@@ -1956,7 +1945,7 @@ public class DesignerView {
 
                     Filter filter;
 
-                    String value = (String)tablesFilter.getSelectedItem();
+                    String value = (String)tableFilters.getSelectedItem();
                     if (value == null || value.isEmpty()) {
                         filter = new EmptyFilter();
                     }
@@ -2042,7 +2031,7 @@ public class DesignerView {
      * @return The size of the page.
      */
     private int getPageSize() {
-        return (Integer)this.rowsNumberSpinner.getValue();
+        return (Integer)this.rowsNumber.getValue();
     }
 
     /**
@@ -2126,7 +2115,7 @@ public class DesignerView {
      * @return A selected type converter.
      */
     private TypeConverter getColumnNameConverter() {
-        ColumnType type = (ColumnType)this.cmbColumnNameTypes.getSelectedItem();
+        ColumnType type = (ColumnType)this.columnConverters.getSelectedItem();
         if (type != null) {
             return type.getConverter();
         }
@@ -2139,7 +2128,7 @@ public class DesignerView {
      * @return A selected and editable column type if exists or null otherwise.
      */
     private ColumnType getSelectedEditableColumnType() {
-        ColumnType type = (ColumnType)this.cmbColumnNameTypes.getSelectedItem();
+        ColumnType type = (ColumnType)this.columnConverters.getSelectedItem();
         if (type != null && type.isEditable()) {
             return type;
         }
@@ -2171,21 +2160,21 @@ public class DesignerView {
      * Reloads column types.
      */
     private void reloadColumnTypes() {
-        ColumnType selectedNameType = (ColumnType)this.cmbColumnNameTypes.getSelectedItem();
+        ColumnType selectedNameType = (ColumnType)this.columnConverters.getSelectedItem();
 
         this.cmbColumnTypes.removeAllItems();
-        this.cmbColumnNameTypes.removeAllItems();
+        this.columnConverters.removeAllItems();
 
         for (ColumnType columnType : ColumnType.getTypes()) {
             this.cmbColumnTypes.addItem(columnType);
         }
 
         for (ColumnType columnType : ColumnType.getNameTypes()) {
-            this.cmbColumnNameTypes.addItem(columnType);
+            this.columnConverters.addItem(columnType);
         }
 
         if (selectedNameType != null) {
-            this.cmbColumnNameTypes.setSelectedItem(selectedNameType);
+            this.columnConverters.setSelectedItem(selectedNameType);
         }
     }
 
@@ -2253,10 +2242,93 @@ public class DesignerView {
     /**
      * Enables or disables the paging buttons.
      */
-    private void enableDisablePagingButtons() {
-        this.showPrevPageButton.setEnabled(this.scanner != null && this.scanner.hasPrev());
-        this.showNextPageButton.setEnabled(this.scanner != null && this.scanner.hasNext());
+    private void togglePagingControls() {
+        rowsPrev.setEnabled(this.scanner != null && this.scanner.hasPrev());
+        rowsNext.setEnabled(this.scanner != null && this.scanner.hasNext());
     }
+
+    private void toggleTableControls() {
+        if (tablesListModel.getSize() > 0) {
+            tableFilters.setEnabled(true);
+
+            int[] selectedIndices = tablesList.getSelectedIndices();
+            if (selectedIndices.length > 0) {
+                tableDelete.setEnabled(true);
+                tableTruncate.setEnabled(true);
+
+                boolean tableEnabled = false;
+
+                if (selectedIndices.length == 1) {
+                    String tableName = (String)tablesListModel.getElementAt(selectedIndices[0]);
+                    tableEnabled = tableEnabled(tableName);
+                }
+
+                tableCopy.setEnabled(tableEnabled);
+                tablePaste.setEnabled(tableEnabled && hasTableInClipboard());
+                tableExport.setEnabled(tableEnabled);
+                tableFlush.setEnabled(tableEnabled || selectedIndices.length > 1);
+                tableMetadata.setEnabled(tableEnabled);
+            }
+        }
+        else {
+            tableFilters.setEnabled(false);
+            tableDelete.setEnabled(false);
+            tableTruncate.setEnabled(false);
+            tableCopy.setEnabled(false);
+            tablePaste.setEnabled(false);
+            tableExport.setEnabled(false);
+            tableFlush.setEnabled(false);
+            tableMetadata.setEnabled(false);
+        }
+    }
+
+    private void toggleColumnControls(boolean enabled) {
+        columnRefresh.setEnabled(enabled);
+        columnFilters.setEnabled(enabled);
+        columnScan.setEnabled(enabled);
+        columnJump.setEnabled(enabled);
+        columnPopulate.setEnabled(enabled);
+        columnCheck.setEnabled(enabled);
+        columnUncheck.setEnabled(enabled);
+        columnConverters.setEnabled(enabled);
+        columnAddConverter.setEnabled(enabled);
+
+        boolean isEditable = getColumnNameConverter().isEditable();
+
+        int row = columnsTable.getSelectedRow();
+        if (row != -1) {
+            ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
+            isEditable |= type.isEditable();
+        }
+
+        columnEditConverter.setEnabled(enabled && isEditable);
+        columnDeleteConverter.setEnabled(enabled && isEditable);
+    }
+
+    private void toggleRowControls(boolean enabled) {
+        int count = rowsTable.getSelectedRowCount();
+
+        rowOpen.setEnabled(enabled && rowsTable.getRowCount() > 0);
+        rowAdd.setEnabled(enabled);
+        rowDelete.setEnabled(enabled && count > 0);
+        rowCopy.setEnabled(enabled && count > 0);
+        rowPaste.setEnabled(hasRowsInClipboard());
+        rowSave.setEnabled(changeTracker.hasChanges());
+    }
+
+    private boolean tableEnabled(String tableName) {
+        boolean enabled = false;
+
+        try {
+            enabled = connection.tableEnabled(tableName);
+        }
+        catch (Exception ex) {
+            setError(String.format("Failed to access table '%s' information.", tableName), ex);
+        }
+
+        return enabled;
+    }
+
 
     /**
      * Sets a filter.
@@ -2370,27 +2442,27 @@ public class DesignerView {
             toolBar1, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, new Dimension(-1, 20), null, 0, false));
-        refreshTablesButton = new JButton();
-        refreshTablesButton.setEnabled(true);
-        refreshTablesButton.setHorizontalAlignment(0);
-        refreshTablesButton.setIcon(new ImageIcon(getClass().getResource("/images/db-refresh.png")));
-        refreshTablesButton.setMaximumSize(new Dimension(24, 24));
-        refreshTablesButton.setMinimumSize(new Dimension(24, 24));
-        refreshTablesButton.setPreferredSize(new Dimension(24, 24));
-        refreshTablesButton.setText("");
-        refreshTablesButton.setToolTipText("Refresh tables");
-        toolBar1.add(refreshTablesButton);
+        tableRefresh = new JButton();
+        tableRefresh.setEnabled(true);
+        tableRefresh.setHorizontalAlignment(0);
+        tableRefresh.setIcon(new ImageIcon(getClass().getResource("/images/db-refresh.png")));
+        tableRefresh.setMaximumSize(new Dimension(24, 24));
+        tableRefresh.setMinimumSize(new Dimension(24, 24));
+        tableRefresh.setPreferredSize(new Dimension(24, 24));
+        tableRefresh.setText("");
+        tableRefresh.setToolTipText("Refresh tables");
+        toolBar1.add(tableRefresh);
         final JToolBar.Separator toolBar$Separator1 = new JToolBar.Separator();
         toolBar1.add(toolBar$Separator1);
-        tablesFilter = new JComboBox();
-        tablesFilter.setAlignmentX(0.0f);
-        tablesFilter.setAlignmentY(0.6f);
-        tablesFilter.setEditable(true);
-        tablesFilter.setFont(new Font(tablesFilter.getFont().getName(), tablesFilter.getFont().getStyle(), tablesFilter.getFont().getSize()));
-        tablesFilter.setMaximumSize(new Dimension(32767, 26));
-        tablesFilter.setMinimumSize(new Dimension(50, 20));
-        tablesFilter.setPreferredSize(new Dimension(-1, -1));
-        toolBar1.add(tablesFilter);
+        tableFilters = new JComboBox();
+        tableFilters.setAlignmentX(0.0f);
+        tableFilters.setAlignmentY(0.6f);
+        tableFilters.setEditable(true);
+        tableFilters.setFont(new Font(tableFilters.getFont().getName(), tableFilters.getFont().getStyle(), tableFilters.getFont().getSize()));
+        tableFilters.setMaximumSize(new Dimension(32767, 26));
+        tableFilters.setMinimumSize(new Dimension(50, 20));
+        tableFilters.setPreferredSize(new Dimension(-1, -1));
+        toolBar1.add(tableFilters);
         final JScrollPane scrollPane1 = new JScrollPane();
         scrollPane1.setAlignmentX(0.5f);
         scrollPane1.setAlignmentY(0.5f);
@@ -2416,91 +2488,91 @@ public class DesignerView {
             toolBar2, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, new Dimension(-1, 20), null, 0, false));
-        addTableButton = new JButton();
-        addTableButton.setEnabled(false);
-        addTableButton.setHorizontalAlignment(0);
-        addTableButton.setIcon(new ImageIcon(getClass().getResource("/images/add-table.png")));
-        addTableButton.setMaximumSize(new Dimension(24, 24));
-        addTableButton.setMinimumSize(new Dimension(24, 24));
-        addTableButton.setPreferredSize(new Dimension(24, 24));
-        addTableButton.setText("");
-        addTableButton.setToolTipText("Create a new table");
-        toolBar2.add(addTableButton);
-        deleteTableButton = new JButton();
-        deleteTableButton.setEnabled(false);
-        deleteTableButton.setHorizontalAlignment(0);
-        deleteTableButton.setIcon(new ImageIcon(getClass().getResource("/images/delete-table.png")));
-        deleteTableButton.setMaximumSize(new Dimension(24, 24));
-        deleteTableButton.setMinimumSize(new Dimension(24, 24));
-        deleteTableButton.setPreferredSize(new Dimension(24, 24));
-        deleteTableButton.setText("");
-        deleteTableButton.setToolTipText("Delete selected table(s)");
-        toolBar2.add(deleteTableButton);
-        truncateTableButton = new JButton();
-        truncateTableButton.setEnabled(false);
-        truncateTableButton.setHorizontalAlignment(0);
-        truncateTableButton.setIcon(new ImageIcon(getClass().getResource("/images/truncate-table.png")));
-        truncateTableButton.setMaximumSize(new Dimension(24, 24));
-        truncateTableButton.setMinimumSize(new Dimension(24, 24));
-        truncateTableButton.setPreferredSize(new Dimension(24, 24));
-        truncateTableButton.setText("");
-        truncateTableButton.setToolTipText("Truncate selected table(s)");
-        toolBar2.add(truncateTableButton);
-        copyTableButton = new JButton();
-        copyTableButton.setEnabled(false);
-        copyTableButton.setIcon(new ImageIcon(getClass().getResource("/images/db-copy.png")));
-        copyTableButton.setMaximumSize(new Dimension(24, 24));
-        copyTableButton.setMinimumSize(new Dimension(24, 24));
-        copyTableButton.setPreferredSize(new Dimension(24, 24));
-        copyTableButton.setText("");
-        copyTableButton.setToolTipText("Copy table information to the clipboard");
-        toolBar2.add(copyTableButton);
-        pasteTableButton = new JButton();
-        pasteTableButton.setEnabled(false);
-        pasteTableButton.setIcon(new ImageIcon(getClass().getResource("/images/db-paste.png")));
-        pasteTableButton.setMaximumSize(new Dimension(24, 24));
-        pasteTableButton.setMinimumSize(new Dimension(24, 24));
-        pasteTableButton.setPreferredSize(new Dimension(24, 24));
-        pasteTableButton.setText("");
-        pasteTableButton.setToolTipText("Paste table from the clipboard");
-        toolBar2.add(pasteTableButton);
-        exportTableButton = new JButton();
-        exportTableButton.setEnabled(false);
-        exportTableButton.setIcon(new ImageIcon(getClass().getResource("/images/db-export.png")));
-        exportTableButton.setMaximumSize(new Dimension(24, 24));
-        exportTableButton.setMinimumSize(new Dimension(24, 24));
-        exportTableButton.setPreferredSize(new Dimension(24, 24));
-        exportTableButton.setText("");
-        exportTableButton.setToolTipText("Export table to the file");
-        toolBar2.add(exportTableButton);
-        importTableButton = new JButton();
-        importTableButton.setEnabled(false);
-        importTableButton.setIcon(new ImageIcon(getClass().getResource("/images/db-import.png")));
-        importTableButton.setMaximumSize(new Dimension(24, 24));
-        importTableButton.setMinimumSize(new Dimension(24, 24));
-        importTableButton.setPreferredSize(new Dimension(24, 24));
-        importTableButton.setText("");
-        importTableButton.setToolTipText("Import table from the file");
-        toolBar2.add(importTableButton);
-        flushTableButton = new JButton();
-        flushTableButton.setEnabled(false);
-        flushTableButton.setHorizontalAlignment(0);
-        flushTableButton.setIcon(new ImageIcon(getClass().getResource("/images/db-flush.png")));
-        flushTableButton.setMaximumSize(new Dimension(24, 24));
-        flushTableButton.setMinimumSize(new Dimension(24, 24));
-        flushTableButton.setPreferredSize(new Dimension(24, 24));
-        flushTableButton.setText("");
-        flushTableButton.setToolTipText("Forse hbase to flush table to HFile");
-        toolBar2.add(flushTableButton);
-        tableMetadataButton = new JButton();
-        tableMetadataButton.setEnabled(false);
-        tableMetadataButton.setIcon(new ImageIcon(getClass().getResource("/images/db-metadata.png")));
-        tableMetadataButton.setMaximumSize(new Dimension(24, 24));
-        tableMetadataButton.setMinimumSize(new Dimension(24, 24));
-        tableMetadataButton.setPreferredSize(new Dimension(24, 24));
-        tableMetadataButton.setText("");
-        tableMetadataButton.setToolTipText("Show table's metadata");
-        toolBar2.add(tableMetadataButton);
+        tableAdd = new JButton();
+        tableAdd.setEnabled(true);
+        tableAdd.setHorizontalAlignment(0);
+        tableAdd.setIcon(new ImageIcon(getClass().getResource("/images/add-table.png")));
+        tableAdd.setMaximumSize(new Dimension(24, 24));
+        tableAdd.setMinimumSize(new Dimension(24, 24));
+        tableAdd.setPreferredSize(new Dimension(24, 24));
+        tableAdd.setText("");
+        tableAdd.setToolTipText("Create a new table");
+        toolBar2.add(tableAdd);
+        tableDelete = new JButton();
+        tableDelete.setEnabled(false);
+        tableDelete.setHorizontalAlignment(0);
+        tableDelete.setIcon(new ImageIcon(getClass().getResource("/images/delete-table.png")));
+        tableDelete.setMaximumSize(new Dimension(24, 24));
+        tableDelete.setMinimumSize(new Dimension(24, 24));
+        tableDelete.setPreferredSize(new Dimension(24, 24));
+        tableDelete.setText("");
+        tableDelete.setToolTipText("Delete selected table(s)");
+        toolBar2.add(tableDelete);
+        tableTruncate = new JButton();
+        tableTruncate.setEnabled(false);
+        tableTruncate.setHorizontalAlignment(0);
+        tableTruncate.setIcon(new ImageIcon(getClass().getResource("/images/truncate-table.png")));
+        tableTruncate.setMaximumSize(new Dimension(24, 24));
+        tableTruncate.setMinimumSize(new Dimension(24, 24));
+        tableTruncate.setPreferredSize(new Dimension(24, 24));
+        tableTruncate.setText("");
+        tableTruncate.setToolTipText("Truncate selected table(s)");
+        toolBar2.add(tableTruncate);
+        tableCopy = new JButton();
+        tableCopy.setEnabled(false);
+        tableCopy.setIcon(new ImageIcon(getClass().getResource("/images/db-copy.png")));
+        tableCopy.setMaximumSize(new Dimension(24, 24));
+        tableCopy.setMinimumSize(new Dimension(24, 24));
+        tableCopy.setPreferredSize(new Dimension(24, 24));
+        tableCopy.setText("");
+        tableCopy.setToolTipText("Copy table information to the clipboard");
+        toolBar2.add(tableCopy);
+        tablePaste = new JButton();
+        tablePaste.setEnabled(false);
+        tablePaste.setIcon(new ImageIcon(getClass().getResource("/images/db-paste.png")));
+        tablePaste.setMaximumSize(new Dimension(24, 24));
+        tablePaste.setMinimumSize(new Dimension(24, 24));
+        tablePaste.setPreferredSize(new Dimension(24, 24));
+        tablePaste.setText("");
+        tablePaste.setToolTipText("Paste table from the clipboard");
+        toolBar2.add(tablePaste);
+        tableExport = new JButton();
+        tableExport.setEnabled(false);
+        tableExport.setIcon(new ImageIcon(getClass().getResource("/images/db-export.png")));
+        tableExport.setMaximumSize(new Dimension(24, 24));
+        tableExport.setMinimumSize(new Dimension(24, 24));
+        tableExport.setPreferredSize(new Dimension(24, 24));
+        tableExport.setText("");
+        tableExport.setToolTipText("Export table to the file");
+        toolBar2.add(tableExport);
+        tableImport = new JButton();
+        tableImport.setEnabled(true);
+        tableImport.setIcon(new ImageIcon(getClass().getResource("/images/db-import.png")));
+        tableImport.setMaximumSize(new Dimension(24, 24));
+        tableImport.setMinimumSize(new Dimension(24, 24));
+        tableImport.setPreferredSize(new Dimension(24, 24));
+        tableImport.setText("");
+        tableImport.setToolTipText("Import table from the file");
+        toolBar2.add(tableImport);
+        tableFlush = new JButton();
+        tableFlush.setEnabled(false);
+        tableFlush.setHorizontalAlignment(0);
+        tableFlush.setIcon(new ImageIcon(getClass().getResource("/images/db-flush.png")));
+        tableFlush.setMaximumSize(new Dimension(24, 24));
+        tableFlush.setMinimumSize(new Dimension(24, 24));
+        tableFlush.setPreferredSize(new Dimension(24, 24));
+        tableFlush.setText("");
+        tableFlush.setToolTipText("Force hbase to flush table to HFile");
+        toolBar2.add(tableFlush);
+        tableMetadata = new JButton();
+        tableMetadata.setEnabled(false);
+        tableMetadata.setIcon(new ImageIcon(getClass().getResource("/images/db-metadata.png")));
+        tableMetadata.setMaximumSize(new Dimension(24, 24));
+        tableMetadata.setMinimumSize(new Dimension(24, 24));
+        tableMetadata.setPreferredSize(new Dimension(24, 24));
+        tableMetadata.setText("");
+        tableMetadata.setToolTipText("Show table's metadata");
+        toolBar2.add(tableMetadata);
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel1.add(
@@ -2549,52 +2621,52 @@ public class DesignerView {
             toolBar3, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, new Dimension(-1, 20), null, 0, false));
-        refreshColumnsButton = new JButton();
-        refreshColumnsButton.setEnabled(false);
-        refreshColumnsButton.setHorizontalAlignment(0);
-        refreshColumnsButton.setIcon(new ImageIcon(getClass().getResource("/images/refresh.png")));
-        refreshColumnsButton.setMaximumSize(new Dimension(24, 24));
-        refreshColumnsButton.setMinimumSize(new Dimension(24, 24));
-        refreshColumnsButton.setPreferredSize(new Dimension(24, 24));
-        refreshColumnsButton.setText("");
-        refreshColumnsButton.setToolTipText("Refresh columns");
-        toolBar3.add(refreshColumnsButton);
+        columnRefresh = new JButton();
+        columnRefresh.setEnabled(false);
+        columnRefresh.setHorizontalAlignment(0);
+        columnRefresh.setIcon(new ImageIcon(getClass().getResource("/images/refresh.png")));
+        columnRefresh.setMaximumSize(new Dimension(24, 24));
+        columnRefresh.setMinimumSize(new Dimension(24, 24));
+        columnRefresh.setPreferredSize(new Dimension(24, 24));
+        columnRefresh.setText("");
+        columnRefresh.setToolTipText("Refresh columns");
+        toolBar3.add(columnRefresh);
         final JToolBar.Separator toolBar$Separator2 = new JToolBar.Separator();
         toolBar3.add(toolBar$Separator2);
-        columnsFilter = new JComboBox();
-        columnsFilter.setAlignmentX(0.0f);
-        columnsFilter.setAlignmentY(0.6f);
-        columnsFilter.setEditable(true);
-        columnsFilter.setMaximumSize(new Dimension(32767, 26));
-        columnsFilter.setMinimumSize(new Dimension(50, 20));
-        columnsFilter.setPreferredSize(new Dimension(-1, -1));
-        toolBar3.add(columnsFilter);
+        columnFilters = new JComboBox();
+        columnFilters.setAlignmentX(0.0f);
+        columnFilters.setAlignmentY(0.6f);
+        columnFilters.setEditable(true);
+        columnFilters.setMaximumSize(new Dimension(32767, 26));
+        columnFilters.setMinimumSize(new Dimension(50, 20));
+        columnFilters.setPreferredSize(new Dimension(-1, -1));
+        toolBar3.add(columnFilters);
         final JToolBar.Separator toolBar$Separator3 = new JToolBar.Separator();
         toolBar3.add(toolBar$Separator3);
-        scanButton = new JButton();
-        scanButton.setEnabled(false);
-        scanButton.setIcon(new ImageIcon(getClass().getResource("/images/search.png")));
-        scanButton.setMinimumSize(new Dimension(24, 24));
-        scanButton.setPreferredSize(new Dimension(24, 24));
-        scanButton.setText("");
-        scanButton.setToolTipText("Perform an advanced scan...");
-        toolBar3.add(scanButton);
-        jumpButton = new JButton();
-        jumpButton.setEnabled(false);
-        jumpButton.setIcon(new ImageIcon(getClass().getResource("/images/jump.png")));
-        jumpButton.setMinimumSize(new Dimension(24, 24));
-        jumpButton.setPreferredSize(new Dimension(24, 24));
-        jumpButton.setText("");
-        jumpButton.setToolTipText("Jump to a specific row number");
-        toolBar3.add(jumpButton);
-        populateButton = new JButton();
-        populateButton.setEnabled(false);
-        populateButton.setIcon(new ImageIcon(getClass().getResource("/images/populate.png")));
-        populateButton.setMinimumSize(new Dimension(24, 24));
-        populateButton.setPreferredSize(new Dimension(24, 24));
-        populateButton.setText("");
-        populateButton.setToolTipText("Populate rows for the selected columns");
-        toolBar3.add(populateButton);
+        columnScan = new JButton();
+        columnScan.setEnabled(false);
+        columnScan.setIcon(new ImageIcon(getClass().getResource("/images/search.png")));
+        columnScan.setMinimumSize(new Dimension(24, 24));
+        columnScan.setPreferredSize(new Dimension(24, 24));
+        columnScan.setText("");
+        columnScan.setToolTipText("Perform an advanced scan...");
+        toolBar3.add(columnScan);
+        columnJump = new JButton();
+        columnJump.setEnabled(false);
+        columnJump.setIcon(new ImageIcon(getClass().getResource("/images/jump.png")));
+        columnJump.setMinimumSize(new Dimension(24, 24));
+        columnJump.setPreferredSize(new Dimension(24, 24));
+        columnJump.setText("");
+        columnJump.setToolTipText("Jump to a specific row number");
+        toolBar3.add(columnJump);
+        columnPopulate = new JButton();
+        columnPopulate.setEnabled(false);
+        columnPopulate.setIcon(new ImageIcon(getClass().getResource("/images/populate.png")));
+        columnPopulate.setMinimumSize(new Dimension(24, 24));
+        columnPopulate.setPreferredSize(new Dimension(24, 24));
+        columnPopulate.setText("");
+        columnPopulate.setToolTipText("Populate rows for the selected columns");
+        toolBar3.add(columnPopulate);
         final JScrollPane scrollPane2 = new JScrollPane();
         scrollPane2.setDoubleBuffered(true);
         panel5.add(
@@ -2617,62 +2689,62 @@ public class DesignerView {
             toolBar4, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
             null, new Dimension(-1, 20), null, 0, false));
-        checkAllButton = new JButton();
-        checkAllButton.setEnabled(false);
-        checkAllButton.setIcon(new ImageIcon(getClass().getResource("/images/select.png")));
-        checkAllButton.setMaximumSize(new Dimension(24, 24));
-        checkAllButton.setMinimumSize(new Dimension(24, 24));
-        checkAllButton.setPreferredSize(new Dimension(24, 24));
-        checkAllButton.setText("");
-        checkAllButton.setToolTipText("Select all columns");
-        toolBar4.add(checkAllButton);
-        uncheckAllButton = new JButton();
-        uncheckAllButton.setEnabled(false);
-        uncheckAllButton.setIcon(new ImageIcon(getClass().getResource("/images/unselect.png")));
-        uncheckAllButton.setMaximumSize(new Dimension(24, 24));
-        uncheckAllButton.setMinimumSize(new Dimension(24, 24));
-        uncheckAllButton.setPreferredSize(new Dimension(24, 24));
-        uncheckAllButton.setText("");
-        uncheckAllButton.setToolTipText("Unselect all columns");
-        toolBar4.add(uncheckAllButton);
+        columnCheck = new JButton();
+        columnCheck.setEnabled(false);
+        columnCheck.setIcon(new ImageIcon(getClass().getResource("/images/select.png")));
+        columnCheck.setMaximumSize(new Dimension(24, 24));
+        columnCheck.setMinimumSize(new Dimension(24, 24));
+        columnCheck.setPreferredSize(new Dimension(24, 24));
+        columnCheck.setText("");
+        columnCheck.setToolTipText("Select all columns");
+        toolBar4.add(columnCheck);
+        columnUncheck = new JButton();
+        columnUncheck.setEnabled(false);
+        columnUncheck.setIcon(new ImageIcon(getClass().getResource("/images/unselect.png")));
+        columnUncheck.setMaximumSize(new Dimension(24, 24));
+        columnUncheck.setMinimumSize(new Dimension(24, 24));
+        columnUncheck.setPreferredSize(new Dimension(24, 24));
+        columnUncheck.setText("");
+        columnUncheck.setToolTipText("Unselect all columns");
+        toolBar4.add(columnUncheck);
         final JToolBar.Separator toolBar$Separator4 = new JToolBar.Separator();
         toolBar4.add(toolBar$Separator4);
-        cmbColumnNameTypes = new WideComboBox();
-        cmbColumnNameTypes.setEnabled(false);
-        cmbColumnNameTypes.setMaximumSize(new Dimension(120, 24));
-        cmbColumnNameTypes.setMinimumSize(new Dimension(50, 24));
-        cmbColumnNameTypes.setPreferredSize(new Dimension(-1, 24));
-        cmbColumnNameTypes.setToolTipText("Choose type to be used to convert column name");
-        toolBar4.add(cmbColumnNameTypes);
+        columnConverters = new WideComboBox();
+        columnConverters.setEnabled(false);
+        columnConverters.setMaximumSize(new Dimension(120, 24));
+        columnConverters.setMinimumSize(new Dimension(50, 24));
+        columnConverters.setPreferredSize(new Dimension(-1, 24));
+        columnConverters.setToolTipText("Choose type to be used to convert column name");
+        toolBar4.add(columnConverters);
         final JToolBar.Separator toolBar$Separator5 = new JToolBar.Separator();
         toolBar4.add(toolBar$Separator5);
-        addConverterButton = new JButton();
-        addConverterButton.setEnabled(false);
-        addConverterButton.setIcon(new ImageIcon(getClass().getResource("/images/addConverter.png")));
-        addConverterButton.setMaximumSize(new Dimension(24, 24));
-        addConverterButton.setMinimumSize(new Dimension(24, 24));
-        addConverterButton.setPreferredSize(new Dimension(24, 24));
-        addConverterButton.setText("");
-        addConverterButton.setToolTipText("Add custom type converter");
-        toolBar4.add(addConverterButton);
-        editConverterButton = new JButton();
-        editConverterButton.setEnabled(false);
-        editConverterButton.setIcon(new ImageIcon(getClass().getResource("/images/editConverter.png")));
-        editConverterButton.setMaximumSize(new Dimension(24, 24));
-        editConverterButton.setMinimumSize(new Dimension(24, 24));
-        editConverterButton.setPreferredSize(new Dimension(24, 24));
-        editConverterButton.setText("");
-        editConverterButton.setToolTipText("Edit custom type converter");
-        toolBar4.add(editConverterButton);
-        deleteConverterButton = new JButton();
-        deleteConverterButton.setEnabled(false);
-        deleteConverterButton.setIcon(new ImageIcon(getClass().getResource("/images/deleteConverter.png")));
-        deleteConverterButton.setMaximumSize(new Dimension(24, 24));
-        deleteConverterButton.setMinimumSize(new Dimension(24, 24));
-        deleteConverterButton.setPreferredSize(new Dimension(24, 24));
-        deleteConverterButton.setText("");
-        deleteConverterButton.setToolTipText("Delete custom type converter");
-        toolBar4.add(deleteConverterButton);
+        columnAddConverter = new JButton();
+        columnAddConverter.setEnabled(false);
+        columnAddConverter.setIcon(new ImageIcon(getClass().getResource("/images/addConverter.png")));
+        columnAddConverter.setMaximumSize(new Dimension(24, 24));
+        columnAddConverter.setMinimumSize(new Dimension(24, 24));
+        columnAddConverter.setPreferredSize(new Dimension(24, 24));
+        columnAddConverter.setText("");
+        columnAddConverter.setToolTipText("Add custom type converter");
+        toolBar4.add(columnAddConverter);
+        columnEditConverter = new JButton();
+        columnEditConverter.setEnabled(false);
+        columnEditConverter.setIcon(new ImageIcon(getClass().getResource("/images/editConverter.png")));
+        columnEditConverter.setMaximumSize(new Dimension(24, 24));
+        columnEditConverter.setMinimumSize(new Dimension(24, 24));
+        columnEditConverter.setPreferredSize(new Dimension(24, 24));
+        columnEditConverter.setText("");
+        columnEditConverter.setToolTipText("Edit custom type converter");
+        toolBar4.add(columnEditConverter);
+        columnDeleteConverter = new JButton();
+        columnDeleteConverter.setEnabled(false);
+        columnDeleteConverter.setIcon(new ImageIcon(getClass().getResource("/images/deleteConverter.png")));
+        columnDeleteConverter.setMaximumSize(new Dimension(24, 24));
+        columnDeleteConverter.setMinimumSize(new Dimension(24, 24));
+        columnDeleteConverter.setPreferredSize(new Dimension(24, 24));
+        columnDeleteConverter.setText("");
+        columnDeleteConverter.setToolTipText("Delete custom type converter");
+        toolBar4.add(columnDeleteConverter);
         final JPanel panel8 = new JPanel();
         panel8.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel5.add(
@@ -2722,56 +2794,56 @@ public class DesignerView {
             toolBar5, new GridConstraints(
             0, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
             new Dimension(-1, 20), null, 0, false));
-        openInViewerButton = new JButton();
-        openInViewerButton.setEnabled(false);
-        openInViewerButton.setIcon(new ImageIcon(getClass().getResource("/images/viewer.png")));
-        openInViewerButton.setMinimumSize(new Dimension(24, 24));
-        openInViewerButton.setPreferredSize(new Dimension(24, 24));
-        openInViewerButton.setText("");
-        openInViewerButton.setToolTipText("Open rows in external viewer");
-        toolBar5.add(openInViewerButton);
-        addRowButton = new JButton();
-        addRowButton.setEnabled(false);
-        addRowButton.setIcon(new ImageIcon(getClass().getResource("/images/add.png")));
-        addRowButton.setMinimumSize(new Dimension(24, 24));
-        addRowButton.setPreferredSize(new Dimension(24, 24));
-        addRowButton.setText("");
-        addRowButton.setToolTipText("Create a new row");
-        toolBar5.add(addRowButton);
-        deleteRowButton = new JButton();
-        deleteRowButton.setEnabled(false);
-        deleteRowButton.setIcon(new ImageIcon(getClass().getResource("/images/delete.png")));
-        deleteRowButton.setMinimumSize(new Dimension(24, 24));
-        deleteRowButton.setPreferredSize(new Dimension(24, 24));
-        deleteRowButton.setText("");
-        deleteRowButton.setToolTipText("Delete selected rows");
-        toolBar5.add(deleteRowButton);
-        copyRowButton = new JButton();
-        copyRowButton.setEnabled(false);
-        copyRowButton.setIcon(new ImageIcon(getClass().getResource("/images/copy.png")));
-        copyRowButton.setMaximumSize(new Dimension(49, 27));
-        copyRowButton.setMinimumSize(new Dimension(24, 24));
-        copyRowButton.setPreferredSize(new Dimension(24, 24));
-        copyRowButton.setText("");
-        copyRowButton.setToolTipText("Copy selected rows to the clipboard");
-        toolBar5.add(copyRowButton);
-        pasteRowButton = new JButton();
-        pasteRowButton.setEnabled(false);
-        pasteRowButton.setIcon(new ImageIcon(getClass().getResource("/images/paste.png")));
-        pasteRowButton.setMaximumSize(new Dimension(49, 27));
-        pasteRowButton.setMinimumSize(new Dimension(24, 24));
-        pasteRowButton.setPreferredSize(new Dimension(24, 24));
-        pasteRowButton.setText("");
-        pasteRowButton.setToolTipText("Paste rows from the clipboard");
-        toolBar5.add(pasteRowButton);
-        updateRowButton = new JButton();
-        updateRowButton.setEnabled(false);
-        updateRowButton.setIcon(new ImageIcon(getClass().getResource("/images/save.png")));
-        updateRowButton.setMinimumSize(new Dimension(24, 24));
-        updateRowButton.setPreferredSize(new Dimension(24, 24));
-        updateRowButton.setText("");
-        updateRowButton.setToolTipText("Save all modified rows to the hbase");
-        toolBar5.add(updateRowButton);
+        rowOpen = new JButton();
+        rowOpen.setEnabled(false);
+        rowOpen.setIcon(new ImageIcon(getClass().getResource("/images/viewer.png")));
+        rowOpen.setMinimumSize(new Dimension(24, 24));
+        rowOpen.setPreferredSize(new Dimension(24, 24));
+        rowOpen.setText("");
+        rowOpen.setToolTipText("Open rows in external viewer");
+        toolBar5.add(rowOpen);
+        rowAdd = new JButton();
+        rowAdd.setEnabled(false);
+        rowAdd.setIcon(new ImageIcon(getClass().getResource("/images/add.png")));
+        rowAdd.setMinimumSize(new Dimension(24, 24));
+        rowAdd.setPreferredSize(new Dimension(24, 24));
+        rowAdd.setText("");
+        rowAdd.setToolTipText("Create a new row");
+        toolBar5.add(rowAdd);
+        rowDelete = new JButton();
+        rowDelete.setEnabled(false);
+        rowDelete.setIcon(new ImageIcon(getClass().getResource("/images/delete.png")));
+        rowDelete.setMinimumSize(new Dimension(24, 24));
+        rowDelete.setPreferredSize(new Dimension(24, 24));
+        rowDelete.setText("");
+        rowDelete.setToolTipText("Delete selected rows");
+        toolBar5.add(rowDelete);
+        rowCopy = new JButton();
+        rowCopy.setEnabled(false);
+        rowCopy.setIcon(new ImageIcon(getClass().getResource("/images/copy.png")));
+        rowCopy.setMaximumSize(new Dimension(49, 27));
+        rowCopy.setMinimumSize(new Dimension(24, 24));
+        rowCopy.setPreferredSize(new Dimension(24, 24));
+        rowCopy.setText("");
+        rowCopy.setToolTipText("Copy selected rows to the clipboard");
+        toolBar5.add(rowCopy);
+        rowPaste = new JButton();
+        rowPaste.setEnabled(false);
+        rowPaste.setIcon(new ImageIcon(getClass().getResource("/images/paste.png")));
+        rowPaste.setMaximumSize(new Dimension(49, 27));
+        rowPaste.setMinimumSize(new Dimension(24, 24));
+        rowPaste.setPreferredSize(new Dimension(24, 24));
+        rowPaste.setText("");
+        rowPaste.setToolTipText("Paste rows from the clipboard");
+        toolBar5.add(rowPaste);
+        rowSave = new JButton();
+        rowSave.setEnabled(false);
+        rowSave.setIcon(new ImageIcon(getClass().getResource("/images/save.png")));
+        rowSave.setMinimumSize(new Dimension(24, 24));
+        rowSave.setPreferredSize(new Dimension(24, 24));
+        rowSave.setText("");
+        rowSave.setToolTipText("Save all modified rows to the hbase");
+        toolBar5.add(rowSave);
         final JToolBar toolBar6 = new JToolBar();
         toolBar6.setBorderPainted(false);
         toolBar6.setFloatable(false);
@@ -2779,17 +2851,17 @@ public class DesignerView {
             toolBar6, new GridConstraints(
             0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
             new Dimension(-1, 20), null, 0, false));
-        rowsNumberSpinner = new JSpinner();
-        rowsNumberSpinner.setDoubleBuffered(true);
-        rowsNumberSpinner.setEnabled(true);
-        rowsNumberSpinner.setMinimumSize(new Dimension(45, 24));
-        rowsNumberSpinner.setPreferredSize(new Dimension(60, 24));
-        toolBar6.add(rowsNumberSpinner);
+        rowsNumber = new JSpinner();
+        rowsNumber.setDoubleBuffered(true);
+        rowsNumber.setEnabled(true);
+        rowsNumber.setMinimumSize(new Dimension(45, 24));
+        rowsNumber.setPreferredSize(new Dimension(60, 24));
+        toolBar6.add(rowsNumber);
         final JToolBar.Separator toolBar$Separator6 = new JToolBar.Separator();
         toolBar6.add(toolBar$Separator6);
-        visibleRowsLabel = new JLabel();
-        visibleRowsLabel.setText("?");
-        toolBar6.add(visibleRowsLabel);
+        rowsVisible = new JLabel();
+        rowsVisible.setText("?");
+        toolBar6.add(rowsVisible);
         final JToolBar.Separator toolBar$Separator7 = new JToolBar.Separator();
         toolBar6.add(toolBar$Separator7);
         final JLabel label4 = new JLabel();
@@ -2797,9 +2869,9 @@ public class DesignerView {
         toolBar6.add(label4);
         final JToolBar.Separator toolBar$Separator8 = new JToolBar.Separator();
         toolBar6.add(toolBar$Separator8);
-        rowsNumberLabel = new JLabel();
-        rowsNumberLabel.setText("?");
-        toolBar6.add(rowsNumberLabel);
+        rowsTotal = new JLabel();
+        rowsTotal.setText("?");
+        toolBar6.add(rowsTotal);
         rowsNumberIcon = new JLabel();
         rowsNumberIcon.setIcon(new ImageIcon(getClass().getResource("/images/busy.gif")));
         rowsNumberIcon.setText("");
@@ -2807,24 +2879,24 @@ public class DesignerView {
         toolBar6.add(rowsNumberIcon);
         final JToolBar.Separator toolBar$Separator9 = new JToolBar.Separator();
         toolBar6.add(toolBar$Separator9);
-        showPrevPageButton = new JButton();
-        showPrevPageButton.setEnabled(false);
-        showPrevPageButton.setIcon(new ImageIcon(getClass().getResource("/images/prev.png")));
-        showPrevPageButton.setMaximumSize(new Dimension(49, 27));
-        showPrevPageButton.setMinimumSize(new Dimension(24, 24));
-        showPrevPageButton.setPreferredSize(new Dimension(24, 24));
-        showPrevPageButton.setText("");
-        showPrevPageButton.setToolTipText("Go to the prvious page");
-        toolBar6.add(showPrevPageButton);
-        showNextPageButton = new JButton();
-        showNextPageButton.setEnabled(false);
-        showNextPageButton.setIcon(new ImageIcon(getClass().getResource("/images/next.png")));
-        showNextPageButton.setMaximumSize(new Dimension(49, 27));
-        showNextPageButton.setMinimumSize(new Dimension(24, 24));
-        showNextPageButton.setPreferredSize(new Dimension(24, 24));
-        showNextPageButton.setText("");
-        showNextPageButton.setToolTipText("Go to the next page");
-        toolBar6.add(showNextPageButton);
+        rowsPrev = new JButton();
+        rowsPrev.setEnabled(false);
+        rowsPrev.setIcon(new ImageIcon(getClass().getResource("/images/prev.png")));
+        rowsPrev.setMaximumSize(new Dimension(49, 27));
+        rowsPrev.setMinimumSize(new Dimension(24, 24));
+        rowsPrev.setPreferredSize(new Dimension(24, 24));
+        rowsPrev.setText("");
+        rowsPrev.setToolTipText("Go to the prvious page");
+        toolBar6.add(rowsPrev);
+        rowsNext = new JButton();
+        rowsNext.setEnabled(false);
+        rowsNext.setIcon(new ImageIcon(getClass().getResource("/images/next.png")));
+        rowsNext.setMaximumSize(new Dimension(49, 27));
+        rowsNext.setMinimumSize(new Dimension(24, 24));
+        rowsNext.setPreferredSize(new Dimension(24, 24));
+        rowsNext.setText("");
+        rowsNext.setToolTipText("Go to the next page");
+        toolBar6.add(rowsNext);
         final JScrollPane scrollPane3 = new JScrollPane();
         panel9.add(
             scrollPane3, new GridConstraints(
