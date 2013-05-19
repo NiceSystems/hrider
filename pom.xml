@@ -10,7 +10,7 @@
     <description>hbase viewer and editor</description>
 
     <packaging>jar</packaging>
-    <version>1.0.6.0</version>
+    <version>1.0.7.0</version>
 
     <repositories>
         <repository>
@@ -134,8 +134,8 @@
                             <classpathPrefix>lib/</classpathPrefix>
                         </manifest>
                         <manifestEntries>
-                            <artifactId>${project.artifactId}</artifactId>
                             <version>${project.version}</version>
+                            <hbaseVersion>${hbase.version}</hbaseVersion>
                         </manifestEntries>
                     </archive>
                 </configuration>

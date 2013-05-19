@@ -68,6 +68,25 @@ public class PathHelper {
         return normalisedPath;
     }
 
+    public static String getFileNameWithoutExtension(String path) {
+        String leaf = getLeaf(path);
+
+        int index = leaf.lastIndexOf('.');
+        if (index != -1) {
+            leaf = leaf.substring(0, index);
+        }
+
+        return leaf;
+    }
+
+    public static String getFileExtension(String path) {
+        int index = path.lastIndexOf('.');
+        if (index != -1) {
+            return path.substring(index);
+        }
+        return null;
+    }
+
     /**
      * Removes media from the provided path. For example D://some_path/some_folder -> some_path/some_folder
      *

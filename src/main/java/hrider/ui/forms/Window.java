@@ -2,7 +2,8 @@ package hrider.ui.forms;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.intellij.uiDesigner.core.Spacer;
+import hrider.actions.Action;
+import hrider.actions.RunnableAction;
 import hrider.config.ClusterConfig;
 import hrider.config.ConnectionDetails;
 import hrider.config.PropertiesConfig;
@@ -10,9 +11,14 @@ import hrider.config.ViewConfig;
 import hrider.data.DataTable;
 import hrider.hbase.Connection;
 import hrider.hbase.ConnectionManager;
+import hrider.io.CloseableHelper;
+import hrider.io.Downloader;
+import hrider.io.FileHelper;
+import hrider.io.Log;
 import hrider.system.Clipboard;
 import hrider.system.ClipboardData;
 import hrider.system.InMemoryClipboard;
+import hrider.system.Version;
 import hrider.ui.MessageHandler;
 import hrider.ui.MessageHandlerListener;
 import hrider.ui.TabClosedListener;
@@ -25,15 +31,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
+import java.awt.event.WindowEvent;
+import java.io.*;
+import java.net.URL;
+import java.util.*;
+import java.util.jar.Manifest;
+import java.util.regex.Pattern;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -55,6 +58,11 @@ import java.util.jar.JarFile;
  */
 public class Window {
 
+    //region Constants
+    private static final String UPDATE_FILE_URL = "https://raw.github.com/NiceSystems/hrider/master/update.properties";
+    private static final Log    logger          = Log.getLogger(Window.class);
+    //endregion
+
     //region Variables
     private JPanel                       topPanel;
     private JTabbedPane                  tabbedPane;
@@ -64,14 +72,18 @@ public class Window {
     private JLinkButton                  actionLabel2;
     private JLabel                       actionLabel3;
     private JButton                      copyToClipboard;
+    private JLinkButton                  newVersionAvailable;
     private boolean                      canceled;
     private UIAction                     uiAction;
     private String                       lastError;
     private Map<Component, DesignerView> viewMap;
+    private Properties                   updateInfo;
+    private JFrame                       frame;
     //endregion
 
     //region Constructor
     public Window() {
+        this.updateInfo = new Properties();
         this.viewMap = new HashMap<Component, DesignerView>();
 
         Font font = this.actionLabel1.getFont();
@@ -193,6 +205,43 @@ public class Window {
                     }
                 }
             });
+
+        this.newVersionAvailable.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    UpdateDialog dialog = new UpdateDialog(updateInfo.getProperty("hrider.version"), getHbaseVersion());
+                    if (dialog.showDialog(topPanel)) {
+                        try {
+                            File jar = FileHelper.findFile(
+                                new File("."), Pattern.compile("h-rider-updater-?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.jar"));
+
+                            File temporary = File.createTempFile("h-rider-updater-", ".jar");
+
+                            FileHelper.copy(jar, temporary);
+
+                            Runtime.getRuntime().exec(
+                                String.format(
+                                    "java -jar %s \"%s\" \"%s\"", temporary.getName(), updateInfo.getProperty("hbase." + getHbaseVersion()),
+                                    jar.getParentFile().getAbsolutePath()), null, temporary.getParentFile());
+
+                            frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+                        }
+                        catch (IOException ex) {
+                            JOptionPane.showMessageDialog(topPanel, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }
+            });
+
+        RunnableAction.run(
+            "compare-versions", new Action<Object>() {
+            @Override
+            public Object run() throws Exception {
+                compareVersions();
+                return null;
+            }
+        });
     }
     //endregion
 
@@ -222,10 +271,11 @@ public class Window {
         window.loadViews(new Splash());
 
         if (!window.canceled) {
-            JFrame frame = new JFrame("H-Rider - " + getVersion());
+            JFrame frame = new JFrame("h-rider - " + getVersion());
+            window.frame = frame;
 
             frame.setContentPane(window.topPanel);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             frame.setLocationByPlatform(true);
             frame.setIconImage(new ImageIcon(Thread.currentThread().getContextClassLoader().getResource("images/h-rider.png")).getImage());
 
@@ -236,14 +286,67 @@ public class Window {
     }
 
     private static String getVersion() {
-        try {
-            String jarPath = Window.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        InputStream stream = null;
 
-            JarFile file = new JarFile(jarPath);
-            return file.getManifest().getMainAttributes().get(new Attributes.Name("version")).toString();
+        try {
+            stream = Thread.currentThread().getContextClassLoader().getResourceAsStream("META-INF/MANIFEST.MF");
+
+            Manifest manifest = new Manifest(stream);
+            return manifest.getMainAttributes().getValue("version");
         }
-        catch (IOException ignore) {
-            return "Unknown Version";
+        catch (Exception ignore) {
+            return "";
+        }
+        finally {
+            CloseableHelper.closeSilently(stream);
+        }
+    }
+
+    private static String getHbaseVersion() {
+        InputStream stream = null;
+
+        try {
+            stream = Thread.currentThread().getContextClassLoader().getResourceAsStream("META-INF/MANIFEST.MF");
+
+            Manifest manifest = new Manifest(stream);
+            return manifest.getMainAttributes().getValue("hbaseVersion");
+        }
+        catch (Exception ignore) {
+            return "";
+        }
+        finally {
+            CloseableHelper.closeSilently(stream);
+        }
+    }
+
+    private void compareVersions() {
+        FileInputStream stream = null;
+
+        try {
+            File updateFile = Downloader.download(new URL(UPDATE_FILE_URL));
+            stream = new FileInputStream(updateFile);
+
+            updateInfo.clear();
+            updateInfo.load(stream);
+
+            String hriderVersion = updateInfo.getProperty("hrider.version");
+            if (hriderVersion != null && Version.compare(hriderVersion, getVersion()) > 0) {
+                String hbaseVersions = updateInfo.getProperty("hbase.versions");
+                if (hbaseVersions != null) {
+                    for (String version : hbaseVersions.split(";")) {
+                        if (Version.compare(version, getHbaseVersion()) == 0) {
+                            newVersionAvailable.setVisible(true);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            logger.error(e, "Failed to retrieve update information from the URL: %s", UPDATE_FILE_URL);
+        }
+        finally {
+            CloseableHelper.closeSilently(stream);
         }
     }
 
@@ -414,7 +517,7 @@ public class Window {
         topPanel.setMinimumSize(new Dimension(650, 450));
         topPanel.setPreferredSize(new Dimension(1200, 550));
         final JPanel panel1 = new JPanel();
-        panel1.setLayout(new BorderLayout(0, 0));
+        panel1.setLayout(new GridLayoutManager(1, 4, new Insets(0, 0, 0, 0), -1, -1));
         panel1.setBackground(new Color(-1));
         topPanel.add(
             panel1, new GridConstraints(
@@ -425,38 +528,59 @@ public class Window {
         final JLabel label1 = new JLabel();
         label1.setIcon(new ImageIcon(getClass().getResource("/images/h-rider.png")));
         label1.setText("");
-        panel1.add(label1, BorderLayout.WEST);
-        final JPanel panel2 = new JPanel();
-        panel2.setLayout(new BorderLayout(0, 0));
-        panel2.setBackground(new Color(-1));
-        panel1.add(panel2, BorderLayout.CENTER);
+        panel1.add(
+            label1, new GridConstraints(
+            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JLabel label2 = new JLabel();
         label2.setFont(new Font("Curlz MT", Font.BOLD, 28));
         label2.setForeground(new Color(-13408513));
         label2.setText(" H-Rider");
-        panel2.add(label2, BorderLayout.WEST);
-        final JPanel panel3 = new JPanel();
-        panel3.setLayout(new BorderLayout(0, 0));
-        panel3.setBackground(new Color(-1));
-        panel2.add(panel3, BorderLayout.CENTER);
+        panel1.add(
+            label2, new GridConstraints(
+            0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_FIXED,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JLabel label3 = new JLabel();
         label3.setFont(new Font("Curlz MT", label3.getFont().getStyle(), 20));
         label3.setHorizontalAlignment(10);
         label3.setHorizontalTextPosition(11);
         label3.setText("  The ultimate Hbase viewer and editor...");
-        panel3.add(label3, BorderLayout.WEST);
+        panel1.add(
+            label3, new GridConstraints(
+            0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_FIXED,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        final JPanel panel2 = new JPanel();
+        panel2.setLayout(new FlowLayout(FlowLayout.RIGHT, 5, 5));
+        panel2.setBackground(new Color(-1));
+        panel1.add(
+            panel2, new GridConstraints(
+            0, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        panel2.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), null));
         connectToCluster = new JLinkButton();
+        connectToCluster.setFocusPainted(false);
+        connectToCluster.setFocusable(false);
+        connectToCluster.setHorizontalAlignment(0);
+        connectToCluster.setRequestFocusEnabled(false);
         connectToCluster.setText("Connect to a cluster...");
-        panel3.add(connectToCluster, BorderLayout.EAST);
-        final JPanel panel4 = new JPanel();
-        panel4.setLayout(new BorderLayout(0, 0));
+        panel2.add(connectToCluster);
+        newVersionAvailable = new JLinkButton();
+        newVersionAvailable.setFocusPainted(false);
+        newVersionAvailable.setFocusable(false);
+        newVersionAvailable.setHorizontalAlignment(4);
+        newVersionAvailable.setRequestFocusEnabled(false);
+        newVersionAvailable.setText("New version is available...");
+        newVersionAvailable.setVisible(false);
+        panel2.add(newVersionAvailable);
+        final JPanel panel3 = new JPanel();
+        panel3.setLayout(new BorderLayout(0, 0));
         topPanel.add(
-            panel4, new GridConstraints(
+            panel3, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(566, 377), null, 0, false));
         tabbedPane = new JTabbedPane();
         tabbedPane.setTabLayoutPolicy(1);
-        panel4.add(tabbedPane, BorderLayout.CENTER);
+        panel3.add(tabbedPane, BorderLayout.CENTER);
         actionPanel = new JPanel();
         actionPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 2, 0));
         topPanel.add(
