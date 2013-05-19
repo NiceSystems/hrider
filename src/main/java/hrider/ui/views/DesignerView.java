@@ -105,7 +105,6 @@ public class DesignerView {
     private JLabel                            tablesNumber;
     private JComboBox                         tableFilters;
     private DefaultComboBoxModel              tablesFilterModel;
-    private ItemListener                      tablesFilterListener;
     private JComboBox                         columnFilters;
     private DefaultComboBoxModel              columnsFilterModel;
     private ItemListener                      columnsFilterListener;
@@ -179,18 +178,17 @@ public class DesignerView {
 
         this.rowsNumber.setModel(new SpinnerNumberModel(100, 1, 10000, 100));
 
-        this.tablesFilterListener = new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    clusterConfig.setSelectedTableFilter((String)e.getItem());
+        this.tableFilters.addItemListener(
+            new ItemListener() {
+                @Override
+                public void itemStateChanged(ItemEvent e) {
+                    if (e.getStateChange() == ItemEvent.SELECTED) {
+                        clusterConfig.setSelectedTableFilter((String)e.getItem());
 
-                    loadTables();
+                        loadTables();
+                    }
                 }
-            }
-        };
-
-        this.tableFilters.addItemListener(this.tablesFilterListener);
+            });
 
         this.tableFilters.getEditor().addActionListener(
             new ActionListener() {
