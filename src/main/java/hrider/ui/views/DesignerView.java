@@ -1568,11 +1568,11 @@ public class DesignerView {
                         rowsTotal.setVisible(false);
 
                         long totalNumberOfRows = scanner.getRowsCount(GlobalConfig.instance().getRowCountTimeout());
-                        if (totalNumberOfRows == scanner.getCalculatedRowsCount()) {
-                            rowsTotal.setText(String.valueOf(totalNumberOfRows));
+                        if (scanner.isRowsCountPartiallyCalculated()) {
+                            rowsTotal.setText("more than " + totalNumberOfRows);
                         }
                         else {
-                            rowsTotal.setText("more than " + totalNumberOfRows);
+                            rowsTotal.setText(String.valueOf(totalNumberOfRows));
                         }
 
                         rowsNumberIcon.setVisible(false);

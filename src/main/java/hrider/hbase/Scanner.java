@@ -53,6 +53,10 @@ public class Scanner {
      */
     private long                    rowsCount;
     /**
+     * Holds a rows number in the table if the calculation has not been completed because of the timeout.
+     */
+    private long                    partialRowsCount;
+    /**
      * The number of the last loaded row.
      */
     private long                    lastRow;
@@ -143,12 +147,12 @@ public class Scanner {
     }
 
     /**
-     * Gets the previously calculated rows count.
+     * Indicates that the rows count has been partially calculated.
      *
-     * @return A number of rows in the table.
+     * @return True if the rows count has been stopped before reaching end of the table or False otherwise.
      */
-    public long getCalculatedRowsCount() {
-        return this.rowsCount;
+    public boolean isRowsCountPartiallyCalculated() {
+        return this.partialRowsCount > 0;
     }
 
     /**
@@ -388,8 +392,10 @@ public class Scanner {
      * @return A total number of rows in the table.
      * @throws IOException Error accessing hbase.
      */
-    public synchronized long getRowsCount(long timeout) throws IOException {
+    public long getRowsCount(long timeout) throws IOException {
         if (this.rowsCount == 0) {
+            this.partialRowsCount = 0;
+
             Scan scan = getScanner();
             scan.setCaching(GlobalConfig.instance().getBatchSizeForRead());
 
@@ -407,7 +413,9 @@ public class Scanner {
                     }
 
                     if (stopWatch.getTime() > timeout) {
-                        return count;
+                        this.partialRowsCount = count;
+
+                        break;
                     }
                 }
 
