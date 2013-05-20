@@ -217,11 +217,11 @@ public class ExportTableDialog extends JDialog {
             @Override
             public Object run() throws IOException {
                 long totalNumberOfRows = scanner.getRowsCount(GlobalConfig.instance().getRowCountTimeout());
-                if (totalNumberOfRows == scanner.getCalculatedRowsCount()) {
-                    totalRowsCount.setText(String.valueOf(totalNumberOfRows));
+                if (scanner.isRowsCountPartiallyCalculated()) {
+                    totalRowsCount.setText("more than " + totalNumberOfRows);
                 }
                 else {
-                    totalRowsCount.setText("more than " + totalNumberOfRows);
+                    totalRowsCount.setText(String.valueOf(totalNumberOfRows));
                 }
                 return null;
             }
