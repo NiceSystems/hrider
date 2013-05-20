@@ -12,6 +12,7 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 
 import java.io.IOException;
 import java.util.*;
@@ -397,6 +398,7 @@ public class Scanner {
             this.partialRowsCount = 0;
 
             Scan scan = getScanner();
+            scan.setFilter(new FirstKeyOnlyFilter());
             scan.setCaching(GlobalConfig.instance().getBatchSizeForRead());
 
             HTable table = this.connection.getTableFactory().get(this.tableName);
