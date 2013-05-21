@@ -329,8 +329,10 @@ public class Window {
             updateInfo.clear();
             updateInfo.load(stream);
 
-            String hriderVersion = updateInfo.getProperty("hrider.version");
-            if (hriderVersion != null && Version.compare(hriderVersion, getVersion()) > 0) {
+            String newVersion = updateInfo.getProperty("hrider.version");
+            String oldVersion = getVersion();
+
+            if (newVersion != null && oldVersion != null && Version.compare(newVersion, oldVersion) > 0) {
                 String hbaseVersions = updateInfo.getProperty("hbase.versions");
                 if (hbaseVersions != null) {
                     for (String version : hbaseVersions.split(";")) {
