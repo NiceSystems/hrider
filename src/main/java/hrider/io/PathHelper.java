@@ -190,9 +190,11 @@ public class PathHelper {
     public static String normalise(String path) {
         if (path != null) {
             String normalizedPath = path;
+            boolean removeSlash = false;
 
             try {
                 normalizedPath = normalizedPath.replace("\\", FILE_SEPARATOR);
+                removeSlash = !normalizedPath.startsWith(FILE_SEPARATOR);
 
                 if (!normalizedPath.startsWith("file:")) {
                     if (normalizedPath.startsWith(FILE_SEPARATOR)) {
@@ -210,7 +212,8 @@ public class PathHelper {
                 logger.warn(e, "Path is not valid URI: '%s'", normalizedPath);
             }
 
-            if (normalizedPath.startsWith(FILE_SEPARATOR)) {
+            // Remove slash in the beginning of the path if it was added by the URI class.
+            if (removeSlash && normalizedPath.startsWith(FILE_SEPARATOR)) {
                 normalizedPath = normalizedPath.substring(FILE_SEPARATOR.length());
             }
 
