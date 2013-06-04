@@ -2247,8 +2247,6 @@ public class DesignerView {
 
     private void toggleTableControls() {
         if (tablesListModel.getSize() > 0) {
-            tableFilters.setEnabled(true);
-
             int[] selectedIndices = tablesList.getSelectedIndices();
             if (selectedIndices.length > 0) {
                 tableDelete.setEnabled(true);
@@ -2269,7 +2267,6 @@ public class DesignerView {
             }
         }
         else {
-            tableFilters.setEnabled(false);
             tableDelete.setEnabled(false);
             tableTruncate.setEnabled(false);
             tableCopy.setEnabled(false);
