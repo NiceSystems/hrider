@@ -70,6 +70,9 @@ public class ConnectionDetails implements Serializable {
         config.set("hbase.zookeeper.property.clientPort", this.zookeeper.getPort());
         config.set("hbase.client.retries.number", "3");
 
+//        config.set("hbase.security.authentication", "kerberos");
+//        config.set("hbase.rpc.engine", "org.apache.hadoop.hbase.ipc.SecureRpcEngine");
+
         return config;
     }
 

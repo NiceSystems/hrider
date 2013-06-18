@@ -74,8 +74,17 @@ public class Window {
                     try {
                         File file = Downloader.download(url);
                         if (file != null) {
-                            actionLabel.setText("Deleting folder...");
-                            FileHelper.delete(targetFolder, "config", "converters");
+                            File oldJar = FileHelper.findFile(
+                                targetFolder, Pattern.compile("h-rider-?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.jar"));
+
+                            File updaterJar = FileHelper.findFile(
+                                targetFolder, Pattern.compile("h-rider-updater-?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.jar"));
+
+                            actionLabel.setText("Deleting old files...");
+
+                            FileHelper.delete(oldJar);
+                            FileHelper.delete(updaterJar);
+                            FileHelper.delete(new File(targetFolder + "/lib"));
 
                             actionLabel.setText("Extracting archive...");
                             ZipHelper.unzip(file, targetFolder);

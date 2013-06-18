@@ -2304,11 +2304,13 @@ public class DesignerView {
         int count = rowsTable.getSelectedRowCount();
 
         rowOpen.setEnabled(enabled && rowsTable.getRowCount() > 0);
-        rowAdd.setEnabled(enabled);
         rowDelete.setEnabled(enabled && count > 0);
         rowCopy.setEnabled(enabled && count > 0);
         rowPaste.setEnabled(hasRowsInClipboard());
         rowSave.setEnabled(changeTracker.hasChanges());
+
+        String tableName = getSelectedTableName();
+        rowAdd.setEnabled(tableName != null && tableEnabled(tableName));
     }
 
     private boolean tableEnabled(String tableName) {
