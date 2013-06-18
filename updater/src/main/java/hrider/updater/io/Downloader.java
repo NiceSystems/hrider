@@ -1,8 +1,9 @@
 package hrider.updater.io;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -25,8 +26,8 @@ import java.net.URLConnection;
 public class Downloader {
 
     //region Constants
-    private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
-    private static final double TOTAL_PERCENTS = 100.0;
+    private static final int    DEFAULT_BUFFER_SIZE = 1024 * 4;
+    private static final double TOTAL_PERCENTS      = 100.0;
     //endregion
 
     //region Variables
@@ -49,14 +50,23 @@ public class Downloader {
     //endregion
 
     //region Public Methods
-    public static File download(URL url) throws IOException, FileNotFoundException {
+    public static File download(URL url) throws IOException, FileNotFoundException, MalformedURLException {
         StringBuilder fileName = new StringBuilder();
         StringBuilder extension = new StringBuilder();
 
         extractFileNameAndExtension(url.getPath(), fileName, extension);
 
         File temp = File.createTempFile(fileName.toString() + '-', extension.length() == 0 ? null : extension.toString());
-        URLConnection connection = url.openConnection();
+        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+
+        int code = connection.getResponseCode();
+        while (code / 100 == 3) {
+            URL redirectedUrl = new URL(connection.getHeaderField("Location"));
+            connection.disconnect();
+
+            connection = (HttpURLConnection)redirectedUrl.openConnection();
+            code = connection.getResponseCode();
+        }
 
         InputStream in = connection.getInputStream();
         OutputStream out = new FileOutputStream(temp);

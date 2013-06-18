@@ -32,27 +32,30 @@ public class FileHelper {
 
     //region Public Methods
     public static void delete(File path, String... exclude) {
-        List<String> excludedPaths = Arrays.asList(exclude);
+        if (path != null) {
+            List<String> excludedPaths = Arrays.asList(exclude);
 
-        File[] files = path.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (!excludedPaths.contains(file.getName())) {
-                    if (file.isDirectory()) {
+            File[] files = path.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (!excludedPaths.contains(file.getName())) {
                         delete(file);
                     }
-                    file.delete();
                 }
             }
+
+            path.delete();
         }
     }
 
     public static File findFile(File folder, Pattern regex) {
-        File[] files = folder.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (regex.matcher(file.getName()).find()) {
-                    return file;
+        if (folder != null) {
+            File[] files = folder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (regex.matcher(file.getName()).find()) {
+                        return file;
+                    }
                 }
             }
         }
