@@ -8,6 +8,7 @@ import hrider.actions.RunnableAction;
 import hrider.config.ClusterConfig;
 import hrider.config.GlobalConfig;
 import hrider.converters.ConvertersLoader;
+import hrider.converters.ConvertersLoaderHandler;
 import hrider.converters.TypeConverter;
 import hrider.data.*;
 import hrider.export.FileExporter;
@@ -877,8 +878,6 @@ public class DesignerView {
                     CustomConverterDialog dialog = new CustomConverterDialog(null);
                     if (dialog.showDialog(topPanel)) {
                         ConvertersLoader.reload();
-
-                        reloadColumnTypes();
                     }
                 }
             });
@@ -893,31 +892,7 @@ public class DesignerView {
                     if (columnType != null) {
                         CustomConverterDialog dialog = new CustomConverterDialog(columnType.getConverter());
                         if (dialog.showDialog(topPanel)) {
-                            if (!columnType.getName().equals(dialog.getConverterName())) {
-                                ConvertersLoader.removeConverter(columnType.getName());
-                            }
-
-                            ConvertersLoader.reload();
-
-                            reloadColumnTypes();
-
-                            for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
-                                ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
-                                if (type.getName().equals(columnType.getName())) {
-                                    ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
-
-                                    type = ColumnType.fromName(type.getName());
-                                    columnsTable.setValueAt(type, row, 2);
-
-                                    updateColumnType(qualifier, type);
-                                }
-                            }
-
-                            if (lastQuery != null) {
-                                lastQuery.setStartKeyType(ColumnType.fromName(lastQuery.getStartKeyType().getName()));
-                                lastQuery.setEndKeyType(ColumnType.fromName(lastQuery.getEndKeyType().getName()));
-                                lastQuery.setWordType(ColumnType.fromName(lastQuery.getWordType().getName()));
-                            }
+                            ConvertersLoader.editConverter(columnType.getName(), dialog.getConverterName());
                         }
                     }
                 }
@@ -938,27 +913,58 @@ public class DesignerView {
 
                         if (decision == JOptionPane.OK_OPTION) {
                             ConvertersLoader.removeConverter(columnType.getName());
-
-                            reloadColumnTypes();
-
-                            for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
-                                ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
-                                if (type.getName().equals(columnType.getName())) {
-                                    ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
-
-                                    type = ColumnType.fromColumn(qualifier.getName());
-                                    columnsTable.setValueAt(type, row, 2);
-
-                                    updateColumnType(qualifier, type);
-                                }
-                            }
-
-                            if (lastQuery != null) {
-                                lastQuery.setStartKeyType(ColumnType.fromNameOrDefault(lastQuery.getStartKeyType().getName(), ColumnType.BinaryString));
-                                lastQuery.setEndKeyType(ColumnType.fromNameOrDefault(lastQuery.getEndKeyType().getName(), ColumnType.BinaryString));
-                                lastQuery.setWordType(ColumnType.fromNameOrDefault(lastQuery.getWordType().getName(), ColumnType.String));
-                            }
                         }
+                    }
+                }
+            });
+
+        ConvertersLoader.addHandler(
+            new ConvertersLoaderHandler() {
+                @Override
+                public void onLoad() {
+                    reloadColumnTypes();
+                }
+
+                @Override
+                public void onEdit(String oldName, String newName) {
+                    ColumnType newType = ColumnType.fromName(newName);
+                    columnConverters.setSelectedItem(newType);
+
+                    for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
+                        ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
+                        if (type.getName().equals(oldName)) {
+                            columnsTable.setValueAt(newType, row, 2);
+
+                            ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
+                            updateColumnType(qualifier, newType);
+                        }
+                    }
+
+                    if (lastQuery != null) {
+                        lastQuery.setStartKeyType(ColumnType.fromName(lastQuery.getStartKeyType().getName()));
+                        lastQuery.setEndKeyType(ColumnType.fromName(lastQuery.getEndKeyType().getName()));
+                        lastQuery.setWordType(ColumnType.fromName(lastQuery.getWordType().getName()));
+                    }
+                }
+
+                @Override
+                public void onRemove(String name) {
+                    for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
+                        ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
+                        if (type.getName().equals(name)) {
+                            ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
+
+                            type = ColumnType.fromColumn(qualifier.getName());
+                            columnsTable.setValueAt(type, row, 2);
+
+                            updateColumnType(qualifier, type);
+                        }
+                    }
+
+                    if (lastQuery != null) {
+                        lastQuery.setStartKeyType(ColumnType.fromNameOrDefault(lastQuery.getStartKeyType().getName(), ColumnType.BinaryString));
+                        lastQuery.setEndKeyType(ColumnType.fromNameOrDefault(lastQuery.getEndKeyType().getName(), ColumnType.BinaryString));
+                        lastQuery.setWordType(ColumnType.fromNameOrDefault(lastQuery.getWordType().getName(), ColumnType.String));
                     }
                 }
             });
@@ -977,7 +983,7 @@ public class DesignerView {
     /**
      * Gets the reference to the view.
      *
-     * @return A {@link JPanel} that contains the controls.
+     * @return A {@link javax.swing.JPanel} that contains the controls.
      */
     public JPanel getView() {
         return this.topPanel;
@@ -986,7 +992,7 @@ public class DesignerView {
     /**
      * Gets a reference to the class used to access the hbase.
      *
-     * @return A reference to the {@link Connection} class.
+     * @return A reference to the {@link hrider.hbase.Connection} class.
      */
     public Connection getConnection() {
         return this.connection;
@@ -1054,7 +1060,7 @@ public class DesignerView {
      *
      * @param columnName The name of the column to look.
      * @param table      The table that should contain column.
-     * @return A reference to {@link TableColumn} if found or {@code null} otherwise.
+     * @return A reference to {@link javax.swing.table.TableColumn} if found or {@code null} otherwise.
      */
     private static TableColumn getColumn(String columnName, JTable table) {
         for (int i = 0 ; i < table.getColumnCount() ; i++) {
@@ -1506,7 +1512,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link DesignerView#rowsNumber} control.
+     * in the {@link hrider.ui.views.DesignerView#rowsNumber} control.
      *
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
      *                  {@link Direction#Forward} or {@link Direction#Backward}.
@@ -1517,7 +1523,7 @@ public class DesignerView {
 
     /**
      * Populates a rows table. The method loads the table content. The number of loaded rows depends on the parameter defined by the user
-     * in the {@link DesignerView#rowsNumber} control.
+     * in the {@link hrider.ui.views.DesignerView#rowsNumber} control.
      *
      * @param offset    The first row to start loading from.
      * @param direction Defines what rows should be presented to the user. {@link Direction#Current},
@@ -2285,8 +2291,6 @@ public class DesignerView {
         columnPopulate.setEnabled(enabled);
         columnCheck.setEnabled(enabled);
         columnUncheck.setEnabled(enabled);
-        columnConverters.setEnabled(enabled);
-        columnAddConverter.setEnabled(enabled);
 
         boolean isEditable = getColumnNameConverter().isEditable();
 
@@ -2707,7 +2711,7 @@ public class DesignerView {
         final JToolBar.Separator toolBar$Separator4 = new JToolBar.Separator();
         toolBar4.add(toolBar$Separator4);
         columnConverters = new WideComboBox();
-        columnConverters.setEnabled(false);
+        columnConverters.setEnabled(true);
         columnConverters.setMaximumSize(new Dimension(120, 24));
         columnConverters.setMinimumSize(new Dimension(50, 24));
         columnConverters.setPreferredSize(new Dimension(-1, 24));
@@ -2716,7 +2720,7 @@ public class DesignerView {
         final JToolBar.Separator toolBar$Separator5 = new JToolBar.Separator();
         toolBar4.add(toolBar$Separator5);
         columnAddConverter = new JButton();
-        columnAddConverter.setEnabled(false);
+        columnAddConverter.setEnabled(true);
         columnAddConverter.setIcon(new ImageIcon(getClass().getResource("/images/addConverter.png")));
         columnAddConverter.setMaximumSize(new Dimension(24, 24));
         columnAddConverter.setMinimumSize(new Dimension(24, 24));

@@ -9,10 +9,7 @@ import java.io.*;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -34,16 +31,18 @@ import java.util.TreeMap;
  *          <p/>
  *          This class is responsible for loading and creation of type converters.
  */
-@SuppressWarnings("CallToPrintStackTrace")
+@SuppressWarnings({"CallToPrintStackTrace", "ResultOfMethodCallIgnored"})
 public class ConvertersLoader {
 
     //region Variables
-    private final static Log logger = Log.getLogger(ConvertersLoader.class);
-    private static Map<String, TypeConverter> converters;
+    private static final Log logger = Log.getLogger(ConvertersLoader.class);
+    private static final List<ConvertersLoaderHandler> handlers;
+    private static       Map<String, TypeConverter>    converters;
     //endregion
 
     //region Constructor
     static {
+        handlers = new ArrayList<ConvertersLoaderHandler>();
         converters = load();
     }
 
@@ -52,6 +51,24 @@ public class ConvertersLoader {
     //endregion
 
     //region Public Methods
+
+    /**
+     * Adds a handler.
+     *
+     * @param handler The new handler.
+     */
+    public static void addHandler(ConvertersLoaderHandler handler) {
+        handlers.add(handler);
+    }
+
+    /**
+     * Removes a handler.
+     *
+     * @param handler A handler to remove.
+     */
+    public static void removeHandler(ConvertersLoaderHandler handler) {
+        handlers.remove(handler);
+    }
 
     /**
      * Checks whether the specified converter exists.
@@ -98,12 +115,52 @@ public class ConvertersLoader {
     }
 
     /**
+     * Handles converter editing.
+     *
+     * @param oldName A new converter name if the name was changed or the old one.
+     * @param newName A new converter name if the name was changed or the old one.
+     */
+    public static void editConverter(String oldName, String newName) {
+        if (!oldName.equals(newName)) {
+            deleteConverter(oldName);
+        }
+
+        reload();
+
+        for (ConvertersLoaderHandler handler : handlers) {
+            handler.onEdit(oldName, newName);
+        }
+    }
+
+    /**
      * Removes converter from the loader's cache and from the file system.
      *
      * @param name The name of the converter to remove.
      */
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void removeConverter(String name) {
+        if (deleteConverter(name)) {
+            reload();
+
+            for (ConvertersLoaderHandler handler : handlers) {
+                handler.onRemove(name);
+            }
+        }
+    }
+
+    /**
+     * Reloads converters.
+     */
+    public static void reload() {
+        converters = load();
+
+        for (ConvertersLoaderHandler handler : handlers) {
+            handler.onLoad();
+        }
+    }
+    //endregion
+
+    //region Private Methods
+    private static boolean deleteConverter(String name) {
         TypeConverter converter = converters.get(name);
         if (converter != null) {
             converters.remove(name);
@@ -121,18 +178,12 @@ public class ConvertersLoader {
             if (codeFile.exists()) {
                 codeFile.delete();
             }
+
+            return true;
         }
+        return false;
     }
 
-    /**
-     * Reloads converters.
-     */
-    public static void reload() {
-        converters = load();
-    }
-    //endregion
-
-    //region Private Methods
     private static Map<String, TypeConverter> load() {
         Map<String, TypeConverter> map = new TreeMap<String, TypeConverter>();
 
