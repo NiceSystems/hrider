@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
@@ -39,6 +40,11 @@ import java.util.regex.Pattern;
  * @version %I%, %G%
  */
 public class Window {
+
+    //region Constants
+    private static final Pattern JAR_PATTERN     = Pattern.compile("h-rider-?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.jar");
+    private static final Pattern UPDATER_PATTERN = Pattern.compile("h-rider-updater-?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.jar");
+    //endregion
 
     //region Variables
     private JPanel       topPanel;
@@ -74,17 +80,22 @@ public class Window {
                     try {
                         File file = Downloader.download(url);
                         if (file != null) {
-                            File oldJar = FileHelper.findFile(
-                                targetFolder, Pattern.compile("h-rider-?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.jar"));
-
-                            File updaterJar = FileHelper.findFile(
-                                targetFolder, Pattern.compile("h-rider-updater-?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.jar"));
-
                             actionLabel.setText("Deleting old files...");
 
-                            FileHelper.delete(oldJar);
-                            FileHelper.delete(updaterJar);
-                            FileHelper.delete(new File(targetFolder + "/lib"));
+                            List<String> filesToRemove = ZipHelper.getRootEntries(file);
+                            for (String fileName : filesToRemove) {
+                                if (JAR_PATTERN.matcher(fileName).find()) {
+                                    File jar = FileHelper.findFile(targetFolder, JAR_PATTERN);
+                                    FileHelper.delete(jar);
+                                }
+                                else if (UPDATER_PATTERN.matcher(fileName).find()) {
+                                    File jar = FileHelper.findFile(targetFolder, UPDATER_PATTERN);
+                                    FileHelper.delete(jar);
+                                }
+                                else {
+                                    FileHelper.delete(new File(targetFolder + "/" + fileName));
+                                }
+                            }
 
                             actionLabel.setText("Extracting archive...");
                             ZipHelper.unzip(file, targetFolder);

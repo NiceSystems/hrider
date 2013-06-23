@@ -88,6 +88,7 @@ public class CustomConverterDialog extends JDialog {
             tfConverterName.setText(converter.getClass().getSimpleName());
             chbNameConverter.setSelected(converter.isValidForNameConversion());
 
+            loadImports(converter.getCode());
             loadMethods(converter.getCode());
         }
         else {
@@ -148,6 +149,20 @@ public class CustomConverterDialog extends JDialog {
     //endregion
 
     //region Private Methods
+    private void loadImports(String code) {
+        StringBuilder imports = new StringBuilder();
+
+        for (String line : code.replace("  ", " ").split(Pattern.quote(PathHelper.LINE_SEPARATOR))) {
+            String trimmedLine = line.trim();
+            if (trimmedLine.startsWith("import")) {
+                imports.append(trimmedLine);
+                imports.append(PathHelper.LINE_SEPARATOR);
+            }
+        }
+
+        taImports.setText(imports.toString());
+    }
+
     private void loadMethods(String code) {
         Methods method = Methods.None;
 

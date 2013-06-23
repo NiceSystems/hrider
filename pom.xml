@@ -10,7 +10,7 @@
     <description>hbase viewer and editor</description>
 
     <packaging>jar</packaging>
-    <version>1.0.7.1</version>
+    <version>1.0.7.2</version>
 
     <repositories>
         <repository>

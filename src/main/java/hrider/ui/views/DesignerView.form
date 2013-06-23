@@ -465,7 +465,7 @@
                           <component id="dcf2c" class="hrider.ui.controls.WideComboBox" binding="columnConverters">
                             <constraints/>
                             <properties>
-                              <enabled value="false"/>
+                              <enabled value="true"/>
                               <maximumSize width="120" height="24"/>
                               <minimumSize width="50" height="24"/>
                               <preferredSize width="-1" height="24"/>
@@ -479,7 +479,7 @@
                           <component id="608e4" class="javax.swing.JButton" binding="columnAddConverter">
                             <constraints/>
                             <properties>
-                              <enabled value="false"/>
+                              <enabled value="true"/>
                               <icon value="images/addConverter.png"/>
                               <maximumSize width="24" height="24"/>
                               <minimumSize width="24" height="24"/>
