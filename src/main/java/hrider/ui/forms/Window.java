@@ -217,13 +217,16 @@ public class Window {
                                 new File("."), Pattern.compile("h-rider-updater-?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.?[0-9]{0,4}\\.jar"));
 
                             File temporary = File.createTempFile("h-rider-updater-", ".jar");
-
                             FileHelper.copy(jar, temporary);
 
+                            String url = updateInfo.getProperty("hbase." + getHbaseVersion() + ".reduced");
+                            if (url == null) {
+                                url = updateInfo.getProperty("hbase." + getHbaseVersion());
+                            }
+
                             Runtime.getRuntime().exec(
-                                String.format(
-                                    "java -jar %s \"%s\" \"%s\"", temporary.getName(), updateInfo.getProperty("hbase." + getHbaseVersion()),
-                                    jar.getParentFile().getAbsolutePath()), null, temporary.getParentFile());
+                                String.format("java -jar %s \"%s\" \"%s\"", temporary.getName(), url, jar.getParentFile().getAbsolutePath()), null,
+                                temporary.getParentFile());
 
                             frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
                         }

@@ -1,7 +1,9 @@
 package hrider.updater.io;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -37,9 +39,10 @@ public class ZipHelper {
 
     //region Public Methods
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void unzip(File file, File targetDir) throws ZipException, IOException, FileNotFoundException {
+    public static void unzip(File zippedFile, File targetDir) throws ZipException, IOException, FileNotFoundException {
         targetDir.mkdirs();
-        ZipFile zipFile = new ZipFile(file);
+
+        ZipFile zipFile = new ZipFile(zippedFile);
 
         try {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
@@ -69,6 +72,29 @@ public class ZipHelper {
         finally {
             zipFile.close();
         }
+    }
+
+    public static List<String> getRootEntries(File zippedFile) throws IOException, ZipException {
+        List<String> fileNames = new ArrayList<String>();
+
+        ZipFile zipFile = new ZipFile(zippedFile);
+
+        try {
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+
+                int index = entry.getName().indexOf('/');
+                if (index == -1 || index == entry.getName().length() - 1) {
+                    fileNames.add(entry.getName());
+                }
+            }
+        }
+        finally {
+            zipFile.close();
+        }
+
+        return fileNames;
     }
     //endregion
 
