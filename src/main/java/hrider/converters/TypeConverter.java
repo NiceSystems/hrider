@@ -1,5 +1,7 @@
 package hrider.converters;
 
+import hrider.io.Log;
+
 import java.io.Serializable;
 
 /**
@@ -26,6 +28,7 @@ import java.io.Serializable;
 public abstract class TypeConverter implements Comparable<TypeConverter>, Serializable {
 
     //region Constants
+    protected static final Log logger = Log.getLogger(TypeConverter.class);
     protected static final byte[] EMPTY_BYTES_ARRAY = new byte[0];
 
     private static final long serialVersionUID = 1490434164342371320L;
