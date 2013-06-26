@@ -466,9 +466,9 @@
                             <constraints/>
                             <properties>
                               <enabled value="true"/>
-                              <maximumSize width="120" height="24"/>
-                              <minimumSize width="50" height="24"/>
-                              <preferredSize width="-1" height="24"/>
+                              <maximumSize width="32767" height="26"/>
+                              <minimumSize width="50" height="20"/>
+                              <preferredSize width="-1" height="-1"/>
                               <toolTipText value="Choose type to be used to convert column name"/>
                             </properties>
                           </component>
