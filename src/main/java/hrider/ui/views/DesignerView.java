@@ -875,6 +875,8 @@ public class DesignerView {
                 public void actionPerformed(ActionEvent e) {
                     clearError();
 
+                    JTableModel.stopCellEditing(columnsTable);
+
                     CustomConverterDialog dialog = new CustomConverterDialog(null);
                     if (dialog.showDialog(topPanel)) {
                         ConvertersLoader.reload();
@@ -887,6 +889,8 @@ public class DesignerView {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     clearError();
+
+                    JTableModel.stopCellEditing(columnsTable);
 
                     ColumnType columnType = getSelectedEditableColumnType();
                     if (columnType != null) {
@@ -903,6 +907,8 @@ public class DesignerView {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     clearError();
+
+                    JTableModel.stopCellEditing(columnsTable);
 
                     ColumnType columnType = getSelectedEditableColumnType();
                     if (columnType != null) {
@@ -941,9 +947,17 @@ public class DesignerView {
                     }
 
                     if (lastQuery != null) {
-                        lastQuery.setStartKeyType(ColumnType.fromName(lastQuery.getStartKeyType().getName()));
-                        lastQuery.setEndKeyType(ColumnType.fromName(lastQuery.getEndKeyType().getName()));
-                        lastQuery.setWordType(ColumnType.fromName(lastQuery.getWordType().getName()));
+                        if (oldName.equals(lastQuery.getStartKeyType().getName())) {
+                            lastQuery.setStartKeyType(newType);
+                        }
+
+                        if (oldName.equals(lastQuery.getEndKeyType().getName())) {
+                            lastQuery.setEndKeyType(newType);
+                        }
+
+                        if (lastQuery.getWordType() != null && oldName.equals(lastQuery.getWordType().getName())) {
+                            lastQuery.setWordType(ColumnType.fromName(lastQuery.getWordType().getName()));
+                        }
                     }
                 }
 
@@ -962,9 +976,17 @@ public class DesignerView {
                     }
 
                     if (lastQuery != null) {
-                        lastQuery.setStartKeyType(ColumnType.fromNameOrDefault(lastQuery.getStartKeyType().getName(), ColumnType.BinaryString));
-                        lastQuery.setEndKeyType(ColumnType.fromNameOrDefault(lastQuery.getEndKeyType().getName(), ColumnType.BinaryString));
-                        lastQuery.setWordType(ColumnType.fromNameOrDefault(lastQuery.getWordType().getName(), ColumnType.String));
+                        if (lastQuery.getStartKeyType() != null) {
+                            lastQuery.setStartKeyType(ColumnType.fromNameOrDefault(lastQuery.getStartKeyType().getName(), ColumnType.BinaryString));
+                        }
+
+                        if (lastQuery.getEndKeyType() != null) {
+                            lastQuery.setEndKeyType(ColumnType.fromNameOrDefault(lastQuery.getEndKeyType().getName(), ColumnType.BinaryString));
+                        }
+
+                        if (lastQuery.getWordType() != null) {
+                            lastQuery.setWordType(ColumnType.fromNameOrDefault(lastQuery.getWordType().getName(), ColumnType.String));
+                        }
                     }
                 }
             });
@@ -1278,8 +1300,9 @@ public class DesignerView {
 
         this.columnsTable.getColumn("Show").setCellRenderer(new JCheckBoxRenderer(new CheckedRow(1, ColumnQualifier.KEY)));
         this.columnsTable.getColumn("Show").setCellEditor(new JCheckBoxRenderer(new CheckedRow(1, ColumnQualifier.KEY)));
-        this.columnsTable.getColumn("Show").setPreferredWidth(40);
-        this.columnsTable.getColumn("Column Name").setPreferredWidth(110);
+        this.columnsTable.getColumn("Show").setPreferredWidth(50);
+        this.columnsTable.getColumn("Show").setMaxWidth(50);
+        this.columnsTable.getColumn("Show").setMinWidth(50);
 
         this.cmbColumnTypes = new WideComboBox();
 
@@ -1293,6 +1316,9 @@ public class DesignerView {
 
         this.columnConverters.setSelectedItem(ColumnType.BinaryString);
         this.columnsTable.getColumn("Column Type").setCellEditor(new DefaultCellEditor(this.cmbColumnTypes));
+        this.columnsTable.getColumn("Column Type").setPreferredWidth(82);
+        this.columnsTable.getColumn("Column Type").setMaxWidth(300);
+        this.columnsTable.getColumn("Column Type").setMinWidth(82);
 
         this.columnsTable.getModel().addTableModelListener(
             new TableModelListener() {
@@ -2330,7 +2356,6 @@ public class DesignerView {
         return enabled;
     }
 
-
     /**
      * Sets a filter.
      *
@@ -2712,9 +2737,9 @@ public class DesignerView {
         toolBar4.add(toolBar$Separator4);
         columnConverters = new WideComboBox();
         columnConverters.setEnabled(true);
-        columnConverters.setMaximumSize(new Dimension(120, 24));
-        columnConverters.setMinimumSize(new Dimension(50, 24));
-        columnConverters.setPreferredSize(new Dimension(-1, 24));
+        columnConverters.setMaximumSize(new Dimension(32767, 26));
+        columnConverters.setMinimumSize(new Dimension(50, 20));
+        columnConverters.setPreferredSize(new Dimension(-1, -1));
         columnConverters.setToolTipText("Choose type to be used to convert column name");
         toolBar4.add(columnConverters);
         final JToolBar.Separator toolBar$Separator5 = new JToolBar.Separator();
