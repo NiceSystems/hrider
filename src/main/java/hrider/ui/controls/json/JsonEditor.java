@@ -50,7 +50,7 @@ public class JsonEditor extends JPanel {
     /**
      * Initializes a new instance of the {@link JsonEditor} class.
      */
-    public JsonEditor() {
+    public JsonEditor(final CellEditor cellEditor) {
 
         this.textPane = new JsonTextPane();
         this.textPane.setLayout(new BorderLayout());
@@ -70,8 +70,8 @@ public class JsonEditor extends JPanel {
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
 
-        JButton saveButton = new JButton("Save");
-        saveButton.setPreferredSize(new Dimension(75, 24));
+        JButton saveButton = new JButton("Mark for save");
+        saveButton.setPreferredSize(new Dimension(115, 24));
         saveButton.addActionListener(
             new ActionListener() {
                 @Override
@@ -81,6 +81,7 @@ public class JsonEditor extends JPanel {
                         JsonEditor.this.textPane.validateJson();
 
                         JsonEditor.this.textField.setText(JsonEditor.this.textPane.getText());
+                        cellEditor.getCellEditorValue();
                     }
                     catch (JsonSyntaxException ex) {
                         JOptionPane.showMessageDialog(JsonEditor.this, ex.getMessage(), "Invalid JSON", JOptionPane.ERROR_MESSAGE);
