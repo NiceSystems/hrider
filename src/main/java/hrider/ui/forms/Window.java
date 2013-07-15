@@ -443,55 +443,49 @@ public class Window {
     private void loadView(Connection connection) {
         DesignerView view = new DesignerView(this.topPanel, connection);
 
-        int index = this.tabbedPane.indexOfTab(connection.getServerName());
-        if (index == -1) {
-            index = this.tabbedPane.getTabCount();
+        int index = this.tabbedPane.getTabCount();
 
-            JCloseButton closeButton = new JCloseButton(connection.getServerName(), this.tabbedPane);
-            this.viewMap.put(closeButton, view);
+        JCloseButton closeButton = new JCloseButton(connection.getServerName(), this.tabbedPane);
+        this.viewMap.put(closeButton, view);
 
-            closeButton.addTabClosedListener(
-                new TabClosedListener() {
-                    @Override
-                    public void onTabClosed(Component component) {
-                        DesignerView designerView = viewMap.get(component);
+        closeButton.addTabClosedListener(
+            new TabClosedListener() {
+                @Override
+                public void onTabClosed(Component component) {
+                    DesignerView designerView = viewMap.get(component);
 
-                        ClipboardData<DataTable> data = InMemoryClipboard.getData();
-                        if (data != null) {
-                            Connection helper = data.getData().getConnection();
-                            if (helper != null) {
-                                if (helper.equals(designerView.getConnection())) {
-                                    InMemoryClipboard.setData(null);
-                                }
+                    ClipboardData<DataTable> data = InMemoryClipboard.getData();
+                    if (data != null) {
+                        Connection helper = data.getData().getConnection();
+                        if (helper != null) {
+                            if (helper.equals(designerView.getConnection())) {
+                                InMemoryClipboard.setData(null);
                             }
                         }
-
-                        ViewConfig.instance().removeCluster(designerView.getConnection().getServerName());
-
-                        PropertiesConfig.fileRemove(designerView.getConnection().getServerName());
-
-                        ConnectionManager.release(designerView.getConnection().getConnectionDetails());
-                        viewMap.remove(component);
                     }
-                });
 
-            this.tabbedPane.addTab(connection.getServerName(), view.getView());
-            this.tabbedPane.setSelectedIndex(index);
-            this.tabbedPane.setTabComponentAt(index, closeButton);
+                    ViewConfig.instance().removeCluster(designerView.getConnection().getServerName());
 
-            ViewConfig.instance().addCluster(connection.getServerName());
+                    PropertiesConfig.fileRemove(designerView.getConnection().getServerName());
 
-            view.populate();
-        }
-        else {
-            this.tabbedPane.setSelectedIndex(index);
-        }
+                    ConnectionManager.release(designerView.getConnection().getConnectionDetails());
+                    viewMap.remove(component);
+                }
+            });
+
+        this.tabbedPane.addTab(connection.getServerName(), view.getView());
+        this.tabbedPane.setSelectedIndex(index);
+        this.tabbedPane.setTabComponentAt(index, closeButton);
+
+        ViewConfig.instance().addCluster(connection.getServerName());
+
+        view.populate();
     }
 
     /**
      * Shows a connection dialog.
      *
-     * @return A reference to {@link hrider.config.ConnectionDetails} class that contains all required information to connect to the cluster.
+     * @return A reference to {@link ConnectionDetails} class that contains all required information to connect to the cluster.
      */
     private ConnectionDetails showDialog() {
         ConnectionDetailsDialog dialog = new ConnectionDetailsDialog();
