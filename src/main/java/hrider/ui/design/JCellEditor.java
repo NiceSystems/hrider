@@ -71,9 +71,9 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         this.dateEditor.setBorder(BorderFactory.createEmptyBorder());
         this.dateEditor.setDateFormat(new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH));
         this.dateEditor.setFieldEditable(canEdit);
-        this.xmlEditor = new XmlEditor();
+        this.xmlEditor = new XmlEditor(this);
         this.xmlEditor.setEditable(canEdit);
-        this.jsonEditor = new JsonEditor();
+        this.jsonEditor = new JsonEditor(this);
         this.jsonEditor.setEditable(canEdit);
     }
     //endregion
