@@ -27,15 +27,11 @@ public interface TabActionListener {
 
     /**
      * The method is called each time the tab of {@link JTabbedPane} is closed by the user.
-     *
-     * @param component The component of the closed tab.
      */
-    void onTabClosed(Component component);
+    void onTabClosed();
 
     /**
      * The method is called each time the tab of {@link JTabbedPane} is being duplicated by the user.
-     *
-     * @param component The component of the duplicated tab.
      */
-    void onTabDuplicated(Component component);
+    void onTabDuplicated();
 }

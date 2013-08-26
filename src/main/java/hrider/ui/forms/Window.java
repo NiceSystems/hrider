@@ -74,7 +74,6 @@ public class Window {
     private boolean                         canceled;
     private UIAction                        uiAction;
     private String                          lastError;
-    private Map<Component, DesignerView>    viewMap;
     private Map<String, List<DesignerView>> viewList;
     private Properties                      updateInfo;
     private JFrame                          frame;
@@ -83,7 +82,6 @@ public class Window {
     //region Constructor
     public Window() {
         this.updateInfo = new Properties();
-        this.viewMap = new HashMap<Component, DesignerView>();
         this.viewList = new HashMap<String, List<DesignerView>>();
 
         Font font = this.actionLabel1.getFont();
@@ -177,7 +175,7 @@ public class Window {
                     if (connectionDetails != null) {
                         try {
                             Connection connection = ConnectionManager.create(connectionDetails);
-                            loadView(connection);
+                            loadView(tabbedPane.getTabCount(), connection);
                         }
                         catch (IOException ex) {
                             MessageHandler.addError(String.format("Failed to connect to %s.", connectionDetails.getZookeeper().getHost()), ex);
@@ -403,7 +401,7 @@ public class Window {
                             splash.update(String.format("Loading %s view...", connectionDetails.getZookeeper().getHost()));
 
                             Connection connection = ConnectionManager.create(connectionDetails);
-                            loadView(connection);
+                            loadView(tabbedPane.getTabCount(), connection);
 
                             loaded.add(connectionDetails);
                         }
@@ -423,7 +421,7 @@ public class Window {
             if (connectionDetails != null) {
                 try {
                     Connection connection = ConnectionManager.create(connectionDetails);
-                    loadView(connection);
+                    loadView(tabbedPane.getTabCount(), connection);
                 }
                 catch (IOException e) {
                     MessageHandler.addError(String.format("Failed to connect to %s.", connectionDetails.getZookeeper().getHost()), e);
@@ -440,56 +438,51 @@ public class Window {
      *
      * @param connection A connection to be used to connect to the cluster.
      */
-    private DesignerView loadView(final Connection connection) {
+    private DesignerView loadView(int index, final Connection connection) {
         final DesignerView view = new DesignerView(this.topPanel, connection);
 
-        int index = this.tabbedPane.getTabCount();
-
-        JTab tab = new JTab(connection.getServerName(), this.tabbedPane);
-        this.viewMap.put(tab, view);
-
-        List<DesignerView> views = this.viewList.get(connection.getServerName());
+        List<DesignerView> views = viewList.get(connection.getServerName());
         if (views == null) {
             views = new ArrayList<DesignerView>();
-            this.viewList.put(connection.getServerName(), views);
+            viewList.put(connection.getServerName(), views);
         }
 
         views.add(view);
 
+        final JTab tab = new JTab(connection.getServerName(), this.tabbedPane);
         tab.addTabActionListener(
             new TabActionListener() {
                 @Override
-                public void onTabClosed(Component component) {
-                    DesignerView designerView = viewMap.get(component);
-
-                    List<DesignerView> list = viewList.get(designerView.getConnection().getServerName());
-                    list.remove(designerView);
+                public void onTabClosed() {
+                    List<DesignerView> list = viewList.get(view.getConnection().getServerName());
+                    list.remove(view);
 
                     ClipboardData<DataTable> data = InMemoryClipboard.getData();
                     if (data != null) {
                         Connection helper = data.getData().getConnection();
                         if (helper != null) {
-                            if (helper.equals(designerView.getConnection())) {
+                            if (helper.equals(view.getConnection())) {
                                 InMemoryClipboard.setData(null);
                             }
                         }
                     }
 
                     if (list.isEmpty()) {
-                        ViewConfig.instance().removeCluster(designerView.getConnection().getServerName());
-                        PropertiesConfig.fileRemove(designerView.getConnection().getServerName());
+                        ViewConfig.instance().removeCluster(view.getConnection().getServerName());
+                        PropertiesConfig.fileRemove(view.getConnection().getServerName());
 
-                        viewList.remove(designerView.getConnection().getServerName());
+                        viewList.remove(view.getConnection().getServerName());
                     }
 
-                    ConnectionManager.release(designerView.getConnection().getConnectionDetails());
-                    viewMap.remove(component);
+                    ConnectionManager.release(view.getConnection().getConnectionDetails());
                 }
 
                 @Override
-                public void onTabDuplicated(Component component) {
+                public void onTabDuplicated() {
                     try {
-                        DesignerView duplicatedView = loadView(new Connection(connection.getConnectionDetails()));
+                        int newIndex = tabbedPane.indexOfComponent(view.getView());
+
+                        DesignerView duplicatedView = loadView(newIndex + 1, new Connection(connection.getConnectionDetails()));
                         duplicatedView.setSelectedTableName(view.getSelectedTableName());
                     }
                     catch (IOException ex) {
@@ -498,9 +491,9 @@ public class Window {
                 }
             });
 
-        this.tabbedPane.addTab(connection.getServerName(), view.getView());
-        this.tabbedPane.setSelectedIndex(index);
-        this.tabbedPane.setTabComponentAt(index, tab);
+        tabbedPane.insertTab(connection.getServerName(), null, view.getView(), null, index);
+        tabbedPane.setSelectedIndex(index);
+        tabbedPane.setTabComponentAt(index, tab);
 
         if (views.size() == 1) {
             ViewConfig.instance().addCluster(connection.getServerName());

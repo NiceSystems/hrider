@@ -66,8 +66,8 @@ public class JTab extends JPanel {
                     if (pane.getTabCount() > 1) {
                         pane.removeTabAt(pane.indexOfTab(title));
 
-                        for (TabActionListener listener : JTab.this.listeners) {
-                            listener.onTabClosed(JTab.this);
+                        for (TabActionListener listener : listeners) {
+                            listener.onTabClosed();
                         }
                     }
                 }
@@ -84,8 +84,8 @@ public class JTab extends JPanel {
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    for (TabActionListener listener : JTab.this.listeners) {
-                        listener.onTabDuplicated(JTab.this);
+                    for (TabActionListener listener : listeners) {
+                        listener.onTabDuplicated();
                     }
                 }
             });
