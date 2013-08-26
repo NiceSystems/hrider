@@ -1,6 +1,7 @@
 package hrider.ui.controls;
 
-import hrider.ui.TabClosedListener;
+import hrider.ui.Images;
+import hrider.ui.TabActionListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -29,60 +30,78 @@ import java.util.List;
  *          <p/>
  *          This class represents a custom button used on tabs in tab component. The button allows to user to close unnecessary tabs.
  */
-public class JCloseButton extends JPanel {
+public class JTab extends JPanel {
 
     //region Constants
     private static final long serialVersionUID = 3457653319908745576L;
     //endregion
 
     //region Variables
-    private List<TabClosedListener> listeners;
+    private List<TabActionListener> listeners;
     //endregion
 
     //region Constructor
-    public JCloseButton(final String title, final JTabbedPane pane) {
+    public JTab(final String title, final JTabbedPane pane) {
 
-        this.listeners = new ArrayList<TabClosedListener>();
+        setOpaque(false);
+
+        this.listeners = new ArrayList<TabActionListener>();
 
         JLabel label = new JLabel();
         label.setText(title);
         label.setHorizontalTextPosition(SwingConstants.TRAILING);
-        label.setIcon(new ImageIcon(Thread.currentThread().getContextClassLoader().getResource("images/server.png")));
+        label.setIcon(Images.get("server"));
 
-        JButton button = new JButton();
+        JButton closeButton = new JButton(Images.get("close"));
+        closeButton.setPreferredSize(new Dimension(16, 16));
+        closeButton.setToolTipText("Close the tab");
+        closeButton.setFocusPainted(false);
+        closeButton.setOpaque(false);
+        closeButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        setOpaque(false);
-
-        button.setPreferredSize(new Dimension(16, 16));
-        button.addActionListener(
+        closeButton.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (pane.getTabCount() > 1) {
                         pane.removeTabAt(pane.indexOfTab(title));
 
-                        for (TabClosedListener listener : JCloseButton.this.listeners) {
-                            listener.onTabClosed(JCloseButton.this);
+                        for (TabActionListener listener : JTab.this.listeners) {
+                            listener.onTabClosed(JTab.this);
                         }
                     }
                 }
             });
 
-        button.setIcon(new ImageIcon(Thread.currentThread().getContextClassLoader().getResource("images/close.png")));
-        button.setFocusPainted(false);
-        button.setOpaque(false);
+        JButton duplicateButton = new JButton(Images.get("duplicate"));
+        duplicateButton.setPreferredSize(new Dimension(16, 16));
+        duplicateButton.setToolTipText("Duplicate the tab");
+        duplicateButton.setFocusPainted(false);
+        duplicateButton.setOpaque(false);
+        duplicateButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        duplicateButton.addActionListener(
+            new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    for (TabActionListener listener : JTab.this.listeners) {
+                        listener.onTabDuplicated(JTab.this);
+                    }
+                }
+            });
 
         add(label);
-        add(button);
+        add(closeButton);
+        add(duplicateButton);
     }
     //endregion
 
     //region Public Methods
-    public void addTabClosedListener(TabClosedListener listener) {
+    public void addTabActionListener(TabActionListener listener) {
         this.listeners.add(listener);
     }
 
-    public void removeTabClosedListener(TabClosedListener listener) {
+    public void removeTabActionListener(TabActionListener listener) {
         this.listeners.remove(listener);
     }
     //endregion

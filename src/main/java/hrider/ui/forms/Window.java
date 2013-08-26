@@ -19,12 +19,9 @@ import hrider.system.Clipboard;
 import hrider.system.ClipboardData;
 import hrider.system.InMemoryClipboard;
 import hrider.system.Version;
-import hrider.ui.MessageHandler;
-import hrider.ui.MessageHandlerListener;
-import hrider.ui.TabClosedListener;
-import hrider.ui.UIAction;
-import hrider.ui.controls.JCloseButton;
+import hrider.ui.*;
 import hrider.ui.controls.JLinkButton;
+import hrider.ui.controls.JTab;
 import hrider.ui.views.DesignerView;
 
 import javax.swing.*;
@@ -35,6 +32,7 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
+import java.util.List;
 import java.util.jar.Manifest;
 import java.util.regex.Pattern;
 
@@ -64,27 +62,29 @@ public class Window {
     //endregion
 
     //region Variables
-    private JPanel                       topPanel;
-    private JTabbedPane                  tabbedPane;
-    private JLinkButton                  connectToCluster;
-    private JPanel                       actionPanel;
-    private JLabel                       actionLabel1;
-    private JLinkButton                  actionLabel2;
-    private JLabel                       actionLabel3;
-    private JButton                      copyToClipboard;
-    private JLinkButton                  newVersionAvailable;
-    private boolean                      canceled;
-    private UIAction                     uiAction;
-    private String                       lastError;
-    private Map<Component, DesignerView> viewMap;
-    private Properties                   updateInfo;
-    private JFrame                       frame;
+    private JPanel                          topPanel;
+    private JTabbedPane                     tabbedPane;
+    private JLinkButton                     connectToCluster;
+    private JPanel                          actionPanel;
+    private JLabel                          actionLabel1;
+    private JLinkButton                     actionLabel2;
+    private JLabel                          actionLabel3;
+    private JButton                         copyToClipboard;
+    private JLinkButton                     newVersionAvailable;
+    private boolean                         canceled;
+    private UIAction                        uiAction;
+    private String                          lastError;
+    private Map<Component, DesignerView>    viewMap;
+    private Map<String, List<DesignerView>> viewList;
+    private Properties                      updateInfo;
+    private JFrame                          frame;
     //endregion
 
     //region Constructor
     public Window() {
         this.updateInfo = new Properties();
         this.viewMap = new HashMap<Component, DesignerView>();
+        this.viewList = new HashMap<String, List<DesignerView>>();
 
         Font font = this.actionLabel1.getFont();
         this.actionLabel1.setFont(font.deriveFont(font.getStyle() | ~Font.BOLD));
@@ -280,7 +280,7 @@ public class Window {
             frame.setContentPane(window.topPanel);
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             frame.setLocationByPlatform(true);
-            frame.setIconImage(new ImageIcon(Thread.currentThread().getContextClassLoader().getResource("images/h-rider.png")).getImage());
+            frame.setIconImage(Images.get("h-rider").getImage());
 
             // Display the window.
             frame.pack();
@@ -440,19 +440,30 @@ public class Window {
      *
      * @param connection A connection to be used to connect to the cluster.
      */
-    private void loadView(Connection connection) {
-        DesignerView view = new DesignerView(this.topPanel, connection);
+    private DesignerView loadView(final Connection connection) {
+        final DesignerView view = new DesignerView(this.topPanel, connection);
 
         int index = this.tabbedPane.getTabCount();
 
-        JCloseButton closeButton = new JCloseButton(connection.getServerName(), this.tabbedPane);
-        this.viewMap.put(closeButton, view);
+        JTab tab = new JTab(connection.getServerName(), this.tabbedPane);
+        this.viewMap.put(tab, view);
 
-        closeButton.addTabClosedListener(
-            new TabClosedListener() {
+        List<DesignerView> views = this.viewList.get(connection.getServerName());
+        if (views == null) {
+            views = new ArrayList<DesignerView>();
+            this.viewList.put(connection.getServerName(), views);
+        }
+
+        views.add(view);
+
+        tab.addTabActionListener(
+            new TabActionListener() {
                 @Override
                 public void onTabClosed(Component component) {
                     DesignerView designerView = viewMap.get(component);
+
+                    List<DesignerView> list = viewList.get(designerView.getConnection().getServerName());
+                    list.remove(designerView);
 
                     ClipboardData<DataTable> data = InMemoryClipboard.getData();
                     if (data != null) {
@@ -464,22 +475,39 @@ public class Window {
                         }
                     }
 
-                    ViewConfig.instance().removeCluster(designerView.getConnection().getServerName());
+                    if (list.isEmpty()) {
+                        ViewConfig.instance().removeCluster(designerView.getConnection().getServerName());
+                        PropertiesConfig.fileRemove(designerView.getConnection().getServerName());
 
-                    PropertiesConfig.fileRemove(designerView.getConnection().getServerName());
+                        viewList.remove(designerView.getConnection().getServerName());
+                    }
 
                     ConnectionManager.release(designerView.getConnection().getConnectionDetails());
                     viewMap.remove(component);
+                }
+
+                @Override
+                public void onTabDuplicated(Component component) {
+                    try {
+                        DesignerView duplicatedView = loadView(new Connection(connection.getConnectionDetails()));
+                        duplicatedView.setSelectedTableName(view.getSelectedTableName());
+                    }
+                    catch (IOException ex) {
+                        MessageHandler.addError(String.format("Failed to duplicate view for %s.", connection.getServerName()), ex);
+                    }
                 }
             });
 
         this.tabbedPane.addTab(connection.getServerName(), view.getView());
         this.tabbedPane.setSelectedIndex(index);
-        this.tabbedPane.setTabComponentAt(index, closeButton);
+        this.tabbedPane.setTabComponentAt(index, tab);
 
-        ViewConfig.instance().addCluster(connection.getServerName());
+        if (views.size() == 1) {
+            ViewConfig.instance().addCluster(connection.getServerName());
+        }
 
         view.populate();
+        return view;
     }
 
     /**

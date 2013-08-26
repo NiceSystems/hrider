@@ -21,9 +21,9 @@ import java.awt.*;
  * @author Igor Cher
  * @version %I%, %G%
  *          <p/>
- *          This is a listener interface that allows to register for tab closed events.
+ *          This is a listener interface that allows to register for tab action events.
  */
-public interface TabClosedListener {
+public interface TabActionListener {
 
     /**
      * The method is called each time the tab of {@link JTabbedPane} is closed by the user.
@@ -31,4 +31,11 @@ public interface TabClosedListener {
      * @param component The component of the closed tab.
      */
     void onTabClosed(Component component);
+
+    /**
+     * The method is called each time the tab of {@link JTabbedPane} is being duplicated by the user.
+     *
+     * @param component The component of the duplicated tab.
+     */
+    void onTabDuplicated(Component component);
 }
