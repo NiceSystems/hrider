@@ -48,7 +48,7 @@ public class XmlEditor extends JPanel {
     /**
      * Initializes a new instance of the {@link XmlEditor} class.
      */
-    public XmlEditor() {
+    public XmlEditor(final CellEditor cellEditor) {
 
         this.textPane = new XmlTextPane();
         this.textPane.setLayout(new BorderLayout());
@@ -68,8 +68,8 @@ public class XmlEditor extends JPanel {
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
 
-        JButton saveButton = new JButton("Save");
-        saveButton.setPreferredSize(new Dimension(75, 24));
+        JButton saveButton = new JButton("Mark for save");
+        saveButton.setPreferredSize(new Dimension(115, 24));
         saveButton.addActionListener(
             new ActionListener() {
                 @Override
@@ -79,6 +79,7 @@ public class XmlEditor extends JPanel {
                         XmlEditor.this.textPane.validateXml();
 
                         XmlEditor.this.textField.setText(XmlEditor.this.textPane.getText());
+                        cellEditor.stopCellEditing();
                     }
                     catch (Exception ex) {
                         JOptionPane.showMessageDialog(XmlEditor.this, ex.getMessage(), "Invalid XML", JOptionPane.ERROR_MESSAGE);
