@@ -934,7 +934,11 @@ public class DesignerView {
                 @Override
                 public void onEdit(String oldName, String newName) {
                     ColumnType newType = ColumnType.fromName(newName);
-                    columnConverters.setSelectedItem(newType);
+
+                    ColumnType selectedType = (ColumnType)columnConverters.getSelectedItem();
+                    if (selectedType != null && selectedType.getName().equals(oldName)) {
+                        columnConverters.setSelectedItem(newType);
+                    }
 
                     for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
                         ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
