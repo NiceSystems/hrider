@@ -131,8 +131,7 @@ public class JavaPackage {
                 }
                 else {
                     if (fileName.endsWith(".class")) {
-                        String className = packageName + '.' +
-                                           PathHelper.getPathWithoutExtension(NUMBER_IN_CLASS_NAME.matcher(fileName).replaceAll(""));
+                        String className = packageName + '.' + PathHelper.getFileNameWithoutExtension(NUMBER_IN_CLASS_NAME.matcher(fileName).replaceAll(""));
 
                         if (!loadedClasses.contains(className)) {
                             logger.info("Loading class '%s'", className);
@@ -186,12 +185,17 @@ public class JavaPackage {
             try {
                 stream = new JarInputStream(new FileInputStream(jarFile));
 
+                String packagePath = packageName.replace('.', '/');
+
                 JarEntry entry;
                 while ((entry = stream.getNextJarEntry()) != null) {
-                    if (entry.getName().endsWith(".class")) {
-                        String className = PathHelper.getPathWithoutExtension(NUMBER_IN_CLASS_NAME.matcher(entry.getName()).replaceAll("")).replace('/', '.');
+                    if (entry.getName().endsWith(".class") && entry.getName().startsWith(packagePath)) {
+                        logger.debug("Found class entry '%s'", entry.getName());
 
-                        if (className.startsWith(packageName) && !loadedClasses.contains(className)) {
+                        String className =
+                            packageName + '.' + PathHelper.getFileNameWithoutExtension(NUMBER_IN_CLASS_NAME.matcher(entry.getName()).replaceAll(""));
+
+                        if (!loadedClasses.contains(className)) {
                             logger.info("Loading class '%s'", className);
 
                             loadedClasses.add(className);
@@ -213,14 +217,14 @@ public class JavaPackage {
 
     //region Private Methods
     private static String getPath(URL url) {
-        String path = PathHelper.normalise(url.getFile());
+        String path = url.getFile().replace("file:/", "");
 
         int index = path.indexOf('!');
         if (index != -1) {
             path = path.substring(0, index);
         }
 
-        return path;
+        return PathHelper.normalise(path);
     }
     //endregion
 }

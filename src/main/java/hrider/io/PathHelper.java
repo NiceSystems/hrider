@@ -1,8 +1,7 @@
 package hrider.io;
 
 import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,7 +28,7 @@ import java.util.regex.Pattern;
 public class PathHelper {
 
     //region Constants
-    public final static String FILE_SEPARATOR = "/";
+    public final static String FILE_SEPARATOR = System.getProperty("file.separator");
     public final static String LINE_SEPARATOR = System.getProperty("line.separator");
 
     private final static Log     logger  = Log.getLogger(PathHelper.class);
@@ -42,13 +41,14 @@ public class PathHelper {
     //endregion
 
     //region Public Methods
+
     /**
      * Gets current folder of the executing process.
      *
      * @return A path to the current folder.
      */
     public static String getCurrentFolder() {
-        return getParent(new File(".").getAbsolutePath());
+        return normalise(".");
     }
 
     /**
@@ -129,30 +129,15 @@ public class PathHelper {
         StringBuilder path = new StringBuilder();
 
         if (path1 != null) {
-            String normalisedPath = expand(path1);
-            path.append(normalisedPath);
-
-            if (!normalisedPath.endsWith(FILE_SEPARATOR)) {
-                path.append(FILE_SEPARATOR);
-            }
+            path.append(path1);
+            path.append(FILE_SEPARATOR);
         }
 
         if (path2 != null) {
-            String normalisedPath = expand(path2);
-            if (path.length() > 0) {
-                if (normalisedPath.startsWith(FILE_SEPARATOR)) {
-                    path.append(normalisedPath.substring(FILE_SEPARATOR.length()));
-                }
-                else {
-                    path.append(normalisedPath);
-                }
-            }
-            else {
-                path.append(normalisedPath);
-            }
+            path.append(path2);
         }
 
-        return path.toString();
+        return expand(path.toString());
     }
 
     public static String getParent(String path) {
@@ -167,8 +152,7 @@ public class PathHelper {
                 return normalisedPath.substring(0, index);
             }
         }
-
-        return null;
+        return path;
     }
 
     public static String getLeaf(String path) {
@@ -183,43 +167,17 @@ public class PathHelper {
                 return normalisedPath.substring(index + 1);
             }
         }
-
-        return null;
+        return path;
     }
 
     public static String normalise(String path) {
-        if (path != null) {
-            String normalizedPath = path;
-            boolean removeSlash = false;
-
-            try {
-                normalizedPath = normalizedPath.replace("\\", FILE_SEPARATOR);
-                removeSlash = !normalizedPath.startsWith(FILE_SEPARATOR);
-
-                if (!normalizedPath.startsWith("file:")) {
-                    if (normalizedPath.startsWith(FILE_SEPARATOR)) {
-                        normalizedPath = "file:" + normalizedPath;
-                    }
-                    else {
-                        normalizedPath = "file:/" + normalizedPath;
-                    }
-                }
-
-                URI uri = new URI(normalizedPath);
-                normalizedPath = uri.getPath();
-            }
-            catch (URISyntaxException e) {
-                logger.warn(e, "Path is not valid URI: '%s'", normalizedPath);
-            }
-
-            // Remove slash in the beginning of the path if it was added by the URI class.
-            if (removeSlash && normalizedPath.startsWith(FILE_SEPARATOR)) {
-                normalizedPath = normalizedPath.substring(FILE_SEPARATOR.length());
-            }
-
-            return normalizedPath;
+        try {
+            return new File(path).getCanonicalPath();
         }
-        return null;
+        catch (IOException e) {
+            logger.warn(e, "Failed to canonicalize the path: '%s'", path);
+            return path;
+        }
     }
     //endregion
 }
