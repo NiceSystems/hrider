@@ -64,17 +64,18 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
     public JCellEditor(ChangeTracker changeTracker, int typeColumn, boolean canEdit) {
         this.changeTracker = changeTracker;
         this.typeColumn = typeColumn;
-        this.textEditor = new JTextField();
-        this.textEditor.setBorder(BorderFactory.createEmptyBorder());
-        this.textEditor.setEditable(canEdit);
-        this.dateEditor = new DatePicker(null);
-        this.dateEditor.setBorder(BorderFactory.createEmptyBorder());
-        this.dateEditor.setDateFormat(new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH));
-        this.dateEditor.setFieldEditable(canEdit);
-        this.xmlEditor = new XmlEditor(this);
-        this.xmlEditor.setEditable(canEdit);
-        this.jsonEditor = new JsonEditor(this);
-        this.jsonEditor.setEditable(canEdit);
+
+        textEditor = new JTextField();
+        textEditor.setBorder(BorderFactory.createEmptyBorder());
+        textEditor.setEditable(canEdit);
+        dateEditor = new DatePicker(null);
+        dateEditor.setBorder(BorderFactory.createEmptyBorder());
+        dateEditor.setDateFormat(new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH));
+        dateEditor.setFieldEditable(canEdit);
+        xmlEditor = new XmlEditor(this, canEdit);
+        xmlEditor.setEditable(canEdit);
+        jsonEditor = new JsonEditor(this, canEdit);
+        jsonEditor.setEditable(canEdit);
     }
     //endregion
 
@@ -86,10 +87,10 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
      * @param editable True if the editor should be editable or False otherwise.
      */
     public void setEditable(boolean editable) {
-        this.textEditor.setEditable(editable);
-        this.dateEditor.setFieldEditable(editable);
-        this.xmlEditor.setEditable(editable);
-        this.jsonEditor.setEditable(editable);
+        textEditor.setEditable(editable);
+        dateEditor.setFieldEditable(editable);
+        xmlEditor.setEditable(editable);
+        jsonEditor.setEditable(editable);
     }
 
     /**
@@ -105,30 +106,30 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 
-        this.editorType = EditorType.Text;
+        editorType = EditorType.Text;
         ColumnType type = ColumnType.String;
 
         // Check if the value contains information regarding its type.
         if (value instanceof DataCell) {
-            this.cell = (DataCell)value;
-            type = this.cell.getType();
+            cell = (DataCell)value;
+            type = cell.getType();
         }
         else {
-            this.cell = null;
+            cell = null;
         }
 
-        if (this.typeColumn != -1) {
-            type = (ColumnType)table.getValueAt(row, this.typeColumn);
+        if (typeColumn != -1) {
+            type = (ColumnType)table.getValueAt(row, typeColumn);
         }
 
         if (type.equals(ColumnType.DateAsString) || type.equals(ColumnType.DateAsLong)) {
-            this.editorType = EditorType.Date;
+            editorType = EditorType.Date;
         }
         else if (type.equals(ColumnType.Xml)) {
-            this.editorType = EditorType.Xml;
+            editorType = EditorType.Xml;
         }
-        else if (type.equals(ColumnType.Json)) {
-            this.editorType = EditorType.Json;
+        else if (type.equals(ColumnType.Json) || type.equals(ColumnType.RegionInfo)) {
+            editorType = EditorType.Json;
         }
 
         initializeEditor(value);
@@ -146,22 +147,22 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
     public Object getCellEditorValue() {
         String text = null;
 
-        switch (this.editorType) {
+        switch (editorType) {
             case Date:
-                Date date = this.dateEditor.getDate();
+                Date date = dateEditor.getDate();
                 if (date != null) {
                     DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                     text = df.format(date);
                 }
                 break;
             case Text:
-                text = this.textEditor.getText().trim();
+                text = textEditor.getText();
                 break;
             case Xml:
-                text = this.xmlEditor.getText().trim();
+                text = xmlEditor.getText();
                 break;
             case Json:
-                text = this.jsonEditor.getText().trim();
+                text = jsonEditor.getText();
                 break;
         }
 
@@ -169,15 +170,15 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
             text = null;
         }
 
-        if (this.cell != null) {
-            if (!this.cell.hasValue(text)) {
-                this.cell.setValue(text);
+        if (cell != null) {
+            if (!cell.hasValue(text)) {
+                cell.setValue(text);
 
-                if (this.changeTracker != null) {
-                    this.changeTracker.addChange(this.cell);
+                if (changeTracker != null) {
+                    changeTracker.addChange(cell);
                 }
             }
-            return this.cell;
+            return cell;
         }
 
         return text;
@@ -192,13 +193,13 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
      * @param value The value to pass to the editor.
      */
     private void initializeEditor(Object value) {
-        switch (this.editorType) {
+        switch (editorType) {
             case Date:
-                if (this.cell != null) {
+                if (cell != null) {
                     DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                     try {
-                        Date date = df.parse(this.cell.getValue());
-                        this.dateEditor.setDate(date);
+                        Date date = df.parse(cell.getValue());
+                        dateEditor.setDate(date);
                     }
                     catch (Exception e) {
                         logger.error(e, "Failed to convert value to Date.", value);
@@ -207,26 +208,26 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
                 break;
             case Text:
                 if (value != null) {
-                    this.textEditor.setText(value.toString());
+                    textEditor.setText(value.toString());
                 }
                 else {
-                    this.textEditor.setText(null);
+                    textEditor.setText(null);
                 }
                 break;
             case Xml:
                 if (value != null) {
-                    this.xmlEditor.setText(value.toString());
+                    xmlEditor.setText(value.toString());
                 }
                 else {
-                    this.xmlEditor.setText(null);
+                    xmlEditor.setText(null);
                 }
                 break;
             case Json:
                 if (value != null) {
-                    this.jsonEditor.setText(value.toString());
+                    jsonEditor.setText(value.toString());
                 }
                 else {
-                    this.jsonEditor.setText(null);
+                    jsonEditor.setText(null);
                 }
                 break;
         }
@@ -238,17 +239,17 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
      * @return The component used to edit the value.
      */
     private Component getEditor() {
-        switch (this.editorType) {
+        switch (editorType) {
             case Date:
-                return this.dateEditor;
+                return dateEditor;
             case Text:
-                return this.textEditor;
+                return textEditor;
             case Xml:
-                return this.xmlEditor;
+                return xmlEditor;
             case Json:
-                return this.jsonEditor;
+                return jsonEditor;
         }
-        return this.textEditor;
+        return textEditor;
     }
     //endregion
 }

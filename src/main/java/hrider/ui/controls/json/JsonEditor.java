@@ -43,6 +43,10 @@ public class JsonEditor extends JPanel {
      * A text pane that is shown in a popup menu and presents the JSON as a formatted string.
      */
     private JsonTextPane textPane;
+    /**
+     * This button is clicked when he changes need to be saved.
+     */
+    private JButton      saveButton;
     //endregion
 
     //region Constructor
@@ -50,27 +54,29 @@ public class JsonEditor extends JPanel {
     /**
      * Initializes a new instance of the {@link JsonEditor} class.
      */
-    public JsonEditor(final CellEditor cellEditor) {
+    public JsonEditor(final CellEditor cellEditor, boolean canEdit) {
 
-        this.textPane = new JsonTextPane();
-        this.textPane.setLayout(new BorderLayout());
+        textPane = new JsonTextPane();
+        textPane.setEditable(canEdit);
+        textPane.setLayout(new BorderLayout());
 
-        this.textField = new JTextField();
-        this.textField.setLayout(new BorderLayout());
-        this.textField.setBorder(new EmptyBorder(0, 0, 0, 0));
-        this.textField.setEditable(false);
+        textField = new JTextField();
+        textField.setLayout(new BorderLayout());
+        textField.setBorder(new EmptyBorder(0, 0, 0, 0));
+        textField.setEditable(false);
 
-        this.setLayout(new BorderLayout());
+        setLayout(new BorderLayout());
 
         final JPopupMenu popup = new JPopupMenu();
 
-        final JScrollPane pane = new JScrollPane(this.textPane);
+        final JScrollPane pane = new JScrollPane(textPane);
         pane.setBorder(BorderFactory.createEtchedBorder());
 
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
 
-        JButton saveButton = new JButton("Mark for save");
+        saveButton = new JButton("Mark for save");
+        saveButton.setEnabled(canEdit);
         saveButton.setPreferredSize(new Dimension(115, 24));
         saveButton.addActionListener(
             new ActionListener() {
@@ -78,9 +84,9 @@ public class JsonEditor extends JPanel {
                 public void actionPerformed(ActionEvent e) {
                     try {
                         popup.setVisible(false);
-                        JsonEditor.this.textPane.validateJson();
+                        textPane.validateJson();
 
-                        JsonEditor.this.textField.setText(JsonEditor.this.textPane.getText());
+                        textField.setText(textPane.getText());
                         cellEditor.stopCellEditing();
                     }
                     catch (JsonSyntaxException ex) {
@@ -121,7 +127,7 @@ public class JsonEditor extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     Dimension size = pane.getPreferredSize();
-                    Rectangle screenSize = JsonEditor.this.getGraphicsConfiguration().getBounds();
+                    Rectangle screenSize = getGraphicsConfiguration().getBounds();
 
                     int width = (int)Math.min(screenSize.getWidth(), size.getWidth() + 35);
                     int height = (int)Math.min(screenSize.getHeight(), size.getHeight() + 45);
@@ -130,15 +136,15 @@ public class JsonEditor extends JPanel {
                     height = Math.max(150, height);
 
                     popup.setPopupSize(width, height);
-                    popup.show(JsonEditor.this, 0, JsonEditor.this.getHeight());
+                    popup.show(JsonEditor.this, 0, getHeight());
                 }
             });
 
-        this.add(this.textField, BorderLayout.CENTER);
-        this.add(button, BorderLayout.EAST);
+        add(textField, BorderLayout.CENTER);
+        add(button, BorderLayout.EAST);
 
-        this.invalidate();
-        this.repaint();
+        invalidate();
+        repaint();
     }
     //endregion
 
@@ -150,7 +156,7 @@ public class JsonEditor extends JPanel {
      * @return An original or modified text.
      */
     public String getText() {
-        return this.textField.getText();
+        return textField.getText();
     }
 
     /**
@@ -159,8 +165,8 @@ public class JsonEditor extends JPanel {
      * @param text The new text to set.
      */
     public void setText(String text) {
-        this.textField.setText(text);
-        this.textPane.setText(text);
+        textField.setText(text);
+        textPane.setText(text);
     }
 
     /**
@@ -169,7 +175,8 @@ public class JsonEditor extends JPanel {
      * @param editable The value to set.
      */
     public void setEditable(Boolean editable) {
-        this.textPane.setEditable(editable);
+        textPane.setEditable(editable);
+        saveButton.setEnabled(editable);
     }
     //endregion
 }

@@ -15,10 +15,7 @@ import hrider.export.FileExporter;
 import hrider.filters.EmptyFilter;
 import hrider.filters.Filter;
 import hrider.filters.PatternFilter;
-import hrider.hbase.Connection;
-import hrider.hbase.HbaseActionListener;
-import hrider.hbase.Query;
-import hrider.hbase.QueryScanner;
+import hrider.hbase.*;
 import hrider.io.PathHelper;
 import hrider.system.ClipboardData;
 import hrider.system.ClipboardListener;
@@ -139,20 +136,21 @@ public class DesignerView {
 
         this.owner = owner;
         this.connection = connection;
-        this.changeTracker = new ChangeTracker();
-        this.rowsTableRemovedColumns = new HashMap<ColumnQualifier, TableColumn>();
-        this.clusterConfig = new ClusterConfig(this.connection.getServerName());
-        this.clusterConfig.setConnection(connection.getConnectionDetails());
-        this.tablesFilterModel = new DefaultComboBoxModel();
-        this.tableFilters.setModel(this.tablesFilterModel);
-        this.columnsFilterModel = new DefaultComboBoxModel();
-        this.columnFilters.setModel(this.columnsFilterModel);
 
-        fillComboBox(tableFilters, null, this.clusterConfig.getTableFilters());
+        changeTracker = new ChangeTracker();
+        rowsTableRemovedColumns = new HashMap<ColumnQualifier, TableColumn>();
+        clusterConfig = new ClusterConfig(connection.getServerName());
+        clusterConfig.setConnection(connection.getConnectionDetails());
+        tablesFilterModel = new DefaultComboBoxModel();
+        tableFilters.setModel(tablesFilterModel);
+        columnsFilterModel = new DefaultComboBoxModel();
+        columnFilters.setModel(columnsFilterModel);
 
-        String tableFilter = this.clusterConfig.getSelectedTableFilter();
+        fillComboBox(tableFilters, null, clusterConfig.getTableFilters());
+
+        String tableFilter = clusterConfig.getSelectedTableFilter();
         if (tableFilter != null) {
-            this.tableFilters.setSelectedItem(tableFilter);
+            tableFilters.setSelectedItem(tableFilter);
         }
 
         InMemoryClipboard.addListener(
@@ -169,17 +167,17 @@ public class DesignerView {
         initializeRowsTable();
 
         // Customize look of the dividers that they will look of the same size and without buttons.
-        BasicSplitPaneDivider dividerContainer = (BasicSplitPaneDivider)this.topSplitPane.getComponent(0);
+        BasicSplitPaneDivider dividerContainer = (BasicSplitPaneDivider)topSplitPane.getComponent(0);
         dividerContainer.setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0));
         dividerContainer.setLayout(new BorderLayout());
 
-        dividerContainer = (BasicSplitPaneDivider)this.innerSplitPane.getComponent(0);
+        dividerContainer = (BasicSplitPaneDivider)innerSplitPane.getComponent(0);
         dividerContainer.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
         dividerContainer.setLayout(new BorderLayout());
 
-        this.rowsNumber.setModel(new SpinnerNumberModel(100, 1, 10000, 100));
+        rowsNumber.setModel(new SpinnerNumberModel(100, 1, 10000, 100));
 
-        this.tableFilters.addItemListener(
+        tableFilters.addItemListener(
             new ItemListener() {
                 @Override
                 public void itemStateChanged(ItemEvent e) {
@@ -191,7 +189,7 @@ public class DesignerView {
                 }
             });
 
-        this.tableFilters.getEditor().addActionListener(
+        tableFilters.getEditor().addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -214,7 +212,7 @@ public class DesignerView {
                 }
             });
 
-        this.columnsFilterListener = new ItemListener() {
+        columnsFilterListener = new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
@@ -225,9 +223,9 @@ public class DesignerView {
             }
         };
 
-        this.columnFilters.addItemListener(this.columnsFilterListener);
+        columnFilters.addItemListener(columnsFilterListener);
 
-        this.columnFilters.getEditor().addActionListener(
+        columnFilters.getEditor().addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -250,7 +248,7 @@ public class DesignerView {
                 }
             });
 
-        this.columnConverters.addItemListener(
+        columnConverters.addItemListener(
             new ItemListener() {
                 @Override
                 public void itemStateChanged(ItemEvent e) {
@@ -274,7 +272,7 @@ public class DesignerView {
                 }
             });
 
-        this.connection.addListener(
+        connection.addListener(
             new HbaseActionListener() {
                 @Override
                 public void copyOperation(String source, String sourceTable, String target, String targetTable, Result result) {
@@ -313,7 +311,7 @@ public class DesignerView {
                 }
             });
 
-        this.columnJump.addActionListener(
+        columnJump.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -337,7 +335,7 @@ public class DesignerView {
                 }
             });
 
-        this.columnPopulate.addActionListener(
+        columnPopulate.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -349,7 +347,7 @@ public class DesignerView {
                 }
             });
 
-        this.columnScan.addActionListener(
+        columnScan.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -365,7 +363,7 @@ public class DesignerView {
                 }
             });
 
-        this.rowOpen.addActionListener(
+        rowOpen.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -407,7 +405,7 @@ public class DesignerView {
                 }
             });
 
-        this.rowAdd.addActionListener(
+        rowAdd.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -454,7 +452,7 @@ public class DesignerView {
                 }
             });
 
-        this.rowDelete.addActionListener(
+        rowDelete.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -494,7 +492,7 @@ public class DesignerView {
             });
 
 
-        this.rowCopy.addActionListener(
+        rowCopy.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -506,7 +504,7 @@ public class DesignerView {
                 }
             });
 
-        this.rowPaste.addActionListener(
+        rowPaste.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -518,7 +516,7 @@ public class DesignerView {
                 }
             });
 
-        this.rowSave.addActionListener(
+        rowSave.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -553,7 +551,7 @@ public class DesignerView {
                 }
             });
 
-        this.tableAdd.addActionListener(
+        tableAdd.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -590,7 +588,7 @@ public class DesignerView {
                 }
             });
 
-        this.tableDelete.addActionListener(
+        tableDelete.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -619,7 +617,7 @@ public class DesignerView {
                 }
             });
 
-        this.tableTruncate.addActionListener(
+        tableTruncate.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -654,7 +652,7 @@ public class DesignerView {
                 }
             });
 
-        this.rowsPrev.addActionListener(
+        rowsPrev.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -664,7 +662,7 @@ public class DesignerView {
                 }
             });
 
-        this.rowsNext.addActionListener(
+        rowsNext.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -674,7 +672,7 @@ public class DesignerView {
                 }
             });
 
-        this.columnCheck.addActionListener(
+        columnCheck.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -692,7 +690,7 @@ public class DesignerView {
                 }
             });
 
-        this.columnUncheck.addActionListener(
+        columnUncheck.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -710,7 +708,7 @@ public class DesignerView {
                 }
             });
 
-        this.tableFlush.addActionListener(
+        tableFlush.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -738,7 +736,7 @@ public class DesignerView {
                 }
             });
 
-        this.tableRefresh.addActionListener(
+        tableRefresh.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -748,7 +746,7 @@ public class DesignerView {
                 }
             });
 
-        this.tableCopy.addActionListener(
+        tableCopy.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -758,7 +756,7 @@ public class DesignerView {
                 }
             });
 
-        this.tablePaste.addActionListener(
+        tablePaste.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -768,7 +766,7 @@ public class DesignerView {
                 }
             });
 
-        this.tableExport.addActionListener(
+        tableExport.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -794,7 +792,7 @@ public class DesignerView {
                 }
             });
 
-        this.tableImport.addActionListener(
+        tableImport.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -826,7 +824,7 @@ public class DesignerView {
                 }
             });
 
-        this.tableMetadata.addActionListener(
+        tableMetadata.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -858,7 +856,7 @@ public class DesignerView {
                 }
             });
 
-        this.columnRefresh.addActionListener(
+        columnRefresh.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -869,7 +867,7 @@ public class DesignerView {
                 }
             });
 
-        this.columnAddConverter.addActionListener(
+        columnAddConverter.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -884,7 +882,7 @@ public class DesignerView {
                 }
             });
 
-        this.columnEditConverter.addActionListener(
+        columnEditConverter.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -902,7 +900,7 @@ public class DesignerView {
                 }
             });
 
-        this.columnDeleteConverter.addActionListener(
+        columnDeleteConverter.addActionListener(
             new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -1012,7 +1010,7 @@ public class DesignerView {
      * @return The name of the selected table from the list of the tables.
      */
     public String getSelectedTableName() {
-        return (String)this.tablesList.getSelectedValue();
+        return (String)tablesList.getSelectedValue();
     }
 
     /**
@@ -1021,7 +1019,7 @@ public class DesignerView {
      * @param tableName The name of the table to select.
      */
     public void setSelectedTableName(String tableName) {
-        this.tablesList.setSelectedValue(tableName, true);
+        tablesList.setSelectedValue(tableName, true);
     }
 
     /**
@@ -1030,7 +1028,7 @@ public class DesignerView {
      * @return A {@link JPanel} that contains the controls.
      */
     public JPanel getView() {
-        return this.topPanel;
+        return topPanel;
     }
 
     /**
@@ -1039,7 +1037,7 @@ public class DesignerView {
      * @return A reference to the {@link Connection} class.
      */
     public Connection getConnection() {
-        return this.connection;
+        return connection;
     }
 
     //endregion
@@ -1154,14 +1152,16 @@ public class DesignerView {
      * Loads the table names.
      */
     private void loadTables() {
-        Object selectedTable = this.tablesList.getSelectedValue();
+        Object selectedTable = tablesList.getSelectedValue();
 
         clearError();
 
-        this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
         try {
-            this.tablesListModel.clear();
+            tablesListModel.clear();
+            tablesListModel.addElement("-ROOT-");
+            tablesListModel.addElement(".META.");
 
             Filter filter;
 
@@ -1173,24 +1173,24 @@ public class DesignerView {
                 filter = new PatternFilter(value);
             }
 
-            Collection<String> tables = this.connection.getTables();
+            Collection<String> tables = connection.getTables();
 
             for (String table : tables) {
                 if (filter.match(table)) {
-                    this.tablesListModel.addElement(table);
+                    tablesListModel.addElement(table);
                 }
             }
 
             toggleTableControls();
 
-            this.tablesNumber.setText(String.format("%s of %s", this.tablesListModel.getSize(), tables.size()));
-            this.tablesList.setSelectedValue(selectedTable, true);
+            tablesNumber.setText(String.format("%s of %s", tablesListModel.getSize(), tables.size()));
+            tablesList.setSelectedValue(selectedTable, true);
         }
         catch (Exception ex) {
             setError("Failed to connect to hadoop: ", ex);
         }
         finally {
-            this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
     }
 
@@ -1198,11 +1198,11 @@ public class DesignerView {
      * Initializes a table list used to present all available tables in the hbase cluster.
      */
     private void initializeTablesList() {
-        this.tablesListModel = new DefaultListModel();
-        this.tablesList.setModel(this.tablesListModel);
-        this.tablesList.setCellRenderer(new JListRenderer(this.connection));
+        tablesListModel = new DefaultListModel();
+        tablesList.setModel(tablesListModel);
+        tablesList.setCellRenderer(new JListRenderer(connection));
 
-        this.tablesList.addListSelectionListener(
+        tablesList.addListSelectionListener(
             new ListSelectionListener() {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
@@ -1286,7 +1286,7 @@ public class DesignerView {
                 }
             });
 
-        this.tablesList.addKeyListener(
+        tablesList.addKeyListener(
             new KeyAdapter() {
                 @Override
                 public void keyReleased(KeyEvent e) {
@@ -1312,37 +1312,37 @@ public class DesignerView {
      * Initializes a columns table used to present the columns of the selected table.
      */
     private void initializeColumnsTable() {
-        this.columnsTableModel = new JTableModel(0, 2);
-        this.columnsTableModel.addColumn("Show");
-        this.columnsTableModel.addColumn("Column Name");
-        this.columnsTableModel.addColumn("Column Type");
-        this.columnsTable.setRowHeight(this.columnsTable.getFont().getSize() + 8);
-        this.columnsTable.setModel(this.columnsTableModel);
-        this.columnsTable.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+        columnsTableModel = new JTableModel(0, 2);
+        columnsTableModel.addColumn("Show");
+        columnsTableModel.addColumn("Column Name");
+        columnsTableModel.addColumn("Column Type");
+        columnsTable.setRowHeight(columnsTable.getFont().getSize() + 8);
+        columnsTable.setModel(columnsTableModel);
+        columnsTable.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 
-        this.columnsTable.getColumn("Show").setCellRenderer(new JCheckBoxRenderer(new CheckedRow(1, ColumnQualifier.KEY)));
-        this.columnsTable.getColumn("Show").setCellEditor(new JCheckBoxRenderer(new CheckedRow(1, ColumnQualifier.KEY)));
-        this.columnsTable.getColumn("Show").setPreferredWidth(50);
-        this.columnsTable.getColumn("Show").setMaxWidth(50);
-        this.columnsTable.getColumn("Show").setMinWidth(50);
+        columnsTable.getColumn("Show").setCellRenderer(new JCheckBoxRenderer(new CheckedRow(1, ColumnQualifier.KEY)));
+        columnsTable.getColumn("Show").setCellEditor(new JCheckBoxRenderer(new CheckedRow(1, ColumnQualifier.KEY)));
+        columnsTable.getColumn("Show").setPreferredWidth(50);
+        columnsTable.getColumn("Show").setMaxWidth(50);
+        columnsTable.getColumn("Show").setMinWidth(50);
 
-        this.cmbColumnTypes = new WideComboBox();
+        cmbColumnTypes = new WideComboBox();
 
         for (ColumnType columnType : ColumnType.getTypes()) {
-            this.cmbColumnTypes.addItem(columnType);
+            cmbColumnTypes.addItem(columnType);
         }
 
         for (ColumnType columnType : ColumnType.getNameTypes()) {
-            this.columnConverters.addItem(columnType);
+            columnConverters.addItem(columnType);
         }
 
-        this.columnConverters.setSelectedItem(ColumnType.BinaryString);
-        this.columnsTable.getColumn("Column Type").setCellEditor(new DefaultCellEditor(this.cmbColumnTypes));
-        this.columnsTable.getColumn("Column Type").setPreferredWidth(82);
-        this.columnsTable.getColumn("Column Type").setMaxWidth(300);
-        this.columnsTable.getColumn("Column Type").setMinWidth(82);
+        columnConverters.setSelectedItem(ColumnType.BinaryString);
+        columnsTable.getColumn("Column Type").setCellEditor(new DefaultCellEditor(cmbColumnTypes));
+        columnsTable.getColumn("Column Type").setPreferredWidth(82);
+        columnsTable.getColumn("Column Type").setMaxWidth(300);
+        columnsTable.getColumn("Column Type").setMinWidth(82);
 
-        this.columnsTable.getModel().addTableModelListener(
+        columnsTable.getModel().addTableModelListener(
             new TableModelListener() {
                 @Override
                 public void tableChanged(TableModelEvent e) {
@@ -1375,7 +1375,7 @@ public class DesignerView {
                 }
             });
 
-        this.columnsTable.addMouseMotionListener(
+        columnsTable.addMouseMotionListener(
             new MouseMotionAdapter() {
                 @Override
                 public void mouseMoved(MouseEvent e) {
@@ -1388,7 +1388,7 @@ public class DesignerView {
                 }
             });
 
-        this.columnsTable.getSelectionModel().addListSelectionListener(
+        columnsTable.getSelectionModel().addListSelectionListener(
             new ListSelectionListener() {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
@@ -1410,14 +1410,14 @@ public class DesignerView {
      * Initializes a rows table used to present the content of the selected table.
      */
     private void initializeRowsTable() {
-        this.rowsTableModel = new DefaultTableModel();
-        this.rowsTable.setModel(this.rowsTableModel);
-        this.rowsTable.setTableHeader(new ResizeableTableHeader(this.rowsTable.getColumnModel()));
-        this.rowsTable.setCellSelectionEnabled(false);
-        this.rowsTable.setRowSelectionAllowed(true);
-        this.rowsTable.setAutoCreateColumnsFromModel(false);
+        rowsTableModel = new DefaultTableModel();
+        rowsTable.setModel(rowsTableModel);
+        rowsTable.setTableHeader(new ResizeableTableHeader(rowsTable.getColumnModel()));
+        rowsTable.setCellSelectionEnabled(false);
+        rowsTable.setRowSelectionAllowed(true);
+        rowsTable.setAutoCreateColumnsFromModel(false);
 
-        this.rowsTable.getSelectionModel().addListSelectionListener(
+        rowsTable.getSelectionModel().addListSelectionListener(
             new ListSelectionListener() {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
@@ -1425,7 +1425,7 @@ public class DesignerView {
                 }
             });
 
-        this.rowsTable.addMouseMotionListener(
+        rowsTable.addMouseMotionListener(
             new MouseMotionAdapter() {
                 @Override
                 public void mouseMoved(MouseEvent e) {
@@ -1438,7 +1438,7 @@ public class DesignerView {
                 }
             });
 
-        this.rowsTable.addKeyListener(
+        rowsTable.addKeyListener(
             new KeyAdapter() {
                 @Override
                 public void keyReleased(KeyEvent e) {
@@ -1463,7 +1463,7 @@ public class DesignerView {
                 }
             });
 
-        this.rowsTable.addPropertyChangeListener(
+        rowsTable.addPropertyChangeListener(
             new PropertyChangeListener() {
                 @Override
                 public void propertyChange(PropertyChangeEvent evt) {
@@ -1475,7 +1475,7 @@ public class DesignerView {
                 }
             });
 
-        this.rowsTable.getColumnModel().addColumnModelListener(
+        rowsTable.getColumnModel().addColumnModelListener(
             new TableColumnModelListener() {
                 @Override
                 public void columnAdded(TableColumnModelEvent e) {
@@ -1503,7 +1503,7 @@ public class DesignerView {
                 }
             });
 
-        this.changeTracker.addListener(
+        changeTracker.addListener(
             new ChangeTrackerListener() {
                 @Override
                 public void onCellChanged(DataCell cell) {
@@ -1532,16 +1532,16 @@ public class DesignerView {
      *                  to collect their keys. Each row can have different keys.
      */
     private void populateColumnsTable(boolean clearRows, DataRow row) {
-        this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
             clearRows(columnsTable);
 
             if (clearRows) {
                 clearTable(rowsTable);
 
-                this.rowsTotal.setText("?");
-                this.rowsVisible.setText("?");
-                this.rowsNumber.setEnabled(true);
+                rowsTotal.setText("?");
+                rowsVisible.setText("?");
+                rowsNumber.setEnabled(true);
             }
 
             String tableName = getSelectedTableName();
@@ -1554,7 +1554,7 @@ public class DesignerView {
             toggleRowControls(rowsTableModel.getRowCount() > 0);
         }
         finally {
-            this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
     }
 
@@ -1579,7 +1579,7 @@ public class DesignerView {
      */
     private void populateRowsTable(long offset, Direction direction) {
 
-        this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
             JTableModel.stopCellEditing(columnsTable);
 
@@ -1589,31 +1589,31 @@ public class DesignerView {
 
                 Map<String, ColumnType> columnTypes = getColumnTypes();
 
-                this.scanner.setColumnTypes(columnTypes);
-                this.scanner.setQuery(this.lastQuery);
+                scanner.setColumnTypes(columnTypes);
+                scanner.setQuery(lastQuery);
 
                 Collection<DataRow> rows;
 
                 if (direction == Direction.Current) {
-                    rows = this.scanner.current(offset, getPageSize());
+                    rows = scanner.current(offset, getPageSize());
                 }
                 else if (direction == Direction.Forward) {
-                    rows = this.scanner.next(getPageSize());
+                    rows = scanner.next(getPageSize());
                 }
                 else {
-                    rows = this.scanner.prev();
+                    rows = scanner.prev();
                 }
 
                 loadColumns(tableName, null);
                 loadRowsTableColumns(tableName);
                 loadRows(rows);
 
-                this.togglePagingControls();
+                togglePagingControls();
 
-                this.rowsVisible.setText(String.format("%s - %s", this.scanner.getLastRow() - rows.size() + 1, this.scanner.getLastRow()));
-                this.rowsNumber.setEnabled(this.scanner.getLastRow() <= getPageSize());
+                rowsVisible.setText(String.format("%s - %s", scanner.getLastRow() - rows.size() + 1, scanner.getLastRow()));
+                rowsNumber.setEnabled(scanner.getLastRow() <= getPageSize());
 
-                this.rowsCountAction = RunnableAction.run(
+                rowsCountAction = RunnableAction.run(
                     tableName + "-rowsCount", new Action<Boolean>() {
 
                     @Override
@@ -1650,7 +1650,7 @@ public class DesignerView {
             setError("Failed to fill rows: ", ex);
         }
         finally {
-            this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
     }
 
@@ -1662,10 +1662,10 @@ public class DesignerView {
      */
     private void populateColumnOnRowsTable(ColumnQualifier qualifier, Iterable<DataRow> rows) {
 
-        this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
             int rowIndex = 0;
-            int columnIndex = this.rowsTable.getColumnModel().getColumnIndex(qualifier);
+            int columnIndex = rowsTable.getColumnModel().getColumnIndex(qualifier);
 
             for (DataRow row : rows) {
                 DataCell cell = row.getCell(qualifier);
@@ -1673,15 +1673,15 @@ public class DesignerView {
                     cell = new DataCell(row, qualifier, new ConvertibleObject(getColumnType(qualifier.getFullName()), null));
                 }
 
-                if (rowIndex >= this.rowsTable.getRowCount()) {
+                if (rowIndex >= rowsTable.getRowCount()) {
                     break;
                 }
 
-                this.rowsTableModel.setValueAt(cell, rowIndex++, columnIndex);
+                rowsTableModel.setValueAt(cell, rowIndex++, columnIndex);
             }
         }
         finally {
-            this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
     }
 
@@ -1692,12 +1692,12 @@ public class DesignerView {
      * @param row       The row to start the population from. This value can be null.
      */
     private void loadColumns(String tableName, DataRow row) {
-        clearRows(this.columnsTable);
+        clearRows(columnsTable);
 
         try {
-            if (this.scanner == null) {
-                this.scanner = connection.getScanner(tableName, null);
-                this.updateColumnNameConverter(getColumnNameConverter());
+            if (scanner == null) {
+                scanner = connection.getScanner(tableName, null);
+                updateColumnNameConverter(getColumnNameConverter());
             }
 
             Filter filter;
@@ -1711,15 +1711,15 @@ public class DesignerView {
             }
 
             if (row == null) {
-                this.scanner.setColumnTypes(
+                scanner.setColumnTypes(
                     new HashMap<String, ColumnType>() {{
                         put(ColumnQualifier.KEY.getName(), ColumnType.String);
                     }});
 
-                row = this.scanner.getFirstRow();
+                row = scanner.getFirstRow();
             }
 
-            Collection<ColumnQualifier> columns = this.scanner.getColumns(getPageSize());
+            Collection<ColumnQualifier> columns = scanner.getColumns(getPageSize());
             for (ColumnQualifier column : columns) {
                 boolean isColumnVisible = column.isKey() || filter.match(column.getFullName());
                 if (isColumnVisible) {
@@ -1729,7 +1729,7 @@ public class DesignerView {
                 setRowsTableColumnVisible(column, isColumnVisible && isShown(tableName, column.getFullName()));
             }
 
-            this.columnsNumber.setText(String.format("%s of %s", this.columnsTableModel.getRowCount(), columns.size()));
+            columnsNumber.setText(String.format("%s of %s", columnsTableModel.getRowCount(), columns.size()));
         }
         catch (Exception ex) {
             setError("Failed to fill tables list: ", ex);
@@ -1758,25 +1758,27 @@ public class DesignerView {
         }
 
         boolean isShown = isShown(tableName, qualifier.getFullName());
-        this.columnsTableModel.addRow(new Object[]{isShown, qualifier, columnType});
+        columnsTableModel.addRow(new Object[]{isShown, qualifier, columnType});
     }
 
     /**
      * Adds columns defined in the columns table to the rows table.
      */
     private void loadRowsTableColumns(String tableName) {
-        clearColumns(this.rowsTable);
+        clearColumns(rowsTable);
 
-        this.rowsTableRemovedColumns.clear();
+        rowsTableRemovedColumns.clear();
 
-        for (int i = 0, j = 0 ; i < this.columnsTable.getRowCount() ; i++) {
-            ColumnQualifier qualifier = (ColumnQualifier)this.columnsTableModel.getValueAt(i, 1);
+        for (int i = 0, j = 0 ; i < columnsTable.getRowCount() ; i++) {
+            ColumnQualifier qualifier = (ColumnQualifier)columnsTableModel.getValueAt(i, 1);
 
-            boolean isShown = (Boolean)this.columnsTableModel.getValueAt(i, 0);
+            boolean isShown = (Boolean)columnsTableModel.getValueAt(i, 0);
             if (isShown) {
                 addColumnToRowsTable(tableName, qualifier, j++);
             }
         }
+
+        setTableEditable(rowsTable, !TableUtil.isMetaTable(tableName));
     }
 
     /**
@@ -1786,32 +1788,32 @@ public class DesignerView {
      * @param isVisible Indicates if the columns should be shown or hidden.
      */
     private void setRowsTableColumnVisible(ColumnQualifier qualifier, boolean isVisible) {
-        if (this.rowsTable.getRowCount() > 0) {
+        if (rowsTable.getRowCount() > 0) {
             if (isVisible) {
-                TableColumn tableColumn = this.rowsTableRemovedColumns.get(qualifier);
+                TableColumn tableColumn = rowsTableRemovedColumns.get(qualifier);
                 if (tableColumn != null) {
-                    this.rowsTable.addColumn(tableColumn);
-                    this.rowsTableRemovedColumns.remove(qualifier);
+                    rowsTable.addColumn(tableColumn);
+                    rowsTableRemovedColumns.remove(qualifier);
 
-                    this.rowsTable.moveColumn(this.rowsTable.getColumnCount() - 1, getColumnIndex(qualifier.getFullName()));
+                    rowsTable.moveColumn(rowsTable.getColumnCount() - 1, getColumnIndex(qualifier.getFullName()));
                 }
                 else {
-                    if (getColumn(qualifier.getFullName(), this.rowsTable) == null) {
-                        addColumnToRowsTable(getSelectedTableName(), qualifier, this.rowsTable.getColumnCount());
+                    if (getColumn(qualifier.getFullName(), rowsTable) == null) {
+                        addColumnToRowsTable(getSelectedTableName(), qualifier, rowsTable.getColumnCount());
 
-                        if (this.scanner != null) {
-                            populateColumnOnRowsTable(qualifier, this.scanner.current());
+                        if (scanner != null) {
+                            populateColumnOnRowsTable(qualifier, scanner.current());
                         }
 
-                        this.rowsTable.moveColumn(this.rowsTable.getColumnCount() - 1, getColumnIndex(qualifier.getFullName()));
+                        rowsTable.moveColumn(rowsTable.getColumnCount() - 1, getColumnIndex(qualifier.getFullName()));
                     }
                 }
             }
             else {
-                TableColumn tableColumn = getColumn(qualifier.getFullName(), this.rowsTable);
+                TableColumn tableColumn = getColumn(qualifier.getFullName(), rowsTable);
                 if (tableColumn != null) {
-                    this.rowsTable.removeColumn(tableColumn);
-                    this.rowsTableRemovedColumns.put(qualifier, tableColumn);
+                    rowsTable.removeColumn(tableColumn);
+                    rowsTableRemovedColumns.put(qualifier, tableColumn);
                 }
             }
         }
@@ -1828,10 +1830,10 @@ public class DesignerView {
         TableColumn tableColumn = new TableColumn(columnIndex);
         tableColumn.setIdentifier(qualifier);
         tableColumn.setHeaderValue(qualifier);
-        tableColumn.setCellEditor(new JCellEditor(this.changeTracker, !ColumnQualifier.isKey(qualifier.getFullName())));
+        tableColumn.setCellEditor(new JCellEditor(changeTracker, !ColumnQualifier.isKey(qualifier.getFullName())));
 
         try {
-            Integer width = this.clusterConfig.getTableConfig(Integer.class, tableName, qualifier.getFullName(), "size");
+            Integer width = clusterConfig.getTableConfig(Integer.class, tableName, qualifier.getFullName(), "size");
             if (width != null) {
                 tableColumn.setPreferredWidth(width);
             }
@@ -1839,8 +1841,8 @@ public class DesignerView {
         catch (NumberFormatException ignore) {
         }
 
-        this.rowsTable.addColumn(tableColumn);
-        this.rowsTableModel.addColumn(qualifier);
+        rowsTable.addColumn(tableColumn);
+        rowsTableModel.addColumn(qualifier);
     }
 
     /**
@@ -1849,7 +1851,7 @@ public class DesignerView {
      * @param rows A list of rows to add.
      */
     private void loadRows(Iterable<DataRow> rows) {
-        clearRows(this.rowsTable);
+        clearRows(rowsTable);
 
         TypeConverter nameConverter = getColumnNameConverter();
 
@@ -1863,7 +1865,22 @@ public class DesignerView {
                 }
                 values.add(cell);
             }
-            this.rowsTableModel.addRow(values.toArray());
+            rowsTableModel.addRow(values.toArray());
+        }
+    }
+
+    /**
+     * Sets the specified table to be editable or not.
+     *
+     * @param table    The table to set.
+     * @param editable Indicates whether the table should be editable or not.
+     */
+    private static void setTableEditable(JTable table, boolean editable) {
+        for (int col = 0 ; col < table.getColumnCount() ; col++) {
+            TableColumn column = table.getColumnModel().getColumn(col);
+
+            JCellEditor cellEditor = (JCellEditor)column.getCellEditor();
+            cellEditor.setEditable(editable);
         }
     }
 
@@ -1871,9 +1888,9 @@ public class DesignerView {
      * Copies selected rows from the rows table to the clipboard.
      */
     private void copySelectedRowsToClipboard() {
-        this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
-            int[] selectedRows = this.rowsTable.getSelectedRows();
+            int[] selectedRows = rowsTable.getSelectedRows();
             if (selectedRows.length > 0) {
                 DataTable table = new DataTable(getSelectedTableName());
                 for (int selectedRow : selectedRows) {
@@ -1888,7 +1905,7 @@ public class DesignerView {
             }
         }
         finally {
-            this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
     }
 
@@ -1898,7 +1915,7 @@ public class DesignerView {
     private void copyTableToClipboard() {
         String tableName = getSelectedTableName();
         if (tableName != null) {
-            InMemoryClipboard.setData(new ClipboardData<DataTable>(new DataTable(tableName, this.connection)));
+            InMemoryClipboard.setData(new ClipboardData<DataTable>(new DataTable(tableName, connection)));
         }
         else {
             InMemoryClipboard.setData(null);
@@ -1925,7 +1942,7 @@ public class DesignerView {
 
                                 // Update the column types according to the added row.
                                 for (DataCell cell : row.getCells()) {
-                                    this.clusterConfig.setTableConfig(
+                                    clusterConfig.setTableConfig(
                                         getSelectedTableName(), cell.getColumn().getFullName(), cell.getType().toString());
                                 }
 
@@ -1979,21 +1996,21 @@ public class DesignerView {
      */
     @SuppressWarnings("OverlyNestedMethod")
     private void pasteTableFromClipboard() {
-        this.tablePaste.setEnabled(false);
+        tablePaste.setEnabled(false);
 
         ClipboardData<DataTable> clipboardData = InMemoryClipboard.getData();
         if (clipboardData != null) {
 
             DataTable table = clipboardData.getData();
 
-            this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             try {
                 TableDescriptor sourceTable = table.getConnection().getTableDescriptor(table.getTableName());
 
                 AddTableDialog dialog = new AddTableDialog(sourceTable);
                 if (dialog.showDialog(topPanel)) {
                     TableDescriptor targetTable = dialog.getTableDescriptor();
-                    this.connection.copyTable(targetTable, sourceTable, table.getConnection());
+                    connection.copyTable(targetTable, sourceTable, table.getConnection());
 
                     Filter filter;
 
@@ -2006,17 +2023,17 @@ public class DesignerView {
                     }
 
                     if (filter.match(targetTable.getName())) {
-                        if (!this.tablesListModel.contains(targetTable.getName())) {
+                        if (!tablesListModel.contains(targetTable.getName())) {
                             String sourcePrefix = String.format("table.%s.", sourceTable.getName());
                             String targetPrefix = String.format("table.%s.", targetTable.getName());
 
-                            for (Map.Entry<String, String> keyValue : this.clusterConfig.getAll(sourcePrefix).entrySet()) {
-                                this.clusterConfig.set(keyValue.getKey().replace(sourcePrefix, targetPrefix), keyValue.getValue());
+                            for (Map.Entry<String, String> keyValue : clusterConfig.getAll(sourcePrefix).entrySet()) {
+                                clusterConfig.set(keyValue.getKey().replace(sourcePrefix, targetPrefix), keyValue.getValue());
                             }
-                            this.tablesListModel.addElement(targetTable.getName());
+                            tablesListModel.addElement(targetTable.getName());
                         }
 
-                        this.tablesList.setSelectedValue(targetTable.getName(), true);
+                        tablesList.setSelectedValue(targetTable.getName(), true);
                     }
                 }
             }
@@ -2024,7 +2041,7 @@ public class DesignerView {
                 setError("Failed to paste table: ", e);
             }
             finally {
-                this.owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
         }
     }
@@ -2050,12 +2067,12 @@ public class DesignerView {
      */
     private Collection<TypedColumn> getShownTypedColumns() {
         Collection<TypedColumn> typedColumns = new ArrayList<TypedColumn>();
-        for (int i = 0 ; i < this.columnsTable.getRowCount() ; i++) {
-            boolean isShown = (Boolean)this.columnsTableModel.getValueAt(i, 0);
+        for (int i = 0 ; i < columnsTable.getRowCount() ; i++) {
+            boolean isShown = (Boolean)columnsTableModel.getValueAt(i, 0);
             if (isShown) {
                 typedColumns.add(
                     new TypedColumn(
-                        (ColumnQualifier)this.columnsTableModel.getValueAt(i, 1), (ColumnType)this.columnsTableModel.getValueAt(i, 2)));
+                        (ColumnQualifier)columnsTableModel.getValueAt(i, 1), (ColumnType)columnsTableModel.getValueAt(i, 2)));
             }
         }
         return typedColumns;
@@ -2068,10 +2085,10 @@ public class DesignerView {
      */
     private List<ColumnQualifier> getShownColumns() {
         List<ColumnQualifier> typedColumns = new ArrayList<ColumnQualifier>();
-        for (int i = 0 ; i < this.columnsTable.getRowCount() ; i++) {
-            boolean isShown = (Boolean)this.columnsTableModel.getValueAt(i, 0);
+        for (int i = 0 ; i < columnsTable.getRowCount() ; i++) {
+            boolean isShown = (Boolean)columnsTableModel.getValueAt(i, 0);
             if (isShown) {
-                typedColumns.add((ColumnQualifier)this.columnsTableModel.getValueAt(i, 1));
+                typedColumns.add((ColumnQualifier)columnsTableModel.getValueAt(i, 1));
             }
         }
         return typedColumns;
@@ -2083,7 +2100,7 @@ public class DesignerView {
      * @return The size of the page.
      */
     private int getPageSize() {
-        return (Integer)this.rowsNumber.getValue();
+        return (Integer)rowsNumber.getValue();
     }
 
     /**
@@ -2093,10 +2110,10 @@ public class DesignerView {
      * @return The index of the specified column.
      */
     private int getColumnIndex(String columnName) {
-        for (int i = 0, j = 0 ; i < this.columnsTable.getRowCount() ; i++) {
-            ColumnQualifier qualifier = (ColumnQualifier)this.columnsTableModel.getValueAt(i, 1);
+        for (int i = 0, j = 0 ; i < columnsTable.getRowCount() ; i++) {
+            ColumnQualifier qualifier = (ColumnQualifier)columnsTableModel.getValueAt(i, 1);
 
-            boolean isShown = (Boolean)this.columnsTableModel.getValueAt(i, 0);
+            boolean isShown = (Boolean)columnsTableModel.getValueAt(i, 0);
             if (isShown) {
                 if (qualifier.getFullName().equals(columnName)) {
                     return j;
@@ -2115,7 +2132,7 @@ public class DesignerView {
      */
     private List<String> getSelectedTables() {
         List<String> tables = new ArrayList<String>();
-        for (Object table : this.tablesList.getSelectedValues()) {
+        for (Object table : tablesList.getSelectedValues()) {
             tables.add(table.toString());
         }
         return tables;
@@ -2129,7 +2146,7 @@ public class DesignerView {
      * @return The column type.
      */
     private ColumnType getSavedColumnType(String tableName, String columnName) {
-        String columnType = this.clusterConfig.getTableConfig(String.class, tableName, columnName);
+        String columnType = clusterConfig.getTableConfig(String.class, tableName, columnName);
         if (columnType != null) {
             return ColumnType.fromName(columnType);
         }
@@ -2158,7 +2175,7 @@ public class DesignerView {
      * @return A selected type converter.
      */
     private TypeConverter getColumnNameConverter() {
-        ColumnType type = (ColumnType)this.columnConverters.getSelectedItem();
+        ColumnType type = (ColumnType)columnConverters.getSelectedItem();
         if (type != null) {
             return type.getConverter();
         }
@@ -2171,7 +2188,7 @@ public class DesignerView {
      * @return A selected and editable column type if exists or null otherwise.
      */
     private ColumnType getSelectedEditableColumnType() {
-        ColumnType type = (ColumnType)this.columnConverters.getSelectedItem();
+        ColumnType type = (ColumnType)columnConverters.getSelectedItem();
         if (type != null && type.isEditable()) {
             return type;
         }
@@ -2195,7 +2212,7 @@ public class DesignerView {
      * @return True if the specified column is checked or False otherwise.
      */
     private boolean isShown(String tableName, String columnName) {
-        Boolean isShown = this.clusterConfig.getTableConfig(Boolean.class, tableName, columnName, "isShown");
+        Boolean isShown = clusterConfig.getTableConfig(Boolean.class, tableName, columnName, "isShown");
         return isShown == null || isShown;
     }
 
@@ -2203,21 +2220,21 @@ public class DesignerView {
      * Reloads column types.
      */
     private void reloadColumnTypes() {
-        ColumnType selectedNameType = (ColumnType)this.columnConverters.getSelectedItem();
+        ColumnType selectedNameType = (ColumnType)columnConverters.getSelectedItem();
 
-        this.cmbColumnTypes.removeAllItems();
-        this.columnConverters.removeAllItems();
+        cmbColumnTypes.removeAllItems();
+        columnConverters.removeAllItems();
 
         for (ColumnType columnType : ColumnType.getTypes()) {
-            this.cmbColumnTypes.addItem(columnType);
+            cmbColumnTypes.addItem(columnType);
         }
 
         for (ColumnType columnType : ColumnType.getNameTypes()) {
-            this.columnConverters.addItem(columnType);
+            columnConverters.addItem(columnType);
         }
 
         if (selectedNameType != null) {
-            this.columnConverters.setSelectedItem(selectedNameType);
+            columnConverters.setSelectedItem(selectedNameType);
         }
     }
 
@@ -2286,8 +2303,8 @@ public class DesignerView {
      * Enables or disables the paging buttons.
      */
     private void togglePagingControls() {
-        rowsPrev.setEnabled(this.scanner != null && this.scanner.hasPrev());
-        rowsNext.setEnabled(this.scanner != null && this.scanner.hasNext());
+        rowsPrev.setEnabled(scanner != null && scanner.hasPrev());
+        rowsNext.setEnabled(scanner != null && scanner.hasNext());
     }
 
     private void toggleTableControls() {
@@ -2357,7 +2374,7 @@ public class DesignerView {
     }
 
     private boolean tableEnabled(String tableName) {
-        boolean enabled = false;
+        boolean enabled = true;
 
         try {
             enabled = connection.tableEnabled(tableName);

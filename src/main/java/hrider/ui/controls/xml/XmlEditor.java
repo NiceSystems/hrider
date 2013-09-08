@@ -41,6 +41,10 @@ public class XmlEditor extends JPanel {
      * A text pane that is shown in a popup menu and presents the XML as a formatted string.
      */
     private XmlTextPane textPane;
+    /**
+     * This button is clicked when he changes need to be saved.
+     */
+    private JButton     saveButton;
     //endregion
 
     //region Constructor
@@ -48,27 +52,29 @@ public class XmlEditor extends JPanel {
     /**
      * Initializes a new instance of the {@link XmlEditor} class.
      */
-    public XmlEditor(final CellEditor cellEditor) {
+    public XmlEditor(final CellEditor cellEditor, boolean canEdit) {
 
-        this.textPane = new XmlTextPane();
-        this.textPane.setLayout(new BorderLayout());
+        textPane = new XmlTextPane();
+        textPane.setEditable(canEdit);
+        textPane.setLayout(new BorderLayout());
 
-        this.textField = new JTextField();
-        this.textField.setLayout(new BorderLayout());
-        this.textField.setBorder(new EmptyBorder(0, 0, 0, 0));
-        this.textField.setEditable(false);
+        textField = new JTextField();
+        textField.setLayout(new BorderLayout());
+        textField.setBorder(new EmptyBorder(0, 0, 0, 0));
+        textField.setEditable(false);
 
-        this.setLayout(new BorderLayout());
+        setLayout(new BorderLayout());
 
         final JPopupMenu popup = new JPopupMenu();
 
-        final JScrollPane pane = new JScrollPane(this.textPane);
+        final JScrollPane pane = new JScrollPane(textPane);
         pane.setBorder(BorderFactory.createEtchedBorder());
 
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
 
-        JButton saveButton = new JButton("Mark for save");
+        saveButton = new JButton("Mark for save");
+        saveButton.setEnabled(canEdit);
         saveButton.setPreferredSize(new Dimension(115, 24));
         saveButton.addActionListener(
             new ActionListener() {
@@ -76,9 +82,9 @@ public class XmlEditor extends JPanel {
                 public void actionPerformed(ActionEvent e) {
                     try {
                         popup.setVisible(false);
-                        XmlEditor.this.textPane.validateXml();
+                        textPane.validateXml();
 
-                        XmlEditor.this.textField.setText(XmlEditor.this.textPane.getText());
+                        textField.setText(textPane.getText());
                         cellEditor.stopCellEditing();
                     }
                     catch (Exception ex) {
@@ -119,7 +125,7 @@ public class XmlEditor extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     Dimension size = pane.getPreferredSize();
-                    Rectangle screenSize = XmlEditor.this.getGraphicsConfiguration().getBounds();
+                    Rectangle screenSize = getGraphicsConfiguration().getBounds();
 
                     int width = (int)Math.min(screenSize.getWidth(), size.getWidth() + 35);
                     int height = (int)Math.min(screenSize.getHeight(), size.getHeight() + 45);
@@ -128,15 +134,15 @@ public class XmlEditor extends JPanel {
                     height = Math.max(150, height);
 
                     popup.setPopupSize(width, height);
-                    popup.show(XmlEditor.this, 0, XmlEditor.this.getHeight());
+                    popup.show(XmlEditor.this, 0, getHeight());
                 }
             });
 
-        this.add(this.textField, BorderLayout.CENTER);
-        this.add(button, BorderLayout.EAST);
+        add(textField, BorderLayout.CENTER);
+        add(button, BorderLayout.EAST);
 
-        this.invalidate();
-        this.repaint();
+        invalidate();
+        repaint();
     }
     //endregion
 
@@ -148,7 +154,7 @@ public class XmlEditor extends JPanel {
      * @return An original or modified text.
      */
     public String getText() {
-        return this.textField.getText();
+        return textField.getText();
     }
 
     /**
@@ -157,8 +163,8 @@ public class XmlEditor extends JPanel {
      * @param text The new text to set.
      */
     public void setText(String text) {
-        this.textField.setText(text);
-        this.textPane.setText(text);
+        textField.setText(text);
+        textPane.setText(text);
     }
 
     /**
@@ -167,7 +173,8 @@ public class XmlEditor extends JPanel {
      * @param editable The value to set.
      */
     public void setEditable(Boolean editable) {
-        this.textPane.setEditable(editable);
+        textPane.setEditable(editable);
+        saveButton.setEnabled(editable);
     }
     //endregion
 }

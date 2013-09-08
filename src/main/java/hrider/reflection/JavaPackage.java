@@ -217,7 +217,7 @@ public class JavaPackage {
 
     //region Private Methods
     private static String getPath(URL url) {
-        String path = url.getFile().replace("file:/", "");
+        String path = url.getFile().replace("file:", "");
 
         int index = path.indexOf('!');
         if (index != -1) {

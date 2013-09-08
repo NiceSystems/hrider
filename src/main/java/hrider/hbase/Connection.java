@@ -190,7 +190,7 @@ public class Connection {
      * @throws IOException Error accessing hbase.
      */
     public boolean tableEnabled(String tableName) throws IOException {
-        return tableName != null && this.hbaseAdmin.isTableEnabled(tableName);
+        return TableUtil.isMetaTable(tableName) || tableName != null && this.hbaseAdmin.isTableEnabled(tableName);
     }
 
     /**

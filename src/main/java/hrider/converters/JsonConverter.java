@@ -1,5 +1,8 @@
 package hrider.converters;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 /**
  * Copyright (C) 2012 NICE Systems ltd.
  * <p/>
@@ -27,5 +30,27 @@ public class JsonConverter extends StringConverter {
     @Override
     public boolean isValidForNameConversion() {
         return false;
+    }
+
+    public static String toJson(Object obj) {
+        try {
+            Gson gson = new GsonBuilder().create();
+            return gson.toJson(obj);
+        }
+        catch (Exception e) {
+            logger.error(e, "Failed to convert object to json '%s'.", obj);
+            return null;
+        }
+    }
+
+    public static <T> T fromJson(String json, Class<T> type) {
+        try {
+            Gson gson = new GsonBuilder().create();
+            return gson.fromJson(json, type);
+        }
+        catch (Exception e) {
+            logger.error(e, "Failed to convert json '%s' to object.", json);
+            return null;
+        }
     }
 }

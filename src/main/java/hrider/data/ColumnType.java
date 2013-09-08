@@ -42,6 +42,7 @@ public class ColumnType implements Serializable {
     public final static ColumnType Short        = new ColumnType("Short");
     public final static ColumnType Json         = new ColumnType("Json");
     public final static ColumnType Xml          = new ColumnType("Xml");
+    public final static ColumnType RegionInfo   = new ColumnType("RegionInfo");
 
     private static final long serialVersionUID = -5311385557088499851L;
     //endregion
@@ -128,8 +129,11 @@ public class ColumnType implements Serializable {
         if (column.contains("timestamp")) {
             return DateAsLong;
         }
-        if ("key".equalsIgnoreCase(column)) {
+        if ("key".equals(column)) {
             return BinaryString;
+        }
+        if ("info:regioninfo".equals(column)) {
+            return RegionInfo;
         }
         return String;
     }
