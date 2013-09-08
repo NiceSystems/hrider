@@ -835,7 +835,7 @@ public class DesignerView {
                         try {
                             TableDescriptor tableDescriptor = connection.getTableDescriptor(tableName);
 
-                            UpdateTableMetadata dialog = new UpdateTableMetadata(tableDescriptor);
+                            UpdateTableMetadata dialog = new UpdateTableMetadata(tableDescriptor, !TableUtil.isMetaTable(tableName));
                             if (dialog.showDialog(topPanel)) {
                                 owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                                 try {
@@ -1876,7 +1876,7 @@ public class DesignerView {
      * @param editable Indicates whether the table should be editable or not.
      */
     private static void setTableEditable(JTable table, boolean editable) {
-        for (int col = 0 ; col < table.getColumnCount() ; col++) {
+        for (int col = 1 ; col < table.getColumnCount() ; col++) {
             TableColumn column = table.getColumnModel().getColumn(col);
 
             JCellEditor cellEditor = (JCellEditor)column.getCellEditor();
@@ -2311,8 +2311,16 @@ public class DesignerView {
         if (tablesListModel.getSize() > 0) {
             int[] selectedIndices = tablesList.getSelectedIndices();
             if (selectedIndices.length > 0) {
-                tableDelete.setEnabled(true);
-                tableTruncate.setEnabled(true);
+                boolean isMetaTableSelected = false;
+
+                for (int index : selectedIndices) {
+                    String tableName = (String)tablesListModel.getElementAt(index);
+                    isMetaTableSelected |= TableUtil.isMetaTable(tableName);
+                }
+
+                tableDelete.setEnabled(!isMetaTableSelected);
+                tableTruncate.setEnabled(!isMetaTableSelected);
+                tableFlush.setEnabled(!isMetaTableSelected);
 
                 boolean tableEnabled = false;
 
@@ -2321,10 +2329,9 @@ public class DesignerView {
                     tableEnabled = tableEnabled(tableName);
                 }
 
-                tableCopy.setEnabled(tableEnabled);
-                tablePaste.setEnabled(tableEnabled && hasTableInClipboard());
-                tableExport.setEnabled(tableEnabled);
-                tableFlush.setEnabled(tableEnabled || selectedIndices.length > 1);
+                tableCopy.setEnabled(tableEnabled && !isMetaTableSelected);
+                tablePaste.setEnabled(tableEnabled && !isMetaTableSelected && hasTableInClipboard());
+                tableExport.setEnabled(tableEnabled && !isMetaTableSelected);
                 tableMetadata.setEnabled(tableEnabled);
             }
         }

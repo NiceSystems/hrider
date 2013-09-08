@@ -55,16 +55,23 @@ public class UpdateTableMetadata extends JDialog {
     private JButton              removeColumnMetadataButton;
     private DefaultTableModel    columnModel;
     private boolean              okPressed;
+    private boolean              isEditable;
     //endregion
 
     //region Constructor
-    public UpdateTableMetadata(final TableDescriptor descriptor) {
+    public UpdateTableMetadata(final TableDescriptor descriptor, boolean canEdit) {
         setContentPane(contentPane);
         setModal(true);
         setTitle(descriptor.getName() + " table metadata");
         getRootPane().setDefaultButton(buttonUpdate);
 
-        TableCellEditor cellEditor = new JCellEditor(null, true);
+        TableCellEditor cellEditor = new JCellEditor(null, canEdit);
+
+        this.isEditable = canEdit;
+        this.buttonUpdate.setEnabled(canEdit);
+        this.addTableMetadataButton.setEnabled(canEdit);
+        this.addColumnMetadataButton.setEnabled(canEdit);
+        this.cmbFamilies.setEditable(canEdit);
 
         this.tableModel = new DefaultTableModel();
         this.tableMetadata.setModel(this.tableModel);
@@ -81,7 +88,7 @@ public class UpdateTableMetadata extends JDialog {
             new ListSelectionListener() {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
-                    removeTableMetadataButton.setEnabled(e.getFirstIndex() >= 0);
+                    removeTableMetadataButton.setEnabled(e.getFirstIndex() >= 0 && isEditable);
                 }
             });
 
@@ -119,7 +126,7 @@ public class UpdateTableMetadata extends JDialog {
             new ListSelectionListener() {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
-                    removeColumnMetadataButton.setEnabled(e.getFirstIndex() >= 0);
+                    removeColumnMetadataButton.setEnabled(e.getFirstIndex() >= 0 && isEditable);
                 }
             });
 
