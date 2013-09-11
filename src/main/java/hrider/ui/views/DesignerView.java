@@ -1160,8 +1160,6 @@ public class DesignerView {
 
         try {
             tablesListModel.clear();
-            tablesListModel.addElement("-ROOT-");
-            tablesListModel.addElement(".META.");
 
             Filter filter;
 
@@ -1173,8 +1171,15 @@ public class DesignerView {
                 filter = new PatternFilter(value);
             }
 
-            Collection<String> tables = connection.getTables();
+            if (filter.match(TableUtil.ROOT_TABLE)) {
+                tablesListModel.addElement(TableUtil.ROOT_TABLE);
+            }
 
+            if (filter.match(TableUtil.META_TABLE)) {
+                tablesListModel.addElement(TableUtil.META_TABLE);
+            }
+
+            Collection<String> tables = connection.getTables();
             for (String table : tables) {
                 if (filter.match(table)) {
                     tablesListModel.addElement(table);

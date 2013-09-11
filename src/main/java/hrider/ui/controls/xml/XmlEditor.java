@@ -130,7 +130,7 @@ public class XmlEditor extends JPanel {
                     int width = (int)Math.min(screenSize.getWidth(), size.getWidth() + 35);
                     int height = (int)Math.min(screenSize.getHeight(), size.getHeight() + 45);
 
-                    width = Math.max(200, width);
+                    width = Math.max(250, width);
                     height = Math.max(150, height);
 
                     popup.setPopupSize(width, height);

@@ -20,10 +20,13 @@ package hrider.hbase;
  */
 public class TableUtil {
 
+    public static final String ROOT_TABLE = "-ROOT-";
+    public static final String META_TABLE = ".META.";
+
     private TableUtil() {
     }
 
     public static boolean isMetaTable(String tableName) {
-        return ".META.".equals(tableName) || "-ROOT-".equals(tableName);
+        return META_TABLE.equals(tableName) || ROOT_TABLE.equals(tableName);
     }
 }
