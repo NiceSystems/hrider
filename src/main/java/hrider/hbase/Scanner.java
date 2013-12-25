@@ -37,6 +37,7 @@ import java.util.*;
  *          <p/>
  *          This class represents a scanner over the hbase tables.
  */
+@SuppressWarnings({"OverlyNestedMethod", "ClassWithTooManyMethods"})
 public class Scanner {
 
     //region Variables
@@ -286,8 +287,8 @@ public class Scanner {
         ResultScanner scanner = table.getScanner(scan);
 
         try {
-            Collection<DataRow> rows = new ArrayList<DataRow>();
-            Collection<ColumnQualifier> columns = new ArrayList<ColumnQualifier>();
+            Collection<DataRow> rows = new LinkedList<DataRow>();
+            Collection<ColumnQualifier> columns = new LinkedList<ColumnQualifier>();
 
             columns.add(ColumnQualifier.KEY);
 
@@ -470,7 +471,9 @@ public class Scanner {
      */
     protected ConvertibleObject loadRows(
         ResultScanner scanner, long offset, int rowsNumber, Collection<DataRow> rows, Collection<ColumnQualifier> columns) throws IOException {
+
         ColumnType keyType = this.columnTypes.get(ColumnQualifier.KEY.getName());
+        Map<ColumnQualifier, ColumnQualifier> loadedColumns = new HashMap<ColumnQualifier, ColumnQualifier>();
 
         int index = 0;
         boolean isValid;
@@ -499,19 +502,20 @@ public class Scanner {
                         for (NavigableMap.Entry<byte[], NavigableMap<Long, byte[]>> qualifierEntry : familyEntry.getValue().entrySet()) {
                             ColumnQualifier qualifier = new ColumnQualifier(qualifierEntry.getKey(), new ColumnFamily(columnDescriptor), nameConverter);
 
-                            ColumnType columnType = ColumnType.String;
                             String columnName = qualifier.getFullName();
+                            ColumnType columnType = this.columnTypes.get(columnName);
 
-                            if (this.columnTypes.containsKey(columnName)) {
-                                columnType = this.columnTypes.get(columnName);
+                            if (columnType == null) {
+                                columnType = ColumnType.String;
                             }
 
                             for (NavigableMap.Entry<Long, byte[]> cell : qualifierEntry.getValue().entrySet()) {
                                 row.addCell(new DataCell(row, qualifier, new ConvertibleObject(columnType, cell.getValue())));
                             }
 
-                            if (!columns.contains(qualifier)) {
+                            if (!loadedColumns.containsKey(qualifier)) {
                                 columns.add(qualifier);
+                                loadedColumns.put(qualifier, null);
                             }
                         }
                     }
@@ -537,6 +541,8 @@ public class Scanner {
         Collection<ColumnQualifier> columns = new ArrayList<ColumnQualifier>();
         columns.add(ColumnQualifier.KEY);
 
+        Map<ColumnQualifier, ColumnQualifier> loadedColumns = new HashMap<ColumnQualifier, ColumnQualifier>();
+
         int itemsNumber = rowsNumber <= GlobalConfig.instance().getBatchSizeForRead() ? rowsNumber : GlobalConfig.instance().getBatchSizeForRead();
 
         Scan scan = getScanner();
@@ -561,8 +567,9 @@ public class Scanner {
 
                         for (byte[] quantifier : familyEntry.getValue().keySet()) {
                             ColumnQualifier columnQualifier = new ColumnQualifier(quantifier, new ColumnFamily(columnDescriptor), nameConverter);
-                            if (!columns.contains(columnQualifier)) {
+                            if (!loadedColumns.containsKey(columnQualifier)) {
                                 columns.add(columnQualifier);
+                                loadedColumns.put(columnQualifier, null);
                             }
                         }
                     }
@@ -606,8 +613,8 @@ public class Scanner {
         ResultScanner scanner = table.getScanner(scan);
 
         try {
-            Collection<DataRow> rows = new ArrayList<DataRow>();
-            Collection<ColumnQualifier> columns = new ArrayList<ColumnQualifier>();
+            Collection<DataRow> rows = new LinkedList<DataRow>();
+            Collection<ColumnQualifier> columns = new LinkedList<ColumnQualifier>();
 
             columns.add(ColumnQualifier.KEY);
 

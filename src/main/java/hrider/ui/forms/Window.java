@@ -28,6 +28,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.URL;
@@ -268,12 +269,20 @@ public class Window {
      * event-dispatching thread.
      */
     private static void createAndShowGUI() {
-        Window window = new Window();
+        final Window window = new Window();
         window.loadViews(new Splash());
 
         if (!window.canceled) {
             JFrame frame = new JFrame("h-rider - " + getVersion());
             window.frame = frame;
+
+            frame.addWindowListener(
+                new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        window.saveViews();
+                    }
+                });
 
             frame.setContentPane(window.topPanel);
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -433,13 +442,21 @@ public class Window {
         }
     }
 
+    private void saveViews() {
+        for (List<DesignerView> views : viewList.values()) {
+            for (DesignerView view : views) {
+                view.saveView();
+            }
+        }
+    }
+
     /**
      * Loads a single cluster view.
      *
      * @param connection A connection to be used to connect to the cluster.
      */
     private DesignerView loadView(int index, final Connection connection) {
-        final DesignerView view = new DesignerView(this.topPanel, connection);
+        DesignerView view = new DesignerView(this.topPanel, connection);
 
         List<DesignerView> views = viewList.get(connection.getServerName());
         if (views == null) {
@@ -449,41 +466,41 @@ public class Window {
 
         views.add(view);
 
-        final JTab tab = new JTab(connection.getServerName(), this.tabbedPane);
+        JTab tab = new JTab(connection.getServerName(), view, this.tabbedPane);
         tab.addTabActionListener(
             new TabActionListener() {
                 @Override
-                public void onTabClosed() {
-                    List<DesignerView> list = viewList.get(view.getConnection().getServerName());
-                    list.remove(view);
+                public void onTabClosed(DesignerView closingView) {
+                    List<DesignerView> list = viewList.get(closingView.getConnection().getServerName());
+                    list.remove(closingView);
 
                     ClipboardData<DataTable> data = InMemoryClipboard.getData();
                     if (data != null) {
                         Connection helper = data.getData().getConnection();
                         if (helper != null) {
-                            if (helper.equals(view.getConnection())) {
+                            if (helper.equals(closingView.getConnection())) {
                                 InMemoryClipboard.setData(null);
                             }
                         }
                     }
 
                     if (list.isEmpty()) {
-                        ViewConfig.instance().removeCluster(view.getConnection().getServerName());
-                        PropertiesConfig.fileRemove(view.getConnection().getServerName());
+                        ViewConfig.instance().removeCluster(closingView.getConnection().getServerName());
+                        PropertiesConfig.fileRemove(closingView.getConnection().getServerName());
 
-                        viewList.remove(view.getConnection().getServerName());
+                        viewList.remove(closingView.getConnection().getServerName());
                     }
 
-                    ConnectionManager.release(view.getConnection().getConnectionDetails());
+                    ConnectionManager.release(closingView.getConnection().getConnectionDetails());
                 }
 
                 @Override
-                public void onTabDuplicated() {
+                public void onTabDuplicated(DesignerView sourceView) {
                     try {
-                        int newIndex = tabbedPane.indexOfComponent(view.getView());
+                        int newIndex = tabbedPane.indexOfComponent(sourceView.getView());
 
                         DesignerView duplicatedView = loadView(newIndex + 1, new Connection(connection.getConnectionDetails()));
-                        duplicatedView.setSelectedTableName(view.getSelectedTableName());
+                        duplicatedView.setSelectedTableName(sourceView.getSelectedTableName());
                     }
                     catch (IOException ex) {
                         MessageHandler.addError(String.format("Failed to duplicate view for %s.", connection.getServerName()), ex);
@@ -506,7 +523,7 @@ public class Window {
     /**
      * Shows a connection dialog.
      *
-     * @return A reference to {@link ConnectionDetails} class that contains all required information to connect to the cluster.
+     * @return A reference to {@link hrider.config.ConnectionDetails} class that contains all required information to connect to the cluster.
      */
     private ConnectionDetails showDialog() {
         ConnectionDetailsDialog dialog = new ConnectionDetailsDialog();

@@ -409,6 +409,7 @@
                       <component id="24118" class="javax.swing.JTable" binding="columnsTable">
                         <constraints/>
                         <properties>
+                          <autoCreateRowSorter value="true"/>
                           <autoResizeMode value="1"/>
                         </properties>
                       </component>

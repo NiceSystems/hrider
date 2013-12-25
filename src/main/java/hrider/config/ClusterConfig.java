@@ -66,8 +66,6 @@ public class ClusterConfig extends PropertiesConfig {
     public void setConnection(ConnectionDetails connection) {
         set("connection.zookeeper.host", connection.getZookeeper().getHost());
         set("connection.zookeeper.port", connection.getZookeeper().getPort());
-
-        save();
     }
 
     /**
@@ -117,7 +115,6 @@ public class ClusterConfig extends PropertiesConfig {
      */
     public void setTableConfig(String table, String value) {
         set(String.format("table.%s", table), value);
-        save();
     }
 
     /**
@@ -129,7 +126,6 @@ public class ClusterConfig extends PropertiesConfig {
      */
     public void setTableConfig(String table, String key, String value) {
         set(String.format("table.%s.%s", table, key), value);
-        save();
     }
 
     /**
@@ -142,7 +138,6 @@ public class ClusterConfig extends PropertiesConfig {
      */
     public void setTableConfig(String table, String column, String key, String value) {
         set(String.format("table.%s.%s.%s", table, column, key), value);
-        save();
     }
 
     /**
@@ -208,7 +203,6 @@ public class ClusterConfig extends PropertiesConfig {
         }
 
         set("table.filters", sb.toString());
-        save();
     }
 
     /**
@@ -218,7 +212,6 @@ public class ClusterConfig extends PropertiesConfig {
      */
     public void setSelectedTableFilter(String filter) {
         set("table.filters.selected", filter);
-        save();
     }
 
     /**
@@ -237,7 +230,6 @@ public class ClusterConfig extends PropertiesConfig {
         }
 
         set(String.format("table.%s.column.filters", table), sb.toString());
-        save();
     }
 
     /**
@@ -248,7 +240,6 @@ public class ClusterConfig extends PropertiesConfig {
      */
     public void setSelectedColumnFilter(String table, String filter) {
         set(String.format("table.%s.column.filters.selected", table), filter);
-        save();
     }
     //endregion
 }

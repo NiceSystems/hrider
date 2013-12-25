@@ -40,11 +40,13 @@ public class JListRenderer extends DefaultListCellRenderer {
         Component component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         if (value instanceof String) {
             try {
-                if (TableUtil.isMetaTable((String)value)) {
-                    setForeground(Color.darkGray);
-                }
-                else if (!connection.tableEnabled((String)value)) {
-                    setForeground(Color.gray);
+                if (isSelected || cellHasFocus) {
+                    if (TableUtil.isMetaTable((String)value)) {
+                        setForeground(Color.darkGray);
+                    }
+                    else if (!connection.tableEnabled((String)value)) {
+                        setForeground(Color.gray);
+                    }
                 }
             }
             catch (Exception ignore) {

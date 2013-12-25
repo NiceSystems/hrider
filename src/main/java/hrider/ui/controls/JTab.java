@@ -2,6 +2,7 @@ package hrider.ui.controls;
 
 import hrider.ui.Images;
 import hrider.ui.TabActionListener;
+import hrider.ui.views.DesignerView;
 
 import javax.swing.*;
 import java.awt.*;
@@ -41,7 +42,7 @@ public class JTab extends JPanel {
     //endregion
 
     //region Constructor
-    public JTab(final String title, final JTabbedPane pane) {
+    public JTab(String title, final DesignerView view, final JTabbedPane pane) {
 
         setOpaque(false);
 
@@ -64,10 +65,10 @@ public class JTab extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (pane.getTabCount() > 1) {
-                        pane.removeTabAt(pane.indexOfTab(title));
+                        pane.removeTabAt(pane.indexOfComponent(view.getView()));
 
                         for (TabActionListener listener : listeners) {
-                            listener.onTabClosed();
+                            listener.onTabClosed(view);
                         }
                     }
                 }
@@ -85,7 +86,7 @@ public class JTab extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     for (TabActionListener listener : listeners) {
-                        listener.onTabDuplicated();
+                        listener.onTabDuplicated(view);
                     }
                 }
             });

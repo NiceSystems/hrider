@@ -1,7 +1,8 @@
 package hrider.ui;
 
+import hrider.ui.views.DesignerView;
+
 import javax.swing.*;
-import java.awt.*;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -28,10 +29,10 @@ public interface TabActionListener {
     /**
      * The method is called each time the tab of {@link JTabbedPane} is closed by the user.
      */
-    void onTabClosed();
+    void onTabClosed(DesignerView closingView);
 
     /**
      * The method is called each time the tab of {@link JTabbedPane} is being duplicated by the user.
      */
-    void onTabDuplicated();
+    void onTabDuplicated(DesignerView sourceView);
 }
