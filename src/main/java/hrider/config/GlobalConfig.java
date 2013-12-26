@@ -26,6 +26,7 @@ public class GlobalConfig extends PropertiesConfig {
 
     //region Constants
     private static final String KEY_DATE_FORMAT                    = "global.dateFormat";
+    private static final String KEY_DATE_TIME_ZONE                 = "global.dateTimeZone";
     private static final String KEY_EXTERNAL_VIEWER_FILE_EXTENSION = "global.externalViewerFileExtension";
     private static final String KEY_EXTERNAL_VIEWER_DELIMETER      = "global.externalViewerDelimiter";
     private static final String KEY_BATCH_READ_SIZE                = "global.batch.readSize";
@@ -36,6 +37,7 @@ public class GlobalConfig extends PropertiesConfig {
     private static final String KEY_CONVERTERS_CODE_FOLDER         = "global.converters.code.folder";
 
     private static final String DEFAULT_DATE_FORMAT                    = "yyyy-MM-dd HH:mm:ss.SSS ZZ";
+    private static final String DEFAULT_DATE_TIME_ZONE                 = "UTC";
     private static final String DEFAULT_EXTERNAL_VIEWER_FILE_EXTENSION = ".csv";
     private static final String DEFAULT_EXTERNAL_VIEWER_DELIMETER      = ",";
     private static final String DEFAULT_BATCH_READ_SIZE                = "1000";
@@ -76,6 +78,15 @@ public class GlobalConfig extends PropertiesConfig {
      */
     public String getDateFormat() {
         return get(String.class, KEY_DATE_FORMAT, DEFAULT_DATE_FORMAT);
+    }
+
+    /**
+     * Gets the date time zone to be used to parse/converters date time strings.
+     *
+     * @return A {@link String} representing date time zone.
+     */
+    public String getDateTimeZone() {
+        return get(String.class, KEY_DATE_TIME_ZONE, DEFAULT_DATE_TIME_ZONE);
     }
 
     /**
@@ -159,6 +170,7 @@ public class GlobalConfig extends PropertiesConfig {
         set(KEY_BATCH_WRITE_SIZE, DEFAULT_BATCH_WRITE_SIZE);
         set(KEY_CONNECTION_CHECK_TIMEOUT, DEFAULT_CONNECTION_CHECK_TIMEOUT);
         set(KEY_DATE_FORMAT, DEFAULT_DATE_FORMAT);
+        set(KEY_DATE_FORMAT, DEFAULT_DATE_TIME_ZONE);
         set(KEY_EXTERNAL_VIEWER_DELIMETER, DEFAULT_EXTERNAL_VIEWER_DELIMETER);
         set(KEY_EXTERNAL_VIEWER_FILE_EXTENSION, DEFAULT_EXTERNAL_VIEWER_FILE_EXTENSION);
 

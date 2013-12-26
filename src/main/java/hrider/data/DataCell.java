@@ -127,6 +127,16 @@ public class DataCell implements Serializable {
     }
 
     /**
+     * Validates whether the value held by the cell can be converted to the specified type.
+     *
+     * @param type The type to check.
+     * @return True if the value can be converted to the specified type or False otherwise.
+     */
+    public boolean isOfType(ColumnType type) {
+        return this.convertibleValue.isOfType(type);
+    }
+
+    /**
      * Gets cell's type.
      *
      * @return The cell's type.

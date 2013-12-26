@@ -150,6 +150,20 @@ public class DataRow implements Serializable {
     //region Public Methods
 
     /**
+     * Validates whether the value held by the cell can be converted to the specified type.
+     *
+     * @param columnType The type to check.
+     * @return True if the value can be converted to the specified type or False otherwise.
+     */
+    public boolean isCellOfType(String columnName, ColumnType columnType) {
+        DataCell cell = getCell(columnName);
+        if (cell != null) {
+            return cell.isOfType(columnType);
+        }
+        return true;
+    }
+
+    /**
      * Updates a column type for all cells that belong to the specified column.
      *
      * @param columnName The name of the column which type should be updated.

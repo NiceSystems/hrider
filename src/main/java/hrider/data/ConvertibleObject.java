@@ -96,6 +96,16 @@ public class ConvertibleObject implements Serializable {
     }
 
     /**
+     * Validates whether the value held by this object can be converted to the specified type.
+     *
+     * @param type The type to check.
+     * @return True if the value can be converted to the specified type or False otherwise.
+     */
+    public boolean isOfType(ColumnType type) {
+        return type.getConverter().canConvert(value);
+    }
+
+    /**
      * Gets the type of the object.
      *
      * @return The object type.

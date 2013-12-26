@@ -43,6 +43,17 @@ public class StringConverter extends TypeConverter {
     }
 
     @Override
+    public boolean canConvert(byte[] value) {
+        try {
+            Bytes.toString(value);
+            return true;
+        }
+        catch (Exception ignore) {
+            return false;
+        }
+    }
+
+    @Override
     public boolean isValidForNameConversion() {
         return true;
     }

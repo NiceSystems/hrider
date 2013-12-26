@@ -35,6 +35,17 @@ public class IntegerConverter extends TypeConverter {
     }
 
     @Override
+    public boolean canConvert(byte[] value) {
+        try {
+            Bytes.toInt(value);
+            return true;
+        }
+        catch (Exception ignore) {
+            return false;
+        }
+    }
+
+    @Override
     public byte[] toBytes(String value) {
         if (value == null) {
             return EMPTY_BYTES_ARRAY;

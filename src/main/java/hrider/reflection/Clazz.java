@@ -1,6 +1,7 @@
 package hrider.reflection;
 
 import hrider.config.GlobalConfig;
+import hrider.format.DateUtils;
 
 import java.lang.reflect.Field;
 import java.text.DateFormat;
@@ -80,14 +81,7 @@ public class Clazz {
                     if (isNumber(value)) {
                         return new Date(Long.parseLong(value));
                     }
-
-                    DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
-                    try {
-                        return df.parse(value);
-                    }
-                    catch (ParseException ignored) {
-                        return null;
-                    }
+                    return DateUtils.parse(value);
                 }
                 if (type.isEnum()) {
                     return Enum.valueOf(type, value);

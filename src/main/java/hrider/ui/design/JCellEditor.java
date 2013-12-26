@@ -1,9 +1,9 @@
 package hrider.ui.design;
 
 import com.michaelbaranov.microba.calendar.DatePicker;
-import hrider.config.GlobalConfig;
 import hrider.data.ColumnType;
 import hrider.data.DataCell;
+import hrider.format.DateUtils;
 import hrider.io.Log;
 import hrider.ui.ChangeTracker;
 import hrider.ui.controls.json.JsonEditor;
@@ -12,10 +12,7 @@ import hrider.ui.controls.xml.XmlEditor;
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -70,7 +67,7 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         textEditor.setEditable(canEdit);
         dateEditor = new DatePicker(null);
         dateEditor.setBorder(BorderFactory.createEmptyBorder());
-        dateEditor.setDateFormat(new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH));
+        dateEditor.setDateFormat(DateUtils.getDefaultDateFormat());
         dateEditor.setFieldEditable(canEdit);
         xmlEditor = new XmlEditor(this, canEdit);
         xmlEditor.setEditable(canEdit);
@@ -151,8 +148,7 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
             case Date:
                 Date date = dateEditor.getDate();
                 if (date != null) {
-                    DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
-                    text = df.format(date);
+                    text = DateUtils.format(date);
                 }
                 break;
             case Text:
@@ -196,9 +192,8 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         switch (editorType) {
             case Date:
                 if (cell != null) {
-                    DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
                     try {
-                        Date date = df.parse(cell.getValue());
+                        Date date = DateUtils.parse(cell.getValue());
                         dateEditor.setDate(date);
                     }
                     catch (Exception e) {

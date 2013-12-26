@@ -28,7 +28,7 @@ import java.io.Serializable;
 public abstract class TypeConverter implements Comparable<TypeConverter>, Serializable {
 
     //region Constants
-    protected static final Log logger = Log.getLogger(TypeConverter.class);
+    protected static final Log    logger            = Log.getLogger(TypeConverter.class);
     protected static final byte[] EMPTY_BYTES_ARRAY = new byte[0];
 
     private static final long serialVersionUID = 1490434164342371320L;
@@ -107,6 +107,14 @@ public abstract class TypeConverter implements Comparable<TypeConverter>, Serial
      * @return A converted string.
      */
     public abstract String toString(byte[] value);
+
+    /**
+     * Checks whether the provided value can be converted to the type supported by this converter.
+     *
+     * @param value The value to check.
+     * @return True if the value can be converted by the converter to the required type of False otherwise.
+     */
+    public abstract boolean canConvert(byte[] value);
 
     @Override
     public int compareTo(TypeConverter o) {

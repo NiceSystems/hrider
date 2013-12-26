@@ -20,10 +20,7 @@ import hrider.io.PathHelper;
 import hrider.system.ClipboardData;
 import hrider.system.ClipboardListener;
 import hrider.system.InMemoryClipboard;
-import hrider.ui.ChangeTracker;
-import hrider.ui.ChangeTrackerListener;
-import hrider.ui.MessageHandler;
-import hrider.ui.UIAction;
+import hrider.ui.*;
 import hrider.ui.controls.WideComboBox;
 import hrider.ui.design.*;
 import hrider.ui.forms.*;
@@ -945,10 +942,13 @@ public class DesignerView {
                     for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
                         ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
                         if (type.getName().equals(oldName)) {
-                            columnsTable.setValueAt(newType, row, 2);
-
                             ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
-                            updateColumnType(qualifier, newType);
+                            if (updateColumnType(qualifier, newType)) {
+                                columnsTable.setValueAt(newType, row, 2);
+                            }
+                            else {
+                                columnsTable.setValueAt(getColumnType(qualifier.getFullName()), row, 2);
+                            }
                         }
                     }
 
@@ -975,9 +975,12 @@ public class DesignerView {
                             ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
 
                             type = ColumnType.fromColumn(qualifier.getName());
-                            columnsTable.setValueAt(type, row, 2);
-
-                            updateColumnType(qualifier, type);
+                            if (updateColumnType(qualifier, type)) {
+                                columnsTable.setValueAt(type, row, 2);
+                            }
+                            else {
+                                columnsTable.setValueAt(getColumnType(qualifier.getFullName()), row, 2);
+                            }
                         }
                     }
 
@@ -1179,11 +1182,15 @@ public class DesignerView {
                 filter = new PatternFilter(value);
             }
 
+            int tablesCount = 0;
+
             if (filter.match(TableUtil.ROOT_TABLE)) {
+                tablesCount++;
                 tablesListModel.addElement(TableUtil.ROOT_TABLE);
             }
 
             if (filter.match(TableUtil.META_TABLE)) {
+                tablesCount++;
                 tablesListModel.addElement(TableUtil.META_TABLE);
             }
 
@@ -1194,9 +1201,11 @@ public class DesignerView {
                 }
             }
 
+            tablesCount += tables.size();
+
             toggleTableControls();
 
-            tablesNumber.setText(String.format("%s of %s", tablesListModel.getSize(), tables.size()));
+            tablesNumber.setText(String.format("%s of %s", tablesListModel.getSize(), tablesCount));
             tablesList.setSelectedValue(selectedTable, true);
         }
         catch (Exception ex) {
@@ -1359,29 +1368,38 @@ public class DesignerView {
             new TableModelListener() {
                 @Override
                 public void tableChanged(TableModelEvent e) {
-                    clearError();
+                    if (UIUpdateHandler.enter("tableChanged")) {
+                        try {
+                            clearError();
 
-                    int column = e.getColumn();
-                    TableModel model = (TableModel)e.getSource();
+                            int column = e.getColumn();
+                            TableModel model = (TableModel)e.getSource();
 
-                    if (column == 0) {
-                        ColumnQualifier qualifier = (ColumnQualifier)model.getValueAt(e.getFirstRow(), 1);
-                        boolean isShown = (Boolean)model.getValueAt(e.getFirstRow(), 0);
+                            if (column == 0) {
+                                ColumnQualifier qualifier = (ColumnQualifier)model.getValueAt(e.getFirstRow(), 1);
+                                boolean isShown = (Boolean)model.getValueAt(e.getFirstRow(), 0);
 
-                        clusterConfig.setTableConfig(getSelectedTableName(), qualifier.getFullName(), "isShown", Boolean.toString(isShown));
+                                clusterConfig.setTableConfig(getSelectedTableName(), qualifier.getFullName(), "isShown", Boolean.toString(isShown));
 
-                        setRowsTableColumnVisible(qualifier, isShown);
-                    }
-                    else if (column == 2) {
-                        ColumnQualifier qualifier = (ColumnQualifier)model.getValueAt(e.getFirstRow(), 1);
-                        ColumnType type = (ColumnType)model.getValueAt(e.getFirstRow(), column);
+                                setRowsTableColumnVisible(qualifier, isShown);
+                            }
+                            else if (column == 2) {
+                                ColumnQualifier qualifier = (ColumnQualifier)model.getValueAt(e.getFirstRow(), 1);
+                                ColumnType type = (ColumnType)model.getValueAt(e.getFirstRow(), column);
 
-                        TypeConverter nameConverter = getColumnNameConverter();
+                                TypeConverter nameConverter = getColumnNameConverter();
 
-                        columnEditConverter.setEnabled(type.isEditable() || nameConverter.isEditable());
-                        columnDeleteConverter.setEnabled(type.isEditable() || nameConverter.isEditable());
+                                columnEditConverter.setEnabled(type.isEditable() || nameConverter.isEditable());
+                                columnDeleteConverter.setEnabled(type.isEditable() || nameConverter.isEditable());
 
-                        updateColumnType(qualifier, type);
+                                if (!updateColumnType(qualifier, type)) {
+                                    columnsTable.setValueAt(getColumnType(qualifier.getFullName()), e.getFirstRow(), 2);
+                                }
+                            }
+                        }
+                        finally {
+                            UIUpdateHandler.leave("tableChanged");
+                        }
                     }
                 }
             });
@@ -2257,21 +2275,31 @@ public class DesignerView {
      * @param qualifier The column to update.
      * @param type      The new column type.
      */
-    private void updateColumnType(ColumnQualifier qualifier, ColumnType type) {
+    private boolean updateColumnType(ColumnQualifier qualifier, ColumnType type) {
         clusterConfig.setTableConfig(getSelectedTableName(), qualifier.getFullName(), type.toString());
 
         JTableModel.stopCellEditing(rowsTable);
 
         if (scanner != null) {
             try {
-                scanner.updateColumnType(qualifier.getFullName(), type);
+                if (scanner.isColumnOfType(qualifier.getFullName(), type)) {
+                    scanner.updateColumnType(qualifier.getFullName(), type);
+                    columnTypes.put(qualifier.getFullName(), type);
+
+                    rowsTable.updateUI();
+                }
+                else {
+                    setError(String.format("The selected type '%s' does not match the data.", type), null);
+                    return false;
+                }
             }
             catch (Exception ex) {
                 setError(String.format("The selected type '%s' does not match the data.", type), ex);
+                return false;
             }
-
-            rowsTable.updateUI();
         }
+
+        return true;
     }
 
     /**

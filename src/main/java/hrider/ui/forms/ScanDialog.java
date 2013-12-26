@@ -3,10 +3,10 @@ package hrider.ui.forms;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.michaelbaranov.microba.calendar.DatePicker;
-import hrider.config.GlobalConfig;
 import hrider.data.ColumnQualifier;
 import hrider.data.ColumnType;
 import hrider.data.TypedColumn;
+import hrider.format.DateUtils;
 import hrider.hbase.Operator;
 import hrider.hbase.Query;
 
@@ -14,8 +14,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyVetoException;
-import java.text.SimpleDateFormat;
-import java.util.Locale;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -62,8 +60,8 @@ public class ScanDialog extends JDialog {
         setTitle("Scan");
         getRootPane().setDefaultButton(this.buttonRun);
 
-        this.startTimeDatePicker.setDateFormat(new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH));
-        this.endTimeDatePicker.setDateFormat(new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH));
+        this.startTimeDatePicker.setDateFormat(DateUtils.getDefaultDateFormat());
+        this.endTimeDatePicker.setDateFormat(DateUtils.getDefaultDateFormat());
 
         for (TypedColumn column : columns) {
             if (!column.getColumn().isKey()) {

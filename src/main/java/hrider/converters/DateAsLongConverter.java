@@ -1,14 +1,9 @@
 package hrider.converters;
 
-import hrider.config.GlobalConfig;
-import hrider.io.Log;
+import hrider.format.DateUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -32,7 +27,6 @@ import java.util.Locale;
  */
 public class DateAsLongConverter extends TypeConverter {
 
-    private static final Log  logger           = Log.getLogger(DateAsLongConverter.class);
     private static final long serialVersionUID = 7524770450006316409L;
 
     @Override
@@ -40,9 +34,18 @@ public class DateAsLongConverter extends TypeConverter {
         if (value == null) {
             return null;
         }
+        return DateUtils.format(new Date(Bytes.toLong(value)));
+    }
 
-        DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
-        return df.format(new Date(Bytes.toLong(value)));
+    @Override
+    public boolean canConvert(byte[] value) {
+        try {
+            Bytes.toLong(value);
+            return true;
+        }
+        catch (Exception ignore) {
+            return false;
+        }
     }
 
     @Override
@@ -51,14 +54,10 @@ public class DateAsLongConverter extends TypeConverter {
             return EMPTY_BYTES_ARRAY;
         }
 
-        DateFormat df = new SimpleDateFormat(GlobalConfig.instance().getDateFormat(), Locale.ENGLISH);
-        try {
-            Date date = df.parse(value);
+        Date date = DateUtils.parse(value);
+        if (date != null) {
             return Bytes.toBytes(date.getTime());
         }
-        catch (ParseException e) {
-            logger.error(e, "Failed to convert DateTime '%s' to byte array.", value);
-            return null;
-        }
+        return EMPTY_BYTES_ARRAY;
     }
 }

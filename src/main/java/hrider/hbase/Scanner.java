@@ -228,6 +228,31 @@ public class Scanner {
     //region Public Methods
 
     /**
+     * Validates whether the values held by the column can be converted to the specified type.
+     *
+     * @param columnType The type to check.
+     * @return True if the value can be converted to the specified type or False otherwise.
+     */
+    public boolean isColumnOfType(String columnName, ColumnType columnType) {
+        Collection<DataRow> rows = this.current;
+        if (rows != null) {
+            int counter = 0;
+            Iterator<DataRow> iterator = rows.iterator();
+
+            while (counter < 10 && iterator.hasNext()) {
+                DataRow row = iterator.next();
+                if (!row.isCellOfType(columnName, columnType)) {
+                    return false;
+                }
+                counter++;
+            }
+
+            return true;
+        }
+        return true;
+    }
+
+    /**
      * Updates a column type of all cells in the specified column.
      *
      * @param columnName The name of the column.
