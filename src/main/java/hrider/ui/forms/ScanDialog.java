@@ -9,8 +9,10 @@ import hrider.data.TypedColumn;
 import hrider.format.DateUtils;
 import hrider.hbase.Operator;
 import hrider.hbase.Query;
+import hrider.ui.controls.BoundsPopupMenuListener;
 
 import javax.swing.*;
+import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyVetoException;
@@ -34,6 +36,10 @@ import java.beans.PropertyVetoException;
  * @version %I%, %G%
  */
 public class ScanDialog extends JDialog {
+
+    //region Constants
+    private static final long serialVersionUID = 694275430107585525L;
+    //endregion
 
     //region Variables
     private JPanel     contentPane;
@@ -68,6 +74,10 @@ public class ScanDialog extends JDialog {
                 this.comboBoxColumns.addItem(column.getColumn());
             }
         }
+
+        PopupMenuListener listener = new BoundsPopupMenuListener(true, false);
+        this.comboBoxColumns.addPopupMenuListener(listener);
+        this.comboBoxColumns.setPrototypeDisplayValue("XXXXXXXXXXXXXXXXXXXX");
 
         for (Operator operator : Operator.values()) {
             this.comboBoxOperator.addItem(operator);

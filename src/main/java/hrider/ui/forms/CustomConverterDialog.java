@@ -22,6 +22,7 @@ public class CustomConverterDialog extends JDialog {
     private final static String CONVERTER_NAME_PLACE_HOLDER               = "$$CONVERTER_NAME_PLACE_HOLDER$$";
     private final static String BYTES_TO_STRING_CODE_PLACE_HOLDER         = "$$BYTES_TO_STRING_CODE_PLACE_HOLDER$$";
     private final static String STRING_TO_BYTES_CODE_PLACE_HOLDER         = "$$STRING_TO_BYTES_CODE_PLACE_HOLDER$$";
+    private final static String CAN_CONVERT_CODE_PLACE_HOLDER             = "$$CAN_CONVERT_CODE_PLACE_HOLDER$$";
     private final static String IS_VALID_FOR_NAME_CONVERSION_PLACE_HOLDER = "$$IS_VALID_FOR_NAME_CONVERSION_PLACE_HOLDER$$";
 
     private final static String TEMPLATE = "package hrider.converters.custom;\n" +
@@ -53,6 +54,17 @@ public class CustomConverterDialog extends JDialog {
                                            "    }\n" +
                                            '\n' +
                                            "    /**\n" +
+                                           "     * Checks whether the provided byte array can be converted by the converter.\n" +
+                                           "     */\n" +
+                                           "    @Override\n" +
+                                           "    public boolean canConvert(byte[] value) {\n" +
+                                           "        if (value == null) {\n" +
+                                           "            return false;\n" +
+                                           "        }\n" +
+                                           "$$CAN_CONVERT_CODE_PLACE_HOLDER$$\n" +
+                                           "    }\n" +
+                                           '\n' +
+                                           "    /**\n" +
                                            "     * Indicates whether the type converter can be used for column name conversions.\n" +
                                            "     */\n" +
                                            "    @Override\n" +
@@ -74,6 +86,7 @@ public class CustomConverterDialog extends JDialog {
     private JTextArea  taImports;
     private JTextArea  taObjectToBytesMethod;
     private JCheckBox  chbNameConverter;
+    private JTextArea  taCanConvertMethod;
     private boolean    okPressed;
     //endregion
 
@@ -188,6 +201,13 @@ public class CustomConverterDialog extends JDialog {
                 continue;
             }
 
+            if (trimmedLine.startsWith("public boolean canConvert(byte[] value) {")) {
+                bracketsCount++;
+                method = Methods.CanConvert;
+
+                continue;
+            }
+
             if (method != Methods.None) {
                 if (trimmedLine.endsWith("{")) {
                     bracketsCount++;
@@ -235,6 +255,9 @@ public class CustomConverterDialog extends JDialog {
                 case StringToBytes:
                     taObjectToBytesMethod.setText(body.toString());
                     break;
+                case CanConvert:
+                    taCanConvertMethod.setText(body.toString());
+                    break;
             }
 
             body.setLength(0);
@@ -258,6 +281,7 @@ public class CustomConverterDialog extends JDialog {
         code = code.replace(CONVERTER_NAME_PLACE_HOLDER, tfConverterName.getText());
         code = code.replace(BYTES_TO_STRING_CODE_PLACE_HOLDER, taBytesToObjectMethod.getText());
         code = code.replace(STRING_TO_BYTES_CODE_PLACE_HOLDER, taObjectToBytesMethod.getText());
+        code = code.replace(CAN_CONVERT_CODE_PLACE_HOLDER, taCanConvertMethod.getText());
         code = code.replace(IS_VALID_FOR_NAME_CONVERSION_PLACE_HOLDER, chbNameConverter.isSelected() ? "true" : "false");
 
         contentPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -337,7 +361,7 @@ public class CustomConverterDialog extends JDialog {
             0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(9, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel3.setLayout(new GridLayoutManager(12, 1, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(
             panel3, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
@@ -360,7 +384,7 @@ public class CustomConverterDialog extends JDialog {
         panel3.add(
             scrollPane2, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(400, 40), null, 0, false));
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(400, 50), null, 0, false));
         taImports = new JTextArea();
         taImports.setText("import org.apache.hadoop.hbase.util.Bytes;");
         scrollPane2.setViewportView(taImports);
@@ -401,18 +425,38 @@ public class CustomConverterDialog extends JDialog {
         chbNameConverter.setText("The converter can be used for column name conversions as well.");
         panel3.add(
             chbNameConverter, new GridConstraints(
-            8, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+            11, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label6 = new JLabel();
+        label6.setText("public boolean canConvert(byte[] value) { // checks correctness of the value");
+        panel3.add(
+            label6, new GridConstraints(
+            8, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            null, 0, false));
+        final JScrollPane scrollPane4 = new JScrollPane();
+        panel3.add(
+            scrollPane4, new GridConstraints(
+            9, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(400, 70), null, 0, false));
+        taCanConvertMethod = new JTextArea();
+        taCanConvertMethod.setText("   return true; // replace with your code");
+        scrollPane4.setViewportView(taCanConvertMethod);
+        final JLabel label7 = new JLabel();
+        label7.setText("}");
+        panel3.add(
+            label7, new GridConstraints(
+            10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+            null, 0, false));
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
         contentPane.add(
             panel4, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
             GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-        final JLabel label6 = new JLabel();
-        label6.setText("Converter Name:");
+        final JLabel label8 = new JLabel();
+        label8.setText("Converter Name:");
         panel4.add(
-            label6, new GridConstraints(
+            label8, new GridConstraints(
             0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         tfConverterName = new JTextField();
@@ -429,7 +473,8 @@ public class CustomConverterDialog extends JDialog {
         label1.setLabelFor(taImports);
         label2.setLabelFor(taBytesToObjectMethod);
         label4.setLabelFor(taObjectToBytesMethod);
-        label6.setLabelFor(tfConverterName);
+        label6.setLabelFor(taObjectToBytesMethod);
+        label8.setLabelFor(tfConverterName);
     }
 
     /**
@@ -444,6 +489,7 @@ public class CustomConverterDialog extends JDialog {
     private enum Methods {
         None,
         BytesToString,
-        StringToBytes
+        StringToBytes,
+        CanConvert
     }
 }
