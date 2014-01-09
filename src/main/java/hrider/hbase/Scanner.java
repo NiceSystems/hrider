@@ -12,6 +12,7 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 
 import java.io.IOException;
@@ -424,7 +425,15 @@ public class Scanner {
             this.partialRowsCount = 0;
 
             Scan scan = getScanner();
-            scan.setFilter(new FirstKeyOnlyFilter());
+
+            FilterList filters = new FilterList();
+            if (scan.getFilter() != null) {
+                filters.addFilter(scan.getFilter());
+            }
+
+            filters.addFilter(new FirstKeyOnlyFilter());
+
+            scan.setFilter(filters);
             scan.setCaching(GlobalConfig.instance().getBatchSizeForRead());
 
             HTable table = this.connection.getTableFactory().get(this.tableName);
@@ -435,11 +444,7 @@ public class Scanner {
 
             try {
                 int count = 0;
-                for (Result rr = scanner.next() ; rr != null ; rr = scanner.next()) {
-                    if (isValidRow(rr)) {
-                        ++count;
-                    }
-
+                for (Result rr = scanner.next() ; rr != null ; rr = scanner.next(), count++) {
                     if (stopWatch.getTime() > timeout) {
                         this.partialRowsCount = count;
 
