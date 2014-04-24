@@ -1,4 +1,4 @@
-package hrider.ui.controls.xml;
+package hrider.ui.controls.format;
 
 import javax.swing.text.StyledEditorKit;
 import javax.swing.text.ViewFactory;
@@ -23,31 +23,31 @@ import javax.swing.text.ViewFactory;
  *          <p/>
  *          This class is used to customize style of the view.
  */
-public class XmlEditorKit extends StyledEditorKit {
+public class FormatEditorKit extends StyledEditorKit {
 
     //region Constants
     private static final long serialVersionUID = 2969169649596107757L;
     //endregion
 
     //region Variables
-    private ViewFactory xmlViewFactory;
+    private FormatViewFactory viewFactory;
     //endregion
 
     //region Constructor
-    public XmlEditorKit() {
-        this.xmlViewFactory = new XmlViewFactory();
+    public FormatEditorKit(TextFormatter formatter) {
+        this.viewFactory = new FormatViewFactory(formatter);
     }
     //endregion
 
     //region Public Methods
     @Override
     public ViewFactory getViewFactory() {
-        return this.xmlViewFactory;
+        return this.viewFactory;
     }
 
     @Override
     public String getContentType() {
-        return "text/xml";
+        return "text/custom";
     }
     //endregion
 }

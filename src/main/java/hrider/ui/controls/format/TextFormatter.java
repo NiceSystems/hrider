@@ -1,4 +1,8 @@
-package hrider.ui.design;
+package hrider.ui.controls.format;
+
+import java.awt.*;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -18,10 +22,11 @@ package hrider.ui.design;
  * @author Igor Cher
  * @version %I%, %G%
  *          <p/>
- *          This enum represents a list of supported editors.
+ *          This interface to provide formatting capabilities.
  */
-public enum EditorType {
-    Date,
-    Text,
-    Format
+public interface TextFormatter {
+
+    Map<Pattern, Color> getColorMappings();
+
+    String format(String value);
 }

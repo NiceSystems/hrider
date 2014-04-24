@@ -54,6 +54,11 @@ public class StringConverter extends TypeConverter {
     }
 
     @Override
+    public boolean supportsFormatting() {
+        return false;
+    }
+
+    @Override
     public boolean isValidForNameConversion() {
         return true;
     }

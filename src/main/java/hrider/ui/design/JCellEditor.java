@@ -6,8 +6,7 @@ import hrider.data.DataCell;
 import hrider.format.DateUtils;
 import hrider.io.Log;
 import hrider.ui.ChangeTracker;
-import hrider.ui.controls.json.JsonEditor;
-import hrider.ui.controls.xml.XmlEditor;
+import hrider.ui.controls.format.FormatEditor;
 
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
@@ -45,8 +44,7 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
     //region Variables
     private JTextField    textEditor;
     private DatePicker    dateEditor;
-    private XmlEditor     xmlEditor;
-    private JsonEditor    jsonEditor;
+    private FormatEditor  formatEditor;
     private DataCell      cell;
     private ChangeTracker changeTracker;
     private int           typeColumn;
@@ -69,10 +67,7 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         dateEditor.setBorder(BorderFactory.createEmptyBorder());
         dateEditor.setDateFormat(DateUtils.getDefaultDateFormat());
         dateEditor.setFieldEditable(canEdit);
-        xmlEditor = new XmlEditor(this, canEdit);
-        xmlEditor.setEditable(canEdit);
-        jsonEditor = new JsonEditor(this, canEdit);
-        jsonEditor.setEditable(canEdit);
+        formatEditor = new FormatEditor(this, canEdit);
     }
     //endregion
 
@@ -86,8 +81,7 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
     public void setEditable(boolean editable) {
         textEditor.setEditable(editable);
         dateEditor.setFieldEditable(editable);
-        xmlEditor.setEditable(editable);
-        jsonEditor.setEditable(editable);
+        formatEditor.setEditable(editable);
     }
 
     /**
@@ -122,14 +116,11 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
         if (type.equals(ColumnType.DateAsString) || type.equals(ColumnType.DateAsLong)) {
             editorType = EditorType.Date;
         }
-        else if (type.equals(ColumnType.Xml)) {
-            editorType = EditorType.Xml;
-        }
-        else if (type.equals(ColumnType.Json) || type.equals(ColumnType.RegionInfo)) {
-            editorType = EditorType.Json;
+        else if (type.getConverter().supportsFormatting()) {
+            editorType = EditorType.Format;
         }
 
-        initializeEditor(value);
+        initializeEditor(type, value);
 
         return getEditor();
     }
@@ -154,11 +145,8 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
             case Text:
                 text = textEditor.getText();
                 break;
-            case Xml:
-                text = xmlEditor.getText();
-                break;
-            case Json:
-                text = jsonEditor.getText();
+            case Format:
+                text = formatEditor.getText();
                 break;
         }
 
@@ -188,7 +176,7 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
      *
      * @param value The value to pass to the editor.
      */
-    private void initializeEditor(Object value) {
+    private void initializeEditor(ColumnType type, Object value) {
         switch (editorType) {
             case Date:
                 if (cell != null) {
@@ -209,20 +197,13 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
                     textEditor.setText(null);
                 }
                 break;
-            case Xml:
+            case Format:
                 if (value != null) {
-                    xmlEditor.setText(value.toString());
+                    formatEditor.setTypeConverter(type.getConverter());
+                    formatEditor.setText(value.toString());
                 }
                 else {
-                    xmlEditor.setText(null);
-                }
-                break;
-            case Json:
-                if (value != null) {
-                    jsonEditor.setText(value.toString());
-                }
-                else {
-                    jsonEditor.setText(null);
+                    formatEditor.setText(null);
                 }
                 break;
         }
@@ -239,10 +220,8 @@ public class JCellEditor extends AbstractCellEditor implements TableCellEditor {
                 return dateEditor;
             case Text:
                 return textEditor;
-            case Xml:
-                return xmlEditor;
-            case Json:
-                return jsonEditor;
+            case Format:
+                return formatEditor;
         }
         return textEditor;
     }

@@ -471,10 +471,10 @@ public class ImportTableDialog extends JDialog {
     private Map<String, ColumnType> getColumnTypes() {
         Map<String, ColumnType> columnTypes = new HashMap<String, ColumnType>();
         for (int i = 0 ; i < this.rowsTable.getRowCount() ; i++) {
-            String columnName = (String)this.rowsTable.getValueAt(i, 0);
+            ColumnQualifier columnName = (ColumnQualifier)this.rowsTable.getValueAt(i, 0);
             ColumnType columnType = (ColumnType)this.rowsTable.getValueAt(i, 1);
 
-            columnTypes.put(columnName, columnType);
+            columnTypes.put(columnName.getFullName(), columnType);
         }
         return columnTypes;
     }

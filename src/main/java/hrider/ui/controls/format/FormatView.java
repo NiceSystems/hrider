@@ -1,10 +1,9 @@
-package hrider.ui.controls.xml;
+package hrider.ui.controls.format;
 
 import javax.swing.text.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,35 +28,21 @@ import java.util.regex.Pattern;
  *          <p/>
  *          This class represents a custom XML view. All the drawings of different colors performed in this class.
  */
-public class XmlView extends PlainView {
+public class FormatView extends PlainView {
 
     //region Constants
-    private final static HashMap<Pattern, Color> patternColors;
-    private final static String TAG_PATTERN           = "(</?[a-zA-Z]*)\\s?>?";
-    private final static String TAG_END_PATTERN       = "(/>)";
-    private final static String TAG_ATTRIBUTE_PATTERN = "\\s(\\w*)\\=";
-    private final static String TAG_ATTRIBUTE_VALUE   = "[a-zA-Z-]*\\=(\"[^\"]*\")";
-    private final static String TAG_COMMENT           = "(<!--.*-->)";
-    private final static String TAG_CDATA_START       = "(\\<!\\[CDATA\\[).*";
-    private final static String TAG_CDATA_END         = ".*(]]>)";
+    private static final Map<Pattern, Color> EMPTY_MAP = new HashMap<Pattern, Color>();
+    //endregion
+
+    //region Variables
+    private TextFormatter formatter;
     //endregion
 
     //region Constructor
-    static {
-        // NOTE: the order is important!
-        patternColors = new HashMap<Pattern, Color>();
-        patternColors.put(Pattern.compile(TAG_CDATA_START), new Color(128, 128, 128));
-        patternColors.put(Pattern.compile(TAG_CDATA_END), new Color(128, 128, 128));
-        patternColors.put(Pattern.compile(TAG_PATTERN), new Color(63, 127, 127));
-        patternColors.put(Pattern.compile(TAG_ATTRIBUTE_PATTERN), new Color(127, 0, 127));
-        patternColors.put(Pattern.compile(TAG_END_PATTERN), new Color(63, 127, 127));
-        patternColors.put(Pattern.compile(TAG_ATTRIBUTE_VALUE), new Color(42, 0, 255));
-        patternColors.put(Pattern.compile(TAG_COMMENT), new Color(63, 95, 191));
-    }
-
-    public XmlView(Element element) {
-
+    public FormatView(TextFormatter formatter, Element element) {
         super(element);
+
+        this.formatter = formatter;
 
         // Set tab size to 4 (instead of the default 8)
         getDocument().putProperty(PlainDocument.tabSizeAttribute, 4);
@@ -67,30 +52,66 @@ public class XmlView extends PlainView {
     //region Protected Methods
     @Override
     protected int drawUnselectedText(Graphics g, int x, int y, int p0, int p1) throws BadLocationException {
+        Map<Pattern, Color> patternColors = formatter.getColorMappings();
+        if (patternColors == null) {
+            patternColors = EMPTY_MAP;
+        }
 
         Document doc = getDocument();
         String text = doc.getText(p0, p1 - p0);
 
         Segment segment = getLineBuffer();
 
-        SortedMap<Integer, Integer> startMap = new TreeMap<Integer, Integer>();
-        SortedMap<Integer, Color> colorMap = new TreeMap<Integer, Color>();
+        Map<Integer, Integer> startMap = new TreeMap<Integer, Integer>();
+        Map<Integer, Color> colorMap = new TreeMap<Integer, Color>();
 
         // Match all regexes on this snippet, store positions
         for (Map.Entry<Pattern, Color> entry : patternColors.entrySet()) {
             Matcher matcher = entry.getKey().matcher(text);
             while (matcher.find()) {
-                startMap.put(matcher.start(1), matcher.end());
-                colorMap.put(matcher.start(1), entry.getValue());
+                int end = matcher.end();
+                int start;
+
+                if (matcher.groupCount() > 0) {
+                    start = matcher.start(1);
+                }
+                else {
+                    start = matcher.start();
+                }
+
+                startMap.put(start, end);
+                colorMap.put(start, entry.getValue());
             }
         }
 
-        // TODO: check the map for overlapping parts
+        int lastEnd = -1;
+
+        Map<Integer, Integer> fixedMap = new TreeMap<Integer, Integer>();
+        for (Map.Entry<Integer, Integer> entry : startMap.entrySet()) {
+            int start = entry.getKey();
+            int end = entry.getValue();
+
+            if (start < lastEnd) {
+                Color color = colorMap.get(start);
+                colorMap.remove(start);
+
+                if (end <= lastEnd) {
+                    continue;
+                }
+
+                start = lastEnd;
+                colorMap.put(start, color);
+            }
+
+            fixedMap.put(start, end);
+            lastEnd = end;
+        }
+
 
         int i = 0;
 
         // Colour the parts
-        for (Map.Entry<Integer, Integer> entry : startMap.entrySet()) {
+        for (Map.Entry<Integer, Integer> entry : fixedMap.entrySet()) {
             int start = entry.getKey();
             int end = entry.getValue();
 

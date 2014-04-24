@@ -49,6 +49,11 @@ public class DateAsLongConverter extends TypeConverter {
     }
 
     @Override
+    public boolean supportsFormatting() {
+        return false;
+    }
+
+    @Override
     public byte[] toBytes(String value) {
         if (value == null) {
             return EMPTY_BYTES_ARRAY;

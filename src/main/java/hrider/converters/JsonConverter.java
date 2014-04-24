@@ -2,6 +2,11 @@ package hrider.converters;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParser;
+
+import java.awt.*;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -32,6 +37,21 @@ public class JsonConverter extends StringConverter {
         return false;
     }
 
+    @Override
+    public boolean supportsFormatting() {
+        return true;
+    }
+
+    @Override
+    public String format(String value) {
+        return formatJson(value);
+    }
+
+    @Override
+    public Map<Pattern, Color> getColorMappings() {
+        return null;
+    }
+
     public static String toJson(Object obj) {
         try {
             Gson gson = new GsonBuilder().create();
@@ -51,6 +71,23 @@ public class JsonConverter extends StringConverter {
         catch (Exception e) {
             logger.error(e, "Failed to convert json '%s' to object.", json);
             return null;
+        }
+    }
+
+    /**
+     * Formats JSON.
+     *
+     * @param json A JSON to format.
+     * @return A formatted JSON.
+     */
+    public static String formatJson(String json) {
+        try {
+            Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+            return gson.toJson(new JsonParser().parse(json));
+        }
+        catch (Exception e) {
+            logger.error(e, "Failed to format json '%s'.", json);
+            return json;
         }
     }
 }

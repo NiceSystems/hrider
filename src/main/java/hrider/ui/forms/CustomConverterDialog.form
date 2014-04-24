@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="hrider.ui.forms.CustomConverterDialog">
-  <grid id="cbd77" binding="contentPane" layout-manager="GridLayoutManager" row-count="4" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+  <grid id="cbd77" binding="contentPane" layout-manager="GridLayoutManager" row-count="5" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="10" left="10" bottom="10" right="10"/>
     <constraints>
-      <xy x="48" y="54" width="462" height="421"/>
+      <xy x="48" y="54" width="565" height="383"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -11,7 +11,7 @@
       <grid id="94766" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="0" left="0" bottom="0" right="0"/>
         <constraints>
-          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties/>
         <border type="none"/>
@@ -49,153 +49,6 @@
           </grid>
         </children>
       </grid>
-      <grid id="e3588" layout-manager="GridLayoutManager" row-count="12" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-        <margin top="0" left="0" bottom="0" right="0"/>
-        <constraints>
-          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties/>
-        <border type="none"/>
-        <children>
-          <scrollpane id="cdd95">
-            <constraints>
-              <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                <preferred-size width="400" height="70"/>
-              </grid>
-            </constraints>
-            <properties/>
-            <border type="none"/>
-            <children>
-              <component id="c6c39" class="javax.swing.JTextArea" binding="taBytesToObjectMethod">
-                <constraints/>
-                <properties>
-                  <text value="   return Bytes.toString(value); // replace with your code"/>
-                </properties>
-              </component>
-            </children>
-          </scrollpane>
-          <component id="6a5f8" class="javax.swing.JLabel">
-            <constraints>
-              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <labelFor value="5a927"/>
-              <text value="Imports:"/>
-            </properties>
-          </component>
-          <scrollpane id="f9c8f">
-            <constraints>
-              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                <preferred-size width="400" height="50"/>
-              </grid>
-            </constraints>
-            <properties/>
-            <border type="none"/>
-            <children>
-              <component id="5a927" class="javax.swing.JTextArea" binding="taImports">
-                <constraints/>
-                <properties>
-                  <text value="import org.apache.hadoop.hbase.util.Bytes;"/>
-                </properties>
-              </component>
-            </children>
-          </scrollpane>
-          <component id="82785" class="javax.swing.JLabel">
-            <constraints>
-              <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <labelFor value="c6c39"/>
-              <text value="public String toString(byte[] value) { // bytes to string conversion"/>
-            </properties>
-          </component>
-          <component id="49006" class="javax.swing.JLabel">
-            <constraints>
-              <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <text value="}"/>
-            </properties>
-          </component>
-          <component id="1aa41" class="javax.swing.JLabel">
-            <constraints>
-              <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <labelFor value="73f52"/>
-              <text value="public byte[] toBytes(String value) { // string to bytes conversion"/>
-            </properties>
-          </component>
-          <scrollpane id="f2699">
-            <constraints>
-              <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                <preferred-size width="400" height="70"/>
-              </grid>
-            </constraints>
-            <properties/>
-            <border type="none"/>
-            <children>
-              <component id="73f52" class="javax.swing.JTextArea" binding="taObjectToBytesMethod">
-                <constraints/>
-                <properties>
-                  <text value="   return Bytes.toBytes(value); // replace with your code"/>
-                </properties>
-              </component>
-            </children>
-          </scrollpane>
-          <component id="df864" class="javax.swing.JLabel">
-            <constraints>
-              <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <text value="}"/>
-            </properties>
-          </component>
-          <component id="1b5bf" class="javax.swing.JCheckBox" binding="chbNameConverter">
-            <constraints>
-              <grid row="11" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <selected value="true"/>
-              <text value="The converter can be used for column name conversions as well."/>
-            </properties>
-          </component>
-          <component id="32f4b" class="javax.swing.JLabel">
-            <constraints>
-              <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <labelFor value="73f52"/>
-              <text value="public boolean canConvert(byte[] value) { // checks correctness of the value"/>
-            </properties>
-          </component>
-          <scrollpane id="38c88">
-            <constraints>
-              <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                <preferred-size width="400" height="70"/>
-              </grid>
-            </constraints>
-            <properties/>
-            <border type="none"/>
-            <children>
-              <component id="bfefa" class="javax.swing.JTextArea" binding="taCanConvertMethod">
-                <constraints/>
-                <properties>
-                  <text value="   return true; // replace with your code"/>
-                </properties>
-              </component>
-            </children>
-          </scrollpane>
-          <component id="60a32" class="javax.swing.JLabel">
-            <constraints>
-              <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <text value="}"/>
-            </properties>
-          </component>
-        </children>
-      </grid>
       <grid id="14253" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="0" left="0" bottom="0" right="0"/>
         <constraints>
@@ -227,9 +80,320 @@
       </grid>
       <component id="91b39" class="javax.swing.JSeparator">
         <constraints>
-          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties/>
+      </component>
+      <tabbedpane id="11345">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <grid id="c9790" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+            <margin top="5" left="5" bottom="5" right="5"/>
+            <constraints>
+              <tabbedpane title="Imports"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="6a5f8" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <labelFor value="5a927"/>
+                  <text value="Define all the imports used by the formatter here"/>
+                </properties>
+              </component>
+              <scrollpane id="f9c8f">
+                <constraints>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                    <preferred-size width="500" height="150"/>
+                  </grid>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="5a927" class="javax.swing.JTextArea" binding="taImports">
+                    <constraints/>
+                    <properties>
+                      <text value="import org.apache.hadoop.hbase.util.Bytes;&#10;import java.util.regex.Pattern;&#10;import java.util.Map;&#10;import java.awt.Color;" noi18n="true"/>
+                    </properties>
+                  </component>
+                </children>
+              </scrollpane>
+            </children>
+          </grid>
+          <grid id="33580" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+            <margin top="5" left="5" bottom="5" right="5"/>
+            <constraints>
+              <tabbedpane title="Variables"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="40d6a" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <labelFor value="5a927"/>
+                  <text value="Define any instance variables here if you need to save the state of the converter between the method calls" noi18n="true"/>
+                </properties>
+              </component>
+              <scrollpane id="82ca1">
+                <constraints>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                    <preferred-size width="500" height="150"/>
+                  </grid>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="33c3f" class="javax.swing.JTextArea" binding="taVariables">
+                    <constraints/>
+                    <properties>
+                      <text value=""/>
+                    </properties>
+                  </component>
+                </children>
+              </scrollpane>
+            </children>
+          </grid>
+          <grid id="4a41b" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+            <margin top="5" left="5" bottom="5" right="5"/>
+            <constraints>
+              <tabbedpane title="toString"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="82785" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <labelFor value="c6c39"/>
+                  <text value="public String toString(byte[] value) { // bytes to string conversion"/>
+                </properties>
+              </component>
+              <scrollpane id="cdd95">
+                <constraints>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                    <preferred-size width="500" height="150"/>
+                  </grid>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="c6c39" class="javax.swing.JTextArea" binding="taBytesToObjectMethod">
+                    <constraints/>
+                    <properties>
+                      <text value="   return Bytes.toString(value); // replace with your code"/>
+                    </properties>
+                  </component>
+                </children>
+              </scrollpane>
+              <component id="49006" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="}"/>
+                </properties>
+              </component>
+            </children>
+          </grid>
+          <grid id="a92a6" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+            <margin top="5" left="5" bottom="5" right="5"/>
+            <constraints>
+              <tabbedpane title="toBytes"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="1aa41" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <labelFor value="73f52"/>
+                  <text value="public byte[] toBytes(String value) { // string to bytes conversion"/>
+                </properties>
+              </component>
+              <scrollpane id="f2699">
+                <constraints>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                    <preferred-size width="500" height="150"/>
+                  </grid>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="73f52" class="javax.swing.JTextArea" binding="taObjectToBytesMethod">
+                    <constraints/>
+                    <properties>
+                      <text value="   return Bytes.toBytes(value); // replace with your code"/>
+                    </properties>
+                  </component>
+                </children>
+              </scrollpane>
+              <component id="df864" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="}"/>
+                </properties>
+              </component>
+            </children>
+          </grid>
+          <grid id="3c368" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+            <margin top="5" left="5" bottom="5" right="5"/>
+            <constraints>
+              <tabbedpane title="canConvert"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="32f4b" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <labelFor value="73f52"/>
+                  <text value="public boolean canConvert(byte[] value) { // checks correctness of the value"/>
+                </properties>
+              </component>
+              <scrollpane id="38c88">
+                <constraints>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                    <preferred-size width="500" height="150"/>
+                  </grid>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="bfefa" class="javax.swing.JTextArea" binding="taCanConvertMethod">
+                    <constraints/>
+                    <properties>
+                      <text value="   return true; // replace with your code"/>
+                    </properties>
+                  </component>
+                </children>
+              </scrollpane>
+              <component id="60a32" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="}"/>
+                </properties>
+              </component>
+            </children>
+          </grid>
+          <grid id="e3588" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+            <margin top="5" left="5" bottom="5" right="5"/>
+            <constraints>
+              <tabbedpane title="Highlighting"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="1900d" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <labelFor value="c6c39"/>
+                  <text value="public Map&lt;Pattern, Color&gt; getColorMappings() { // regex to color mapping"/>
+                </properties>
+              </component>
+              <scrollpane id="86376">
+                <constraints>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                    <preferred-size width="500" height="150"/>
+                  </grid>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="c4dba" class="javax.swing.JTextArea" binding="taColorMappings">
+                    <constraints/>
+                    <properties>
+                      <text value="// Example of XML highlighting. The regular expression must be inside the brackets () to form the group.&#10;//&#10;// Map&lt;Pattern, Color&gt; map = new HashMap&lt;Pattern, Color&gt;();&#10;// map.put(Pattern.compile(&quot;(&lt;/?[a-zA-Z]*)\\s?&gt;?&quot;), new Color(63, 127, 127)); -- start tag&#10;// map.put(Pattern.compile(&quot;\\s(\\w*)=&quot;), new Color(127, 0, 127)); -- attr tag&#10;// map.put(Pattern.compile(&quot;(/&gt;)&quot;), new Color(63, 127, 127)); -- end tag&#10;// map.put(Pattern.compile(&quot;[a-zA-Z-]*=(\&quot;[^\&quot;]*\&quot;)&quot;), new Color(42, 0, 255)); -- attr value&#10;// map.put(Pattern.compile(&quot;(&lt;!--.*--&gt;)&quot;), new Color(63, 95, 191)); -- comment&#10;//        &#10;// return map;&#10;&#10;   return null; // replace with your code" noi18n="true"/>
+                      <toolTipText value="" noi18n="true"/>
+                    </properties>
+                  </component>
+                </children>
+              </scrollpane>
+              <component id="fc527" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="}"/>
+                </properties>
+              </component>
+            </children>
+          </grid>
+          <grid id="e49d7" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+            <margin top="5" left="5" bottom="5" right="5"/>
+            <constraints>
+              <tabbedpane title="Formatting"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="cd6ca" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <labelFor value="c6c39"/>
+                  <text value="public String format(String value) { // apply custom formatting of the data" noi18n="true"/>
+                </properties>
+              </component>
+              <scrollpane id="377c8">
+                <constraints>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                    <preferred-size width="400" height="70"/>
+                  </grid>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="c6feb" class="javax.swing.JTextArea" binding="taFormat">
+                    <constraints/>
+                    <properties>
+                      <text value="   return value; // replace with your code"/>
+                    </properties>
+                  </component>
+                </children>
+              </scrollpane>
+              <component id="99530" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="}"/>
+                </properties>
+              </component>
+            </children>
+          </grid>
+        </children>
+      </tabbedpane>
+      <component id="1b5bf" class="javax.swing.JCheckBox" binding="chbNameConverter">
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <selected value="true"/>
+          <text value="The converter can be used for column name conversions as well."/>
+        </properties>
       </component>
     </children>
   </grid>

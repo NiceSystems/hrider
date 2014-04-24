@@ -1,6 +1,6 @@
-package hrider.ui.controls.json;
+package hrider.ui.controls.format;
 
-import com.google.gson.JsonSyntaxException;
+import hrider.converters.TypeConverter;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -26,37 +26,37 @@ import java.awt.event.ActionListener;
  * @author Igor Cher
  * @version %I%, %G%
  *          <p/>
- *          This class represents an editor for a data saved as a JSON in the hbase. The editor is used primarily with JTable.
+ *          This class represents an editor for a custom data formatter. The editor is used primarily with JTable.
  */
-public class JsonEditor extends JPanel {
+public class FormatEditor extends JPanel {
 
     //region Constants
-    private static final long serialVersionUID = 6707366863144388860L;
+    private static final long serialVersionUID = -6427009457813292664L;
     //endregion
 
     //region Variables
     /**
      * A text field that is shown within the cell.
      */
-    private JTextField   textField;
+    private JTextField     textField;
     /**
-     * A text pane that is shown in a popup menu and presents the JSON as a formatted string.
+     * A text pane that is shown in a popup menu and presents the data as a formatted string.
      */
-    private JsonTextPane textPane;
+    private FormatTextPane textPane;
     /**
      * This button is clicked when he changes need to be saved.
      */
-    private JButton      saveButton;
+    private JButton        saveButton;
     //endregion
 
     //region Constructor
 
     /**
-     * Initializes a new instance of the {@link JsonEditor} class.
+     * Initializes a new instance of the {@link FormatEditor} class.
      */
-    public JsonEditor(final CellEditor cellEditor, boolean canEdit) {
+    public FormatEditor(final CellEditor cellEditor, boolean canEdit) {
 
-        textPane = new JsonTextPane();
+        textPane = new FormatTextPane();
         textPane.setEditable(canEdit);
         textPane.setLayout(new BorderLayout());
 
@@ -84,13 +84,12 @@ public class JsonEditor extends JPanel {
                 public void actionPerformed(ActionEvent e) {
                     try {
                         popup.setVisible(false);
-                        textPane.validateJson();
 
                         textField.setText(textPane.getText());
                         cellEditor.stopCellEditing();
                     }
-                    catch (JsonSyntaxException ex) {
-                        JOptionPane.showMessageDialog(JsonEditor.this, ex.getMessage(), "Invalid JSON", JOptionPane.ERROR_MESSAGE);
+                    catch (Exception ex) {
+                        JOptionPane.showMessageDialog(FormatEditor.this, ex.getMessage(), "Invalid data", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             });
@@ -136,7 +135,7 @@ public class JsonEditor extends JPanel {
                     height = Math.max(150, height);
 
                     popup.setPopupSize(width, height);
-                    popup.show(JsonEditor.this, 0, getHeight());
+                    popup.show(FormatEditor.this, 0, getHeight());
                 }
             });
 
@@ -177,6 +176,15 @@ public class JsonEditor extends JPanel {
     public void setEditable(Boolean editable) {
         textPane.setEditable(editable);
         saveButton.setEnabled(editable);
+    }
+
+    /**
+     * Sets the type converter to format the data.
+     *
+     * @param typeConverter The type converter to set.
+     */
+    public void setTypeConverter(TypeConverter typeConverter) {
+        textPane.setTypeConverter(typeConverter);
     }
     //endregion
 }

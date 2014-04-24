@@ -66,7 +66,6 @@ public class FileExporter implements Exporter {
      */
     @Override
     public void write(DataRow row, Iterable<ColumnQualifier> columns) throws IOException {
-
         if (!this.headerWritten) {
 
             Formatter formatter = new CharacterDelimitedFormatter(this.delimiter);

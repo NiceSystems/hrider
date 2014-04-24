@@ -2,7 +2,10 @@ package hrider.converters;
 
 import hrider.io.Log;
 
+import java.awt.*;
 import java.io.Serializable;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Copyright (C) 2012 NICE Systems ltd.
@@ -115,6 +118,32 @@ public abstract class TypeConverter implements Comparable<TypeConverter>, Serial
      * @return True if the value can be converted by the converter to the required type of False otherwise.
      */
     public abstract boolean canConvert(byte[] value);
+
+    /**
+     * Indicates whether the type converter supports formatting of the data.
+     *
+     * @return True if the type converter can be used to format the data or False otherwise.
+     */
+    public abstract boolean supportsFormatting();
+
+    /**
+     * Gets the mapping between the regular expression and the color to be used for drawing the text.
+     *
+     * @return The color to regular expression mappings.
+     */
+    public Map<Pattern, Color> getColorMappings() {
+        return null;
+    }
+
+    /**
+     * Apply the custom formatting on the data.
+     *
+     * @param value The data to format.
+     * @return The formatted data.
+     */
+    public String format(String value) {
+        return value;
+    }
 
     @Override
     public int compareTo(TypeConverter o) {

@@ -1,4 +1,4 @@
-package hrider.ui.controls.xml;
+package hrider.ui.controls.format;
 
 import javax.swing.text.Element;
 import javax.swing.text.View;
@@ -22,13 +22,19 @@ import javax.swing.text.ViewFactory;
  * @author Igor Cher
  * @version %I%, %G%
  */
-public class XmlViewFactory implements ViewFactory {
+public class FormatViewFactory implements ViewFactory {
+
+    private TextFormatter formatter;
+
+    public FormatViewFactory(TextFormatter formatter) {
+        this.formatter = formatter;
+    }
 
     /**
      * @see ViewFactory#create(Element)
      */
     @Override
     public View create(Element elem) {
-        return new XmlView(elem);
+        return new FormatView(formatter, elem);
     }
 }
