@@ -13,6 +13,12 @@ To get started, begin here:
 3. If you have any problems read the [FAQ](https://github.com/NiceSystems/hrider/wiki/FAQ) first.
 
 ## News
+### 27 April, 2014: Release 1.0.8.3 available
+Issues fixed: improved custom type converters framework & some minor bug fixes
+
+[Download for hbase 0.94.1 - with dependencies](http://bit.ly/PGNNyI).
+
+[Download for hbase 0.94.1 - without dependencies](http://bit.ly/1ruwSMc).
 ### 08 January, 2014: Release 1.0.8.2 available
 Issues fixed: improved performance
 
