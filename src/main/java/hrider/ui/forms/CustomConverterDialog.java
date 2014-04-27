@@ -175,6 +175,14 @@ public class CustomConverterDialog extends JDialog {
         setTitle(converter == null ? "Create custom type converter" : "Edit custom type converter");
         getRootPane().setDefaultButton(buttonOK);
 
+        taImports.setTabSize(4);
+        taVariables.setTabSize(4);
+        taBytesToObjectMethod.setTabSize(4);
+        taObjectToBytesMethod.setTabSize(4);
+        taCanConvertMethod.setTabSize(4);
+        taColorMappings.setTabSize(4);
+        taFormat.setTabSize(4);
+
         if (converter != null) {
             tfConverterName.setText(converter.getClass().getSimpleName());
             chbNameConverter.setSelected(converter.isValidForNameConversion());
@@ -394,7 +402,7 @@ public class CustomConverterDialog extends JDialog {
         panel4.add(
             scrollPane1, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 150), null, 0, false));
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 250), null, 0, false));
         taImports = new JTextArea();
         taImports.setText("import org.apache.hadoop.hbase.util.Bytes;\nimport java.util.regex.Pattern;\nimport java.util.Map;\nimport java.awt.Color;");
         scrollPane1.setViewportView(taImports);
@@ -411,7 +419,7 @@ public class CustomConverterDialog extends JDialog {
         panel5.add(
             scrollPane2, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 150), null, 0, false));
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 250), null, 0, false));
         taVariables = new JTextArea();
         taVariables.setText("");
         scrollPane2.setViewportView(taVariables);
@@ -428,7 +436,7 @@ public class CustomConverterDialog extends JDialog {
         panel6.add(
             scrollPane3, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 150), null, 0, false));
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 250), null, 0, false));
         taBytesToObjectMethod = new JTextArea();
         taBytesToObjectMethod.setText("   return Bytes.toString(value); // replace with your code");
         scrollPane3.setViewportView(taBytesToObjectMethod);
@@ -451,7 +459,7 @@ public class CustomConverterDialog extends JDialog {
         panel7.add(
             scrollPane4, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 150), null, 0, false));
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 250), null, 0, false));
         taObjectToBytesMethod = new JTextArea();
         taObjectToBytesMethod.setText("   return Bytes.toBytes(value); // replace with your code");
         scrollPane4.setViewportView(taObjectToBytesMethod);
@@ -474,7 +482,7 @@ public class CustomConverterDialog extends JDialog {
         panel8.add(
             scrollPane5, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 150), null, 0, false));
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 250), null, 0, false));
         taCanConvertMethod = new JTextArea();
         taCanConvertMethod.setText("   return true; // replace with your code");
         scrollPane5.setViewportView(taCanConvertMethod);
@@ -486,7 +494,7 @@ public class CustomConverterDialog extends JDialog {
             null, 0, false));
         final JPanel panel9 = new JPanel();
         panel9.setLayout(new GridLayoutManager(3, 1, new Insets(5, 5, 5, 5), -1, -1));
-        tabbedPane1.addTab("Highlighting", panel9);
+        tabbedPane1.addTab("Highlight", panel9);
         final JLabel label10 = new JLabel();
         label10.setText("public Map<Pattern, Color> getColorMappings() { // regex to color mapping");
         panel9.add(
@@ -497,7 +505,7 @@ public class CustomConverterDialog extends JDialog {
         panel9.add(
             scrollPane6, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 150), null, 0, false));
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 250), null, 0, false));
         taColorMappings = new JTextArea();
         taColorMappings.setText(
             "// Example of XML highlighting. The regular expression must be inside the brackets () to form the group.\n//\n// Map<Pattern, Color> map = new HashMap<Pattern, Color>();\n// map.put(Pattern.compile(\"(</?[a-zA-Z]*)\\\\s?>?\"), new Color(63, 127, 127)); -- start tag\n// map.put(Pattern.compile(\"\\\\s(\\\\w*)=\"), new Color(127, 0, 127)); -- attr tag\n// map.put(Pattern.compile(\"(/>)\"), new Color(63, 127, 127)); -- end tag\n// map.put(Pattern.compile(\"[a-zA-Z-]*=(\\\"[^\\\"]*\\\")\"), new Color(42, 0, 255)); -- attr value\n// map.put(Pattern.compile(\"(<!--.*-->)\"), new Color(63, 95, 191)); -- comment\n//        \n// return map;\n\n   return null; // replace with your code");
@@ -511,7 +519,7 @@ public class CustomConverterDialog extends JDialog {
             null, 0, false));
         final JPanel panel10 = new JPanel();
         panel10.setLayout(new GridLayoutManager(3, 1, new Insets(5, 5, 5, 5), -1, -1));
-        tabbedPane1.addTab("Formatting", panel10);
+        tabbedPane1.addTab("Format", panel10);
         final JLabel label12 = new JLabel();
         label12.setText("public String format(String value) { // apply custom formatting of the data");
         panel10.add(
@@ -522,7 +530,7 @@ public class CustomConverterDialog extends JDialog {
         panel10.add(
             scrollPane7, new GridConstraints(
             1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(400, 70), null, 0, false));
+            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(500, 250), null, 0, false));
         taFormat = new JTextArea();
         taFormat.setText("   return value; // replace with your code");
         scrollPane7.setViewportView(taFormat);
@@ -533,7 +541,7 @@ public class CustomConverterDialog extends JDialog {
             2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
             null, 0, false));
         chbNameConverter = new JCheckBox();
-        chbNameConverter.setSelected(true);
+        chbNameConverter.setSelected(false);
         chbNameConverter.setText("The converter can be used for column name conversions as well.");
         contentPane.add(
             chbNameConverter, new GridConstraints(

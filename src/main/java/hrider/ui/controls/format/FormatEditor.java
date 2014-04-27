@@ -55,7 +55,6 @@ public class FormatEditor extends JPanel {
      * Initializes a new instance of the {@link FormatEditor} class.
      */
     public FormatEditor(final CellEditor cellEditor, boolean canEdit) {
-
         textPane = new FormatTextPane();
         textPane.setEditable(canEdit);
         textPane.setLayout(new BorderLayout());
@@ -155,7 +154,7 @@ public class FormatEditor extends JPanel {
      * @return An original or modified text.
      */
     public String getText() {
-        return textField.getText();
+        return textPane.getText();
     }
 
     /**

@@ -79,7 +79,7 @@ public class XmlConverter extends StringConverter {
         Map<Pattern, Color> colorMap = new HashMap<Pattern, Color>();
         colorMap.put(Pattern.compile("(<!\\[CDATA\\[)(?=.*)"), new Color(128, 128, 128));
         colorMap.put(Pattern.compile("(?<=.*)(]]>)"), new Color(128, 128, 128));
-        colorMap.put(Pattern.compile("(<\\s*/?\\s*[a-zA-Z-:\\.]*)(?=\\s*[ >/])"), new Color(63, 127, 127));
+        colorMap.put(Pattern.compile("(<\\s*/?\\s*[a-zA-Z-_:\\.]*)(?=\\s*[ >/])"), new Color(63, 127, 127));
         colorMap.put(Pattern.compile("(/?\\s*>)"), new Color(63, 127, 127));
         colorMap.put(Pattern.compile("(?<=\\s)(\\w*)(?==)"), new Color(127, 0, 127));
         colorMap.put(Pattern.compile("(?<=[a-zA-Z-]*=)(\"[^\"]*\")"), new Color(42, 0, 255));

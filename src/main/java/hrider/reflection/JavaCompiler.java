@@ -2,7 +2,10 @@ package hrider.reflection;
 
 import hrider.io.PathHelper;
 
-import javax.tools.*;
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -51,8 +54,7 @@ public class JavaCompiler {
     //endregion
 
     //region Public Methods
-    public static boolean compile(File sourceCode, String outputFolder) throws IOException, FileNotFoundException {
-
+    public static boolean compile(File sourceCode, String outputFolder) throws Exception {
         errors.clear();
 
         // make sure all directories are created.
@@ -61,7 +63,7 @@ public class JavaCompiler {
         StandardJavaFileManager fileManager = null;
 
         try {
-            javax.tools.JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+            javax.tools.JavaCompiler compiler = (javax.tools.JavaCompiler)Class.forName("com.sun.tools.javac.api.JavacTool").getConstructor().newInstance();
             fileManager = compiler.getStandardFileManager(null, null, null);
 
             DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
