@@ -259,6 +259,13 @@ public class Connection {
     public void truncateTable(String tableName) throws IOException, TableNotFoundException {
         HTableDescriptor td = this.hbaseAdmin.getTableDescriptor(Bytes.toBytes(tableName));
 
+        HTable table = this.factory.get(tableName);
+
+        byte[][] startKeys = table.getStartKeys();
+        byte[][] splitKeys = new byte[startKeys.length - 1][];
+
+        System.arraycopy(startKeys, 1, splitKeys, 0, startKeys.length - 1);
+
         // Delete your table
         if (this.hbaseAdmin.isTableEnabled(tableName)) {
             this.hbaseAdmin.disableTable(tableName);
@@ -266,7 +273,7 @@ public class Connection {
         this.hbaseAdmin.deleteTable(tableName);
 
         // Recreate your table
-        this.hbaseAdmin.createTable(td);
+        this.hbaseAdmin.createTable(td, splitKeys);
 
         for (HbaseActionListener listener : this.listeners) {
             listener.tableOperation(tableName, "truncated");
