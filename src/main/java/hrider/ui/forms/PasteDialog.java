@@ -2,9 +2,8 @@ package hrider.ui.forms;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import hrider.data.DataRow;
 import hrider.data.ConvertibleObject;
-import hrider.ui.ChangeTracker;
+import hrider.data.DataRow;
 import hrider.ui.design.JCellEditor;
 
 import javax.swing.*;
@@ -39,16 +38,16 @@ public class PasteDialog extends JDialog {
     //region Variables
     private static final long serialVersionUID = 1459899796815018087L;
 
-    private JPanel                    contentPane;
-    private JButton                   buttonOK;
-    private JButton                   buttonCancel;
-    private JTable                    table;
-    private boolean                   okPressed;
+    private JPanel                          contentPane;
+    private JButton                         buttonOK;
+    private JButton                         buttonCancel;
+    private JTable                          table;
+    private boolean                         okPressed;
     private Map<ConvertibleObject, DataRow> rows;
     //endregion
 
     //region Constructor
-    public PasteDialog(ChangeTracker changeTracker, Iterable<DataRow> rows) {
+    public PasteDialog(Iterable<DataRow> rows) {
         this.rows = new HashMap<ConvertibleObject, DataRow>();
 
         setContentPane(this.contentPane);
@@ -63,8 +62,8 @@ public class PasteDialog extends JDialog {
         tableModel.addColumn("New Key");
         this.table.setRowHeight(this.table.getFont().getSize() + 8);
         this.table.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
-        this.table.getColumn("Original Key").setCellEditor(new JCellEditor(changeTracker, false));
-        this.table.getColumn("New Key").setCellEditor(new JCellEditor(changeTracker, true));
+        this.table.getColumn("Original Key").setCellEditor(new JCellEditor(null, false));
+        this.table.getColumn("New Key").setCellEditor(new JCellEditor(null, true));
 
         for (DataRow row : rows) {
             this.rows.put(row.getKey(), row);

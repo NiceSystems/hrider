@@ -210,6 +210,16 @@ public class Connection {
      * @throws IOException Error accessing hbase.
      */
     public void createOrModifyTable(TableDescriptor tableDescriptor) throws IOException, TableNotFoundException {
+        createOrModifyTable(tableDescriptor, null);
+    }
+
+    /**
+     * Creates a new table or modifies an existing one in the hbase cluster.
+     *
+     * @param tableDescriptor The descriptor of the table to create.
+     * @throws IOException Error accessing hbase.
+     */
+    public void createOrModifyTable(TableDescriptor tableDescriptor, byte[][] splitKeys) throws IOException, TableNotFoundException {
         if (this.hbaseAdmin.tableExists(tableDescriptor.getName())) {
             if (this.hbaseAdmin.isTableEnabled(tableDescriptor.getName())) {
                 this.hbaseAdmin.disableTable(tableDescriptor.getName());
@@ -223,7 +233,7 @@ public class Connection {
             }
         }
         else {
-            this.hbaseAdmin.createTable(tableDescriptor.toDescriptor());
+            this.hbaseAdmin.createTable(tableDescriptor.toDescriptor(), splitKeys);
 
             for (HbaseActionListener listener : this.listeners) {
                 listener.tableOperation(tableDescriptor.getName(), "created");
@@ -289,9 +299,15 @@ public class Connection {
      * @throws IOException Error accessing hbase on one of the clusters or on both clusters.
      */
     public void copyTable(TableDescriptor targetTable, TableDescriptor sourceTable, Connection sourceCluster) throws IOException, TableNotFoundException {
-        createOrModifyTable(targetTable);
-
         HTable source = sourceCluster.factory.get(sourceTable.getName());
+
+        byte[][] startKeys = source.getStartKeys();
+        byte[][] splitKeys = new byte[startKeys.length - 1][];
+
+        System.arraycopy(startKeys, 1, splitKeys, 0, startKeys.length - 1);
+
+        createOrModifyTable(targetTable, splitKeys);
+
         HTable target = this.factory.get(targetTable.getName());
 
         Scan scan = new Scan();

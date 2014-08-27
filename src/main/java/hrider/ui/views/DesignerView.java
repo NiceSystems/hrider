@@ -1980,7 +1980,7 @@ public class DesignerView {
             if (table.getRowsCount() > 0) {
                 owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 try {
-                    PasteDialog dialog = new PasteDialog(changeTracker, table.getRows());
+                    PasteDialog dialog = new PasteDialog(table.getRows());
                     if (dialog.showDialog(topPanel)) {
                         Collection<DataRow> updatedRows = dialog.getRows();
                         for (DataRow row : updatedRows) {
