@@ -155,13 +155,13 @@ public class DesignerView {
         }
 
         InMemoryClipboard.addListener(
-            new ClipboardListener() {
-                @Override
-                public void onChanged(ClipboardData data) {
-                    tablePaste.setEnabled(hasTableInClipboard());
-                    rowPaste.setEnabled(hasRowsInClipboard());
-                }
-            });
+                new ClipboardListener() {
+                    @Override
+                    public void onChanged(ClipboardData data) {
+                        tablePaste.setEnabled(hasTableInClipboard());
+                        rowPaste.setEnabled(hasRowsInClipboard());
+                    }
+                });
 
         initializeTablesList();
         initializeColumnsTable();
@@ -179,39 +179,39 @@ public class DesignerView {
         rowsNumber.setModel(new SpinnerNumberModel(100, 1, 10000, 100));
 
         tableFilters.addItemListener(
-            new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    if (e.getStateChange() == ItemEvent.SELECTED) {
-                        clusterConfig.setSelectedTableFilter((String)e.getItem());
+                new ItemListener() {
+                    @Override
+                    public void itemStateChanged(ItemEvent e) {
+                        if (e.getStateChange() == ItemEvent.SELECTED) {
+                            clusterConfig.setSelectedTableFilter((String)e.getItem());
 
-                        loadTables();
+                            loadTables();
+                        }
                     }
-                }
-            });
+                });
 
         tableFilters.getEditor().addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    String item = (String)tableFilters.getEditor().getItem();
-                    if (item != null && !item.isEmpty()) {
-                        if (tablesFilterModel.getIndexOf(item) == -1) {
-                            tableFilters.addItem(item);
-                        }
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        String item = (String)tableFilters.getEditor().getItem();
+                        if (item != null && !item.isEmpty()) {
+                            if (tablesFilterModel.getIndexOf(item) == -1) {
+                                tableFilters.addItem(item);
+                            }
 
-                        tableFilters.setSelectedItem(item);
-                        clusterConfig.setTablesFilter(getFilters(tableFilters));
-                    }
-                    else {
-                        Object selectedItem = tableFilters.getSelectedItem();
-                        if (selectedItem != null) {
-                            tableFilters.removeItem(selectedItem);
+                            tableFilters.setSelectedItem(item);
                             clusterConfig.setTablesFilter(getFilters(tableFilters));
                         }
+                        else {
+                            Object selectedItem = tableFilters.getSelectedItem();
+                            if (selectedItem != null) {
+                                tableFilters.removeItem(selectedItem);
+                                clusterConfig.setTablesFilter(getFilters(tableFilters));
+                            }
+                        }
                     }
-                }
-            });
+                });
 
         columnsFilterListener = new ItemListener() {
             @Override
@@ -227,623 +227,220 @@ public class DesignerView {
         columnFilters.addItemListener(columnsFilterListener);
 
         columnFilters.getEditor().addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    String item = (String)columnFilters.getEditor().getItem();
-                    if (item != null && !item.isEmpty()) {
-                        if (columnsFilterModel.getIndexOf(item) == -1) {
-                            columnFilters.addItem(item);
-                        }
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        String item = (String)columnFilters.getEditor().getItem();
+                        if (item != null && !item.isEmpty()) {
+                            if (columnsFilterModel.getIndexOf(item) == -1) {
+                                columnFilters.addItem(item);
+                            }
 
-                        columnFilters.setSelectedItem(item);
-                        clusterConfig.setColumnsFilter(getSelectedTableName(), getFilters(columnFilters));
-                    }
-                    else {
-                        Object selectedItem = columnFilters.getSelectedItem();
-                        if (selectedItem != null) {
-                            columnFilters.removeItem(selectedItem);
+                            columnFilters.setSelectedItem(item);
                             clusterConfig.setColumnsFilter(getSelectedTableName(), getFilters(columnFilters));
                         }
+                        else {
+                            Object selectedItem = columnFilters.getSelectedItem();
+                            if (selectedItem != null) {
+                                columnFilters.removeItem(selectedItem);
+                                clusterConfig.setColumnsFilter(getSelectedTableName(), getFilters(columnFilters));
+                            }
+                        }
                     }
-                }
-            });
+                });
 
         columnConverters.addItemListener(
-            new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    if (e.getStateChange() == ItemEvent.SELECTED) {
-                        TypeConverter nameConverter = getColumnNameConverter();
-                        updateColumnNameConverter(nameConverter);
+                new ItemListener() {
+                    @Override
+                    public void itemStateChanged(ItemEvent e) {
+                        if (e.getStateChange() == ItemEvent.SELECTED) {
+                            TypeConverter nameConverter = getColumnNameConverter();
+                            updateColumnNameConverter(nameConverter);
 
-                        boolean isEditable = nameConverter.isEditable();
+                            boolean isEditable = nameConverter.isEditable();
 
-                        int row = columnsTable.getSelectedRow();
-                        if (row != -1) {
-                            ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
-                            isEditable |= type.isEditable();
+                            int row = columnsTable.getSelectedRow();
+                            if (row != -1) {
+                                ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
+                                isEditable |= type.isEditable();
+                            }
+
+                            clusterConfig.setTableConfig(getSelectedTableName(), "nameConverter", nameConverter.getName());
+
+                            columnEditConverter.setEnabled(isEditable);
+                            columnDeleteConverter.setEnabled(isEditable);
                         }
-
-                        clusterConfig.setTableConfig(getSelectedTableName(), "nameConverter", nameConverter.getName());
-
-                        columnEditConverter.setEnabled(isEditable);
-                        columnDeleteConverter.setEnabled(isEditable);
                     }
-                }
-            });
+                });
 
         connection.addListener(
-            new HbaseActionListener() {
-                @Override
-                public void copyOperation(String source, String sourceTable, String target, String targetTable, Result result) {
-                    setInfo(
-                        String.format(
-                            "Copying row '%s' from '%s.%s' to '%s.%s'", Bytes.toStringBinary(result.getRow()), source, sourceTable, target, targetTable));
-                }
+                new HbaseActionListener() {
+                    @Override
+                    public void copyOperation(String source, String sourceTable, String target, String targetTable, Result result) {
+                        setInfo(
+                                String.format(
+                                        "Copying row '%s' from '%s.%s' to '%s.%s'", Bytes.toStringBinary(result.getRow()), source, sourceTable, target, targetTable));
+                    }
 
-                @Override
-                public void saveOperation(String tableName, String path, Result result) {
-                    setInfo(String.format("Saving row '%s' from table '%s' to file '%s'", Bytes.toStringBinary(result.getRow()), tableName, path));
-                }
+                    @Override
+                    public void saveOperation(String tableName, String path, Result result) {
+                        setInfo(String.format("Saving row '%s' from table '%s' to file '%s'", Bytes.toStringBinary(result.getRow()), tableName, path));
+                    }
 
-                @Override
-                public void loadOperation(String tableName, String path, Put put) {
-                    setInfo(String.format("Loading row '%s' to table '%s' from file '%s'", Bytes.toStringBinary(put.getRow()), tableName, path));
-                }
+                    @Override
+                    public void loadOperation(String tableName, String path, Put put) {
+                        setInfo(String.format("Loading row '%s' to table '%s' from file '%s'", Bytes.toStringBinary(put.getRow()), tableName, path));
+                    }
 
-                @Override
-                public void tableOperation(String tableName, String operation) {
-                    setInfo(String.format("The %s table has been %s", tableName, operation));
-                }
+                    @Override
+                    public void tableOperation(String tableName, String operation) {
+                        setInfo(String.format("The %s table has been %s", tableName, operation));
+                    }
 
-                @Override
-                public void rowOperation(String tableName, DataRow row, String operation) {
-                    setInfo(
-                        String.format(
-                            "The %s row has been %s %s the %s table", row.getKey(), operation, "added".equals(operation) ? "to" : "from", tableName));
-                }
+                    @Override
+                    public void rowOperation(String tableName, DataRow row, String operation) {
+                        setInfo(
+                                String.format(
+                                        "The %s row has been %s %s the %s table", row.getKey(), operation, "added".equals(operation) ? "to" : "from", tableName));
+                    }
 
-                @Override
-                public void columnOperation(String tableName, String column, String operation) {
-                    setInfo(
-                        String.format(
-                            "The %s column has been %s %s the %s table", column, operation, "added".equals(operation) ? "to" : "from", tableName));
-                }
-            });
+                    @Override
+                    public void columnOperation(String tableName, String column, String operation) {
+                        setInfo(
+                                String.format(
+                                        "The %s column has been %s %s the %s table", column, operation, "added".equals(operation) ? "to" : "from", tableName));
+                    }
+                });
 
         columnJump.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
 
-                    String rowNumber = JOptionPane.showInputDialog(
-                        topPanel, "Row number:", "Jump to specific row", JOptionPane.PLAIN_MESSAGE);
+                        String rowNumber = JOptionPane.showInputDialog(
+                                topPanel, "Row number:", "Jump to specific row", JOptionPane.PLAIN_MESSAGE);
 
-                    if (rowNumber != null) {
-                        try {
-                            long offset = Long.parseLong(rowNumber);
+                        if (rowNumber != null) {
+                            try {
+                                long offset = Long.parseLong(rowNumber);
 
-                            lastQuery = null;
+                                lastQuery = null;
 
-                            populateRowsTable(offset, Direction.Current);
-                        }
-                        catch (NumberFormatException ignore) {
-                            JOptionPane.showMessageDialog(topPanel, "Row number must be a number.", "Error", JOptionPane.ERROR_MESSAGE);
+                                populateRowsTable(offset, Direction.Current);
+                            }
+                            catch (NumberFormatException ignore) {
+                                JOptionPane.showMessageDialog(topPanel, "Row number must be a number.", "Error", JOptionPane.ERROR_MESSAGE);
+                            }
                         }
                     }
-                }
-            });
+                });
 
         columnPopulate.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
 
-                    lastQuery = null;
+                        lastQuery = null;
 
-                    populateRowsTable(Direction.Current);
-                }
-            });
-
-        columnScan.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    ScanDialog dialog = new ScanDialog(lastQuery, getShownTypedColumns());
-                    dialog.showDialog(topPanel);
-
-                    lastQuery = dialog.getQuery();
-                    if (lastQuery != null) {
                         populateRowsTable(Direction.Current);
                     }
-                }
-            });
+                });
+
+        columnScan.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        ScanDialog dialog = new ScanDialog(lastQuery, getShownTypedColumns());
+                        dialog.showDialog(topPanel);
+
+                        lastQuery = dialog.getQuery();
+                        if (lastQuery != null) {
+                            populateRowsTable(Direction.Current);
+                        }
+                    }
+                });
 
         rowOpen.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
 
-                    owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                    try {
-                        File tempFile = File.createTempFile("h-rider", GlobalConfig.instance().getExternalViewerFileExtension());
-                        FileOutputStream stream = null;
-
-                        try {
-                            stream = new FileOutputStream(tempFile);
-                            FileExporter exporter = new FileExporter(stream, GlobalConfig.instance().getExternalViewerDelimeter());
-
-                            List<ColumnQualifier> columns = getShownColumns();
-
-                            for (int i = 0 ; i < rowsTable.getRowCount() ; i++) {
-                                exporter.write(((DataCell)rowsTable.getValueAt(i, 0)).getRow(), columns);
-                            }
-                        }
-                        finally {
-                            if (stream != null) {
-                                try {
-                                    stream.close();
-                                }
-                                catch (IOException ignore) {
-                                }
-                            }
-                        }
-
-                        Desktop.getDesktop().open(tempFile);
-                    }
-                    catch (Exception ex) {
-                        setError("Failed to open rows in external viewer: ", ex);
-                    }
-                    finally {
-                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                    }
-                }
-            });
-
-        rowAdd.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    JTableModel.stopCellEditing(columnsTable);
-                    JTableModel.stopCellEditing(rowsTable);
-
-                    try {
-                        Collection<ColumnFamily> columnFamilies = connection.getColumnFamilies(getSelectedTableName());
-
-                        AddRowDialog dialog = new AddRowDialog(getShownTypedColumns(), columnFamilies);
-                        if (dialog.showDialog(topPanel)) {
-                            DataRow row = dialog.getRow();
-
-                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                            try {
-                                connection.setRow(getSelectedTableName(), row);
-
-                                if (scanner != null) {
-                                    scanner.resetCurrent(row.getKey());
-                                }
-
-                                // Update the column types according to the added row.
-                                for (DataCell cell : row.getCells()) {
-                                    clusterConfig.setTableConfig(
-                                        getSelectedTableName(), cell.getColumn().getFullName(), cell.getType().toString());
-                                }
-
-                                populateColumnsTable(true, row);
-                                populateRowsTable(Direction.Current);
-                            }
-                            catch (Exception ex) {
-                                setError("Failed to update rows in HBase: ", ex);
-                            }
-                            finally {
-                                owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                            }
-                        }
-                    }
-                    catch (Exception ex) {
-                        setError(String.format("Failed to get column families for table '%s'.", getSelectedTableName()), ex);
-                    }
-                }
-            });
-
-        rowDelete.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    JTableModel.stopCellEditing(rowsTable);
-
-                    int decision = JOptionPane.showConfirmDialog(
-                        topPanel, "Are you sure you want to delete the selected rows?", "Confirmation", JOptionPane.OK_CANCEL_OPTION);
-
-                    if (decision == JOptionPane.OK_OPTION) {
                         owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                         try {
-                            int[] selectedRows = rowsTable.getSelectedRows();
-                            for (int selectedRow : selectedRows) {
-                                try {
-                                    DataCell key = (DataCell)rowsTable.getValueAt(selectedRow, 0);
-                                    connection.deleteRow(getSelectedTableName(), key.getRow());
+                            File tempFile = File.createTempFile("h-rider", GlobalConfig.instance().getExternalViewerFileExtension());
+                            FileOutputStream stream = null;
+
+                            try {
+                                stream = new FileOutputStream(tempFile);
+                                FileExporter exporter = new FileExporter(stream, GlobalConfig.instance().getExternalViewerDelimeter());
+
+                                List<ColumnQualifier> columns = getShownColumns();
+
+                                for (int i = 0 ; i < rowsTable.getRowCount() ; i++) {
+                                    exporter.write(((DataCell)rowsTable.getValueAt(i, 0)).getRow(), columns);
                                 }
-                                catch (Exception ex) {
-                                    setError("Failed to delete row in HBase: ", ex);
+                            }
+                            finally {
+                                if (stream != null) {
+                                    try {
+                                        stream.close();
+                                    }
+                                    catch (IOException ignore) {
+                                    }
                                 }
                             }
 
-                            if (scanner != null) {
-                                scanner.resetCurrent(null);
-                            }
-
-                            populateColumnsTable(true);
-                            populateRowsTable(Direction.Current);
+                            Desktop.getDesktop().open(tempFile);
+                        }
+                        catch (Exception ex) {
+                            setError("Failed to open rows in external viewer: ", ex);
                         }
                         finally {
                             owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                         }
                     }
-                }
-            });
+                });
 
+        rowAdd.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
 
-        rowCopy.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
+                        JTableModel.stopCellEditing(columnsTable);
+                        JTableModel.stopCellEditing(rowsTable);
 
-                    JTableModel.stopCellEditing(rowsTable);
-
-                    copySelectedRowsToClipboard();
-                }
-            });
-
-        rowPaste.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    JTableModel.stopCellEditing(rowsTable);
-
-                    pasteRowsFromClipboard();
-                }
-            });
-
-        rowSave.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    JTableModel.stopCellEditing(rowsTable);
-
-                    int decision = JOptionPane.showConfirmDialog(
-                        topPanel,
-                        "You are going to save modified rows to hbase; make sure the selected column's types\nare correct otherwise the data will not be read by the application.",
-                        "Confirmation", JOptionPane.OK_CANCEL_OPTION);
-
-                    if (decision == JOptionPane.OK_OPTION) {
-                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                         try {
-                            for (DataRow row : changeTracker.getChanges()) {
+                            Collection<ColumnFamily> columnFamilies = connection.getColumnFamilies(getSelectedTableName());
+
+                            AddRowDialog dialog = new AddRowDialog(getShownTypedColumns(), columnFamilies);
+                            if (dialog.showDialog(topPanel)) {
+                                DataRow row = dialog.getRow();
+
+                                owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                                 try {
                                     connection.setRow(getSelectedTableName(), row);
+
+                                    if (scanner != null) {
+                                        scanner.resetCurrent(row.getKey());
+                                    }
+
+                                    // Update the column types according to the added row.
+                                    for (DataCell cell : row.getCells()) {
+                                        clusterConfig.setTableConfig(
+                                                getSelectedTableName(), cell.getColumn().getFullName(), cell.getType().toString());
+                                    }
+
+                                    populateColumnsTable(true, row);
+                                    populateRowsTable(Direction.Current);
                                 }
                                 catch (Exception ex) {
                                     setError("Failed to update rows in HBase: ", ex);
-                                }
-                            }
-
-                            changeTracker.clear();
-                            rowSave.setEnabled(changeTracker.hasChanges());
-                        }
-                        finally {
-                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                        }
-                    }
-                }
-            });
-
-        tableAdd.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    AddTableDialog dialog = new AddTableDialog();
-                    if (dialog.showDialog(topPanel)) {
-                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                        try {
-                            connection.createOrModifyTable(dialog.getTableDescriptor());
-
-                            Filter filter;
-
-                            String value = (String)tableFilters.getSelectedItem();
-                            if (value == null || value.isEmpty()) {
-                                filter = new EmptyFilter();
-                            }
-                            else {
-                                filter = new PatternFilter(value);
-                            }
-
-                            if (filter.match(dialog.getTableDescriptor().getName())) {
-                                tablesListModel.addElement(dialog.getTableDescriptor().getName());
-                                tablesList.setSelectedValue(dialog.getTableDescriptor().getName(), true);
-                            }
-                        }
-                        catch (Exception ex) {
-                            setError(String.format("Failed to create table %s: ", dialog.getTableDescriptor().getName()), ex);
-                        }
-                        finally {
-                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                        }
-                    }
-                }
-            });
-
-        tableDelete.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    int decision = JOptionPane.showConfirmDialog(
-                        topPanel, "Are you sure you want to delete selected table(s).", "Confirmation", JOptionPane.YES_NO_OPTION);
-
-                    if (decision == JOptionPane.YES_OPTION) {
-                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                        try {
-                            for (String tableName : getSelectedTables()) {
-                                try {
-                                    connection.deleteTable(tableName);
-                                    tablesListModel.removeElement(tableName);
-                                }
-                                catch (Exception ex) {
-                                    setError(String.format("Failed to delete table %s: ", tableName), ex);
-                                }
-                            }
-                        }
-                        finally {
-                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                        }
-                    }
-                }
-            });
-
-        tableTruncate.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    int decision = JOptionPane.showConfirmDialog(
-                        topPanel, "Are you sure you want to truncate selected table(s).", "Confirmation", JOptionPane.YES_NO_OPTION);
-
-                    if (decision == JOptionPane.YES_OPTION) {
-                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                        try {
-                            List<String> selectedTables = getSelectedTables();
-                            if (!selectedTables.isEmpty()) {
-                                for (String tableName : selectedTables) {
-                                    try {
-                                        connection.truncateTable(tableName);
-                                    }
-                                    catch (Exception ex) {
-                                        setError(String.format("Failed to truncate table %s: ", tableName), ex);
-                                    }
-                                }
-
-                                scanner = null;
-
-                                populateColumnsTable(true);
-                            }
-                        }
-                        finally {
-                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                        }
-                    }
-                }
-            });
-
-        rowsPrev.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    populateRowsTable(Direction.Backward);
-                }
-            });
-
-        rowsNext.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    populateRowsTable(Direction.Forward);
-                }
-            });
-
-        columnCheck.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                    try {
-                        for (int i = 1 ; i < columnsTable.getRowCount() ; i++) {
-                            columnsTable.setValueAt(true, i, 0);
-                        }
-                    }
-                    finally {
-                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                    }
-                }
-            });
-
-        columnUncheck.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                    try {
-                        for (int i = 1 ; i < columnsTable.getRowCount() ; i++) {
-                            columnsTable.setValueAt(false, i, 0);
-                        }
-                    }
-                    finally {
-                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                    }
-                }
-            });
-
-        tableFlush.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    int decision = JOptionPane.showConfirmDialog(
-                        topPanel, "Are you sure you want to flush selected table(s).", "Confirmation", JOptionPane.YES_NO_OPTION);
-
-                    if (decision == JOptionPane.YES_OPTION) {
-                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                        try {
-                            for (String tableName : getSelectedTables()) {
-                                try {
-                                    connection.flushTable(tableName);
-                                }
-                                catch (Exception ex) {
-                                    setError(String.format("Failed to flush table %s: ", tableName), ex);
-                                }
-                            }
-                        }
-                        finally {
-                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                        }
-                    }
-                }
-            });
-
-        tableRefresh.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    populate();
-                }
-            });
-
-        tableCopy.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    copyTableToClipboard();
-                }
-            });
-
-        tablePaste.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    pasteTableFromClipboard();
-                }
-            });
-
-        tableExport.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    String tableName = getSelectedTableName();
-                    if (tableName != null) {
-                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                        try {
-                            QueryScanner scanner = connection.getScanner(tableName, null);
-                            scanner.setColumnTypes(columnTypes);
-
-                            ExportTableDialog dialog = new ExportTableDialog(scanner);
-                            dialog.showDialog(topPanel);
-                        }
-                        catch (Exception ex) {
-                            setError(String.format("Failed to export table %s: ", tableName), ex);
-                        }
-                        finally {
-                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                        }
-                    }
-                }
-            });
-
-        tableImport.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                    try {
-                        String tableName = getSelectedTableName();
-
-                        Collection<ColumnFamily> columnFamilies;
-                        if (tableName != null) {
-                            columnFamilies = connection.getColumnFamilies(tableName);
-                        }
-                        else {
-                            columnFamilies = new ArrayList<ColumnFamily>();
-                        }
-
-                        ImportTableDialog dialog = new ImportTableDialog(
-                            connection, tableName, getColumnNameConverter(), getShownTypedColumns(), columnFamilies);
-
-                        dialog.showDialog(topPanel);
-                    }
-                    catch (Exception ex) {
-                        setError("Failed to import to table.", ex);
-                    }
-                    finally {
-                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                    }
-                }
-            });
-
-        tableMetadata.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    String tableName = getSelectedTableName();
-                    if (tableName != null) {
-                        try {
-                            TableDescriptor tableDescriptor = connection.getTableDescriptor(tableName);
-
-                            UpdateTableMetadata dialog = new UpdateTableMetadata(tableDescriptor, !TableUtil.isMetaTable(tableName));
-                            if (dialog.showDialog(topPanel)) {
-                                owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                                try {
-                                    connection.createOrModifyTable(tableDescriptor);
-                                }
-                                catch (Exception ex) {
-                                    setError(String.format("Failed to update table %s metadata: ", tableName), ex);
                                 }
                                 finally {
                                     owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -851,154 +448,557 @@ public class DesignerView {
                             }
                         }
                         catch (Exception ex) {
-                            setError(String.format("Failed to retrieve descriptor of the table %s: ", tableName), ex);
+                            setError(String.format("Failed to get column families for table '%s'.", getSelectedTableName()), ex);
                         }
                     }
-                }
-            });
+                });
 
-        columnRefresh.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
+        rowDelete.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
 
-                    scanner = null;
-                    populateColumnsTable(true);
-                }
-            });
+                        JTableModel.stopCellEditing(rowsTable);
 
-        columnAddConverter.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    JTableModel.stopCellEditing(columnsTable);
-
-                    CustomConverterDialog dialog = new CustomConverterDialog(null);
-                    if (dialog.showDialog(topPanel)) {
-                        ConvertersLoader.reload();
-                    }
-                }
-            });
-
-        columnEditConverter.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    JTableModel.stopCellEditing(columnsTable);
-
-                    ColumnType columnType = getSelectedEditableColumnType();
-                    if (columnType != null) {
-                        CustomConverterDialog dialog = new CustomConverterDialog(columnType.getConverter());
-                        if (dialog.showDialog(topPanel)) {
-                            ConvertersLoader.editConverter(columnType.getName(), dialog.getConverterName());
-                        }
-                    }
-                }
-            });
-
-        columnDeleteConverter.addActionListener(
-            new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    clearError();
-
-                    JTableModel.stopCellEditing(columnsTable);
-
-                    ColumnType columnType = getSelectedEditableColumnType();
-                    if (columnType != null) {
                         int decision = JOptionPane.showConfirmDialog(
-                            topPanel, String.format(
-                            "Are you sure you want to delete '%s' type?%sIt will be lost for good!", columnType.getName(), PathHelper.LINE_SEPARATOR),
-                            "Confirmation", JOptionPane.OK_CANCEL_OPTION);
+                                topPanel, "Are you sure you want to delete the selected rows?", "Confirmation", JOptionPane.OK_CANCEL_OPTION);
 
                         if (decision == JOptionPane.OK_OPTION) {
-                            ConvertersLoader.removeConverter(columnType.getName());
+                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                            try {
+                                int[] selectedRows = rowsTable.getSelectedRows();
+                                for (int selectedRow : selectedRows) {
+                                    try {
+                                        DataCell key = (DataCell)rowsTable.getValueAt(selectedRow, 0);
+                                        connection.deleteRow(getSelectedTableName(), key.getRow());
+                                    }
+                                    catch (Exception ex) {
+                                        setError("Failed to delete row in HBase: ", ex);
+                                    }
+                                }
+
+                                if (scanner != null) {
+                                    scanner.resetCurrent(null);
+                                }
+
+                                populateColumnsTable(true);
+                                populateRowsTable(Direction.Current);
+                            }
+                            finally {
+                                owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                            }
                         }
                     }
-                }
-            });
+                });
+
+
+        rowCopy.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        JTableModel.stopCellEditing(rowsTable);
+
+                        copySelectedRowsToClipboard();
+                    }
+                });
+
+        rowPaste.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        JTableModel.stopCellEditing(rowsTable);
+
+                        pasteRowsFromClipboard();
+                    }
+                });
+
+        rowSave.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        JTableModel.stopCellEditing(rowsTable);
+
+                        int decision = JOptionPane.showConfirmDialog(
+                                topPanel,
+                                "You are going to save modified rows to hbase; make sure the selected column's types\nare correct otherwise the data will not be read by the application.",
+                                "Confirmation", JOptionPane.OK_CANCEL_OPTION);
+
+                        if (decision == JOptionPane.OK_OPTION) {
+                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                            try {
+                                for (DataRow row : changeTracker.getChanges()) {
+                                    try {
+                                        connection.setRow(getSelectedTableName(), row);
+                                    }
+                                    catch (Exception ex) {
+                                        setError("Failed to update rows in HBase: ", ex);
+                                    }
+                                }
+
+                                changeTracker.clear();
+                                rowSave.setEnabled(changeTracker.hasChanges());
+                            }
+                            finally {
+                                owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                            }
+                        }
+                    }
+                });
+
+        tableAdd.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        AddTableDialog dialog = new AddTableDialog();
+                        if (dialog.showDialog(topPanel)) {
+                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                            try {
+                                connection.createOrModifyTable(dialog.getTableDescriptor());
+
+                                Filter filter;
+
+                                String value = (String)tableFilters.getSelectedItem();
+                                if (value == null || value.isEmpty()) {
+                                    filter = new EmptyFilter();
+                                }
+                                else {
+                                    filter = new PatternFilter(value);
+                                }
+
+                                if (filter.match(dialog.getTableDescriptor().getName())) {
+                                    tablesListModel.addElement(dialog.getTableDescriptor().getName());
+                                    tablesList.setSelectedValue(dialog.getTableDescriptor().getName(), true);
+                                }
+                            }
+                            catch (Exception ex) {
+                                setError(String.format("Failed to create table %s: ", dialog.getTableDescriptor().getName()), ex);
+                            }
+                            finally {
+                                owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                            }
+                        }
+                    }
+                });
+
+        tableDelete.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        int decision = JOptionPane.showConfirmDialog(
+                                topPanel, "Are you sure you want to delete selected table(s).", "Confirmation", JOptionPane.YES_NO_OPTION);
+
+                        if (decision == JOptionPane.YES_OPTION) {
+                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                            try {
+                                for (String tableName : getSelectedTables()) {
+                                    try {
+                                        connection.deleteTable(tableName);
+                                        tablesListModel.removeElement(tableName);
+                                    }
+                                    catch (Exception ex) {
+                                        setError(String.format("Failed to delete table %s: ", tableName), ex);
+                                    }
+                                }
+                            }
+                            finally {
+                                owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                            }
+                        }
+                    }
+                });
+
+        tableTruncate.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        int decision = JOptionPane.showConfirmDialog(
+                                topPanel, "Are you sure you want to truncate selected table(s).", "Confirmation", JOptionPane.YES_NO_OPTION);
+
+                        if (decision == JOptionPane.YES_OPTION) {
+                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                            try {
+                                List<String> selectedTables = getSelectedTables();
+                                if (!selectedTables.isEmpty()) {
+                                    for (String tableName : selectedTables) {
+                                        try {
+                                            connection.truncateTable(tableName);
+                                        }
+                                        catch (Exception ex) {
+                                            setError(String.format("Failed to truncate table %s: ", tableName), ex);
+                                        }
+                                    }
+
+                                    scanner = null;
+
+                                    populateColumnsTable(true);
+                                }
+                            }
+                            finally {
+                                owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                            }
+                        }
+                    }
+                });
+
+        rowsPrev.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        populateRowsTable(Direction.Backward);
+                    }
+                });
+
+        rowsNext.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        populateRowsTable(Direction.Forward);
+                    }
+                });
+
+        columnCheck.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        try {
+                            for (int i = 1 ; i < columnsTable.getRowCount() ; i++) {
+                                columnsTable.setValueAt(true, i, 0);
+                            }
+                        }
+                        finally {
+                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                        }
+                    }
+                });
+
+        columnUncheck.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        try {
+                            for (int i = 1 ; i < columnsTable.getRowCount() ; i++) {
+                                columnsTable.setValueAt(false, i, 0);
+                            }
+                        }
+                        finally {
+                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                        }
+                    }
+                });
+
+        tableFlush.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        int decision = JOptionPane.showConfirmDialog(
+                                topPanel, "Are you sure you want to flush selected table(s).", "Confirmation", JOptionPane.YES_NO_OPTION);
+
+                        if (decision == JOptionPane.YES_OPTION) {
+                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                            try {
+                                for (String tableName : getSelectedTables()) {
+                                    try {
+                                        connection.flushTable(tableName);
+                                    }
+                                    catch (Exception ex) {
+                                        setError(String.format("Failed to flush table %s: ", tableName), ex);
+                                    }
+                                }
+                            }
+                            finally {
+                                owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                            }
+                        }
+                    }
+                });
+
+        tableRefresh.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        populate();
+                    }
+                });
+
+        tableCopy.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        copyTableToClipboard();
+                    }
+                });
+
+        tablePaste.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        pasteTableFromClipboard();
+                    }
+                });
+
+        tableExport.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        String tableName = getSelectedTableName();
+                        if (tableName != null) {
+                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                            try {
+                                QueryScanner scanner = connection.getScanner(tableName, null);
+                                scanner.setColumnTypes(columnTypes);
+
+                                ExportTableDialog dialog = new ExportTableDialog(scanner);
+                                dialog.showDialog(topPanel);
+                            }
+                            catch (Exception ex) {
+                                setError(String.format("Failed to export table %s: ", tableName), ex);
+                            }
+                            finally {
+                                owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                            }
+                        }
+                    }
+                });
+
+        tableImport.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        try {
+                            String tableName = getSelectedTableName();
+
+                            Collection<ColumnFamily> columnFamilies;
+                            if (tableName != null) {
+                                columnFamilies = connection.getColumnFamilies(tableName);
+                            }
+                            else {
+                                columnFamilies = new ArrayList<ColumnFamily>();
+                            }
+
+                            ImportTableDialog dialog = new ImportTableDialog(
+                                    connection, tableName, getColumnNameConverter(), getShownTypedColumns(), columnFamilies);
+
+                            dialog.showDialog(topPanel);
+                        }
+                        catch (Exception ex) {
+                            setError("Failed to import to table.", ex);
+                        }
+                        finally {
+                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                        }
+                    }
+                });
+
+        tableMetadata.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        String tableName = getSelectedTableName();
+                        if (tableName != null) {
+                            try {
+                                TableDescriptor tableDescriptor = connection.getTableDescriptor(tableName);
+
+                                UpdateTableMetadata dialog = new UpdateTableMetadata(tableDescriptor, !TableUtil.isMetaTable(tableName));
+                                if (dialog.showDialog(topPanel)) {
+                                    owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                                    try {
+                                        connection.createOrModifyTable(tableDescriptor);
+                                    }
+                                    catch (Exception ex) {
+                                        setError(String.format("Failed to update table %s metadata: ", tableName), ex);
+                                    }
+                                    finally {
+                                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                                    }
+                                }
+                            }
+                            catch (Exception ex) {
+                                setError(String.format("Failed to retrieve descriptor of the table %s: ", tableName), ex);
+                            }
+                        }
+                    }
+                });
+
+        columnRefresh.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        scanner = null;
+                        populateColumnsTable(true);
+                    }
+                });
+
+        columnAddConverter.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        JTableModel.stopCellEditing(columnsTable);
+
+                        CustomConverterDialog dialog = new CustomConverterDialog(null);
+                        if (dialog.showDialog(topPanel)) {
+                            ConvertersLoader.reload();
+                        }
+                    }
+                });
+
+        columnEditConverter.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        JTableModel.stopCellEditing(columnsTable);
+
+                        ColumnType columnType = getSelectedEditableColumnType();
+                        if (columnType != null) {
+                            CustomConverterDialog dialog = new CustomConverterDialog(columnType.getConverter());
+                            if (dialog.showDialog(topPanel)) {
+                                ConvertersLoader.editConverter(columnType.getName(), dialog.getConverterName());
+                            }
+                        }
+                    }
+                });
+
+        columnDeleteConverter.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        clearError();
+
+                        JTableModel.stopCellEditing(columnsTable);
+
+                        ColumnType columnType = getSelectedEditableColumnType();
+                        if (columnType != null) {
+                            int decision = JOptionPane.showConfirmDialog(
+                                    topPanel, String.format(
+                                            "Are you sure you want to delete '%s' type?%sIt will be lost for good!", columnType.getName(), PathHelper.LINE_SEPARATOR),
+                                    "Confirmation", JOptionPane.OK_CANCEL_OPTION);
+
+                            if (decision == JOptionPane.OK_OPTION) {
+                                ConvertersLoader.removeConverter(columnType.getName());
+                            }
+                        }
+                    }
+                });
 
         ConvertersLoader.addHandler(
-            new ConvertersLoaderHandler() {
-                @Override
-                public void onLoad() {
-                    reloadColumnTypes();
-                }
-
-                @Override
-                public void onEdit(String oldName, String newName) {
-                    ColumnType newType = ColumnType.fromName(newName);
-
-                    ColumnType selectedType = (ColumnType)columnConverters.getSelectedItem();
-                    if (selectedType != null && selectedType.getName().equals(oldName)) {
-                        columnConverters.setSelectedItem(newType);
+                new ConvertersLoaderHandler() {
+                    @Override
+                    public void onLoad() {
+                        reloadColumnTypes();
                     }
 
-                    for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
-                        ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
-                        if (type.getName().equals(oldName)) {
-                            ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
-                            if (updateColumnType(qualifier, newType)) {
-                                columnsTable.setValueAt(newType, row, 2);
+                    @Override
+                    public void onEdit(String oldName, String newName) {
+                        ColumnType newType = ColumnType.fromName(newName);
+
+                        ColumnType selectedType = (ColumnType)columnConverters.getSelectedItem();
+                        if (selectedType != null && selectedType.getName().equals(oldName)) {
+                            columnConverters.setSelectedItem(newType);
+                        }
+
+                        for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
+                            ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
+                            if (type.getName().equals(oldName)) {
+                                ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
+                                if (updateColumnType(qualifier, newType)) {
+                                    columnsTable.setValueAt(newType, row, 2);
+                                }
+                                else {
+                                    columnsTable.setValueAt(getColumnType(qualifier.getFullName()), row, 2);
+                                }
                             }
-                            else {
-                                columnsTable.setValueAt(getColumnType(qualifier.getFullName()), row, 2);
+                        }
+
+                        if (lastQuery != null) {
+                            if (oldName.equals(lastQuery.getStartKeyType().getName())) {
+                                lastQuery.setStartKeyType(newType);
                             }
-                        }
-                    }
 
-                    if (lastQuery != null) {
-                        if (oldName.equals(lastQuery.getStartKeyType().getName())) {
-                            lastQuery.setStartKeyType(newType);
-                        }
-
-                        if (oldName.equals(lastQuery.getEndKeyType().getName())) {
-                            lastQuery.setEndKeyType(newType);
-                        }
-
-                        if (lastQuery.getWordType() != null && oldName.equals(lastQuery.getWordType().getName())) {
-                            lastQuery.setWordType(ColumnType.fromName(lastQuery.getWordType().getName()));
-                        }
-                    }
-                }
-
-                @Override
-                public void onRemove(String name) {
-                    for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
-                        ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
-                        if (type.getName().equals(name)) {
-                            ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
-
-                            type = ColumnType.fromColumn(qualifier.getName());
-                            if (updateColumnType(qualifier, type)) {
-                                columnsTable.setValueAt(type, row, 2);
+                            if (oldName.equals(lastQuery.getEndKeyType().getName())) {
+                                lastQuery.setEndKeyType(newType);
                             }
-                            else {
-                                columnsTable.setValueAt(getColumnType(qualifier.getFullName()), row, 2);
+
+                            if (lastQuery.getWordType() != null && oldName.equals(lastQuery.getWordType().getName())) {
+                                lastQuery.setWordType(ColumnType.fromName(lastQuery.getWordType().getName()));
                             }
                         }
                     }
 
-                    if (lastQuery != null) {
-                        if (lastQuery.getStartKeyType() != null) {
-                            lastQuery.setStartKeyType(ColumnType.fromNameOrDefault(lastQuery.getStartKeyType().getName(), ColumnType.BinaryString));
+                    @Override
+                    public void onRemove(String name) {
+                        for (int row = 0 ; row < columnsTable.getRowCount() ; row++) {
+                            ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
+                            if (type.getName().equals(name)) {
+                                ColumnQualifier qualifier = (ColumnQualifier)columnsTable.getValueAt(row, 1);
+
+                                type = ColumnType.fromColumn(qualifier.getName());
+                                if (updateColumnType(qualifier, type)) {
+                                    columnsTable.setValueAt(type, row, 2);
+                                }
+                                else {
+                                    columnsTable.setValueAt(getColumnType(qualifier.getFullName()), row, 2);
+                                }
+                            }
                         }
 
-                        if (lastQuery.getEndKeyType() != null) {
-                            lastQuery.setEndKeyType(ColumnType.fromNameOrDefault(lastQuery.getEndKeyType().getName(), ColumnType.BinaryString));
-                        }
+                        if (lastQuery != null) {
+                            if (lastQuery.getStartKeyType() != null) {
+                                lastQuery.setStartKeyType(ColumnType.fromNameOrDefault(lastQuery.getStartKeyType().getName(), ColumnType.BinaryString));
+                            }
 
-                        if (lastQuery.getWordType() != null) {
-                            lastQuery.setWordType(ColumnType.fromNameOrDefault(lastQuery.getWordType().getName(), ColumnType.String));
+                            if (lastQuery.getEndKeyType() != null) {
+                                lastQuery.setEndKeyType(ColumnType.fromNameOrDefault(lastQuery.getEndKeyType().getName(), ColumnType.BinaryString));
+                            }
+
+                            if (lastQuery.getWordType() != null) {
+                                lastQuery.setWordType(ColumnType.fromNameOrDefault(lastQuery.getWordType().getName(), ColumnType.String));
+                            }
                         }
                     }
-                }
-            });
+                });
     }
     //endregion
 
@@ -1225,109 +1225,109 @@ public class DesignerView {
         tablesList.setCellRenderer(new JListRenderer(connection));
 
         tablesList.addListSelectionListener(
-            new ListSelectionListener() {
-                @Override
-                public void valueChanged(ListSelectionEvent e) {
-                    if (!e.getValueIsAdjusting()) {
-                        if (rowsCountAction != null) {
-                            rowsCountAction.abort();
-                        }
-
-                        toggleTableControls();
-
-                        boolean populate = false;
-                        int[] selectedIndices = tablesList.getSelectedIndices();
-
-                        if (selectedIndices.length == 1) {
-                            populate = tableEnabled(getSelectedTableName());
-                        }
-
-                        if (populate) {
-                            scanner = null;
-
-                            String currentFilter = clusterConfig.getSelectedColumnFilter(getSelectedTableName());
-
-                            fillComboBox(columnFilters, columnsFilterListener, clusterConfig.getColumnFilters(getSelectedTableName()));
-                            setFilter(columnFilters, columnsFilterListener, currentFilter);
-
-                            String converterType = clusterConfig.getTableConfig(String.class, getSelectedTableName(), "nameConverter");
-                            if (converterType != null) {
-                                columnConverters.setSelectedItem(ColumnType.fromNameOrDefault(converterType, ColumnType.BinaryString));
-                            }
-                            else {
-                                columnConverters.setSelectedItem(ColumnType.BinaryString);
+                new ListSelectionListener() {
+                    @Override
+                    public void valueChanged(ListSelectionEvent e) {
+                        if (!e.getValueIsAdjusting()) {
+                            if (rowsCountAction != null) {
+                                rowsCountAction.abort();
                             }
 
-                            populateColumnsTable(true);
-                        }
-                        else {
-                            clearRows(columnsTable);
-                            clearTable(rowsTable);
+                            toggleTableControls();
 
-                            togglePagingControls();
-                            toggleColumnControls(false);
-                            toggleRowControls(false);
-
-                            rowsTotal.setText("?");
-                            rowsVisible.setText("?");
+                            boolean populate = false;
+                            int[] selectedIndices = tablesList.getSelectedIndices();
 
                             if (selectedIndices.length == 1) {
-                                setAction(
-                                    new UIAction() {
-                                        @Override
-                                        public void execute() {
-                                            String tableName = getSelectedTableName();
+                                populate = tableEnabled(getSelectedTableName());
+                            }
 
-                                            owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                                            try {
-                                                connection.enableTable(tableName);
+                            if (populate) {
+                                scanner = null;
 
-                                                tablesList.clearSelection();
-                                                tablesList.setSelectedValue(tableName, true);
+                                String currentFilter = clusterConfig.getSelectedColumnFilter(getSelectedTableName());
 
-                                                setInfo(String.format("The '%s' table has been successfully enabled.", tableName));
-                                            }
-                                            catch (Exception ex) {
-                                                setError(String.format("Failed to enable table '%s'", tableName), ex);
-                                            }
-                                            finally {
-                                                owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                                            }
-                                        }
+                                fillComboBox(columnFilters, columnsFilterListener, clusterConfig.getColumnFilters(getSelectedTableName()));
+                                setFilter(columnFilters, columnsFilterListener, currentFilter);
 
-                                        @Override
-                                        public String[] getFormattedMessage() {
-                                            return new String[]{
-                                                "The selected table is disabled, do you want to", "enable", "it?"
-                                            };
-                                        }
-                                    });
+                                String converterType = clusterConfig.getTableConfig(String.class, getSelectedTableName(), "nameConverter");
+                                if (converterType != null) {
+                                    columnConverters.setSelectedItem(ColumnType.fromNameOrDefault(converterType, ColumnType.BinaryString));
+                                }
+                                else {
+                                    columnConverters.setSelectedItem(ColumnType.BinaryString);
+                                }
+
+                                populateColumnsTable(true);
+                            }
+                            else {
+                                clearRows(columnsTable);
+                                clearTable(rowsTable);
+                                changeTracker.clear();
+                                togglePagingControls();
+                                toggleColumnControls(false);
+                                toggleRowControls(false);
+
+                                rowsTotal.setText("?");
+                                rowsVisible.setText("?");
+
+                                if (selectedIndices.length == 1) {
+                                    setAction(
+                                            new UIAction() {
+                                                @Override
+                                                public void execute() {
+                                                    String tableName = getSelectedTableName();
+
+                                                    owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                                                    try {
+                                                        connection.enableTable(tableName);
+
+                                                        tablesList.clearSelection();
+                                                        tablesList.setSelectedValue(tableName, true);
+
+                                                        setInfo(String.format("The '%s' table has been successfully enabled.", tableName));
+                                                    }
+                                                    catch (Exception ex) {
+                                                        setError(String.format("Failed to enable table '%s'", tableName), ex);
+                                                    }
+                                                    finally {
+                                                        owner.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                                                    }
+                                                }
+
+                                                @Override
+                                                public String[] getFormattedMessage() {
+                                                    return new String[]{
+                                                            "The selected table is disabled, do you want to", "enable", "it?"
+                                                    };
+                                                }
+                                            });
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
 
         tablesList.addKeyListener(
-            new KeyAdapter() {
-                @Override
-                public void keyReleased(KeyEvent e) {
-                    if (e.isControlDown()) {
-                        if (e.getKeyCode() == KeyEvent.VK_C) {
-                            clearError();
-                            if (tableCopy.isEnabled()) {
-                                copyTableToClipboard();
+                new KeyAdapter() {
+                    @Override
+                    public void keyReleased(KeyEvent e) {
+                        if (e.isControlDown()) {
+                            if (e.getKeyCode() == KeyEvent.VK_C) {
+                                clearError();
+                                if (tableCopy.isEnabled()) {
+                                    copyTableToClipboard();
+                                }
                             }
-                        }
-                        else if (e.getKeyCode() == KeyEvent.VK_V) {
-                            clearError();
-                            if (tablePaste.isEnabled()) {
-                                pasteTableFromClipboard();
+                            else if (e.getKeyCode() == KeyEvent.VK_V) {
+                                clearError();
+                                if (tablePaste.isEnabled()) {
+                                    pasteTableFromClipboard();
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
     }
 
     /**
@@ -1365,74 +1365,74 @@ public class DesignerView {
         columnsTable.getColumn("Column Type").setMinWidth(82);
 
         columnsTable.getModel().addTableModelListener(
-            new TableModelListener() {
-                @Override
-                public void tableChanged(TableModelEvent e) {
-                    if (UIUpdateHandler.enter("tableChanged")) {
-                        try {
-                            clearError();
+                new TableModelListener() {
+                    @Override
+                    public void tableChanged(TableModelEvent e) {
+                        if (UIUpdateHandler.enter("tableChanged")) {
+                            try {
+                                clearError();
 
-                            int column = e.getColumn();
-                            TableModel model = (TableModel)e.getSource();
+                                int column = e.getColumn();
+                                TableModel model = (TableModel)e.getSource();
 
-                            if (column == 0) {
-                                ColumnQualifier qualifier = (ColumnQualifier)model.getValueAt(e.getFirstRow(), 1);
-                                boolean isShown = (Boolean)model.getValueAt(e.getFirstRow(), 0);
+                                if (column == 0) {
+                                    ColumnQualifier qualifier = (ColumnQualifier)model.getValueAt(e.getFirstRow(), 1);
+                                    boolean isShown = (Boolean)model.getValueAt(e.getFirstRow(), 0);
 
-                                clusterConfig.setTableConfig(getSelectedTableName(), qualifier.getFullName(), "isShown", Boolean.toString(isShown));
+                                    clusterConfig.setTableConfig(getSelectedTableName(), qualifier.getFullName(), "isShown", Boolean.toString(isShown));
 
-                                setRowsTableColumnVisible(qualifier, isShown);
-                            }
-                            else if (column == 2) {
-                                ColumnQualifier qualifier = (ColumnQualifier)model.getValueAt(e.getFirstRow(), 1);
-                                ColumnType type = (ColumnType)model.getValueAt(e.getFirstRow(), column);
+                                    setRowsTableColumnVisible(qualifier, isShown);
+                                }
+                                else if (column == 2) {
+                                    ColumnQualifier qualifier = (ColumnQualifier)model.getValueAt(e.getFirstRow(), 1);
+                                    ColumnType type = (ColumnType)model.getValueAt(e.getFirstRow(), column);
 
-                                TypeConverter nameConverter = getColumnNameConverter();
+                                    TypeConverter nameConverter = getColumnNameConverter();
 
-                                columnEditConverter.setEnabled(type.isEditable() || nameConverter.isEditable());
-                                columnDeleteConverter.setEnabled(type.isEditable() || nameConverter.isEditable());
+                                    columnEditConverter.setEnabled(type.isEditable() || nameConverter.isEditable());
+                                    columnDeleteConverter.setEnabled(type.isEditable() || nameConverter.isEditable());
 
-                                if (!updateColumnType(qualifier, type)) {
-                                    columnsTable.setValueAt(getColumnType(qualifier.getFullName()), e.getFirstRow(), 2);
+                                    if (!updateColumnType(qualifier, type)) {
+                                        columnsTable.setValueAt(getColumnType(qualifier.getFullName()), e.getFirstRow(), 2);
+                                    }
                                 }
                             }
-                        }
-                        finally {
-                            UIUpdateHandler.leave("tableChanged");
+                            finally {
+                                UIUpdateHandler.leave("tableChanged");
+                            }
                         }
                     }
-                }
-            });
+                });
 
         columnsTable.addMouseMotionListener(
-            new MouseMotionAdapter() {
-                @Override
-                public void mouseMoved(MouseEvent e) {
-                    Point p = e.getPoint();
-                    int row = columnsTable.rowAtPoint(p);
-                    int column = columnsTable.columnAtPoint(p);
-                    if (row != -1 && column != -1) {
-                        columnsTable.setToolTipText(String.valueOf(columnsTable.getValueAt(row, column)));
+                new MouseMotionAdapter() {
+                    @Override
+                    public void mouseMoved(MouseEvent e) {
+                        Point p = e.getPoint();
+                        int row = columnsTable.rowAtPoint(p);
+                        int column = columnsTable.columnAtPoint(p);
+                        if (row != -1 && column != -1) {
+                            columnsTable.setToolTipText(String.valueOf(columnsTable.getValueAt(row, column)));
+                        }
                     }
-                }
-            });
+                });
 
         columnsTable.getSelectionModel().addListSelectionListener(
-            new ListSelectionListener() {
-                @Override
-                public void valueChanged(ListSelectionEvent e) {
-                    boolean isEditable = getColumnNameConverter().isEditable();
+                new ListSelectionListener() {
+                    @Override
+                    public void valueChanged(ListSelectionEvent e) {
+                        boolean isEditable = getColumnNameConverter().isEditable();
 
-                    int row = columnsTable.getSelectedRow();
-                    if (row != -1) {
-                        ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
-                        isEditable |= type.isEditable();
+                        int row = columnsTable.getSelectedRow();
+                        if (row != -1) {
+                            ColumnType type = (ColumnType)columnsTable.getValueAt(row, 2);
+                            isEditable |= type.isEditable();
+                        }
+
+                        columnEditConverter.setEnabled(isEditable);
+                        columnDeleteConverter.setEnabled(isEditable);
                     }
-
-                    columnEditConverter.setEnabled(isEditable);
-                    columnDeleteConverter.setEnabled(isEditable);
-                }
-            });
+                });
     }
 
     /**
@@ -1447,99 +1447,99 @@ public class DesignerView {
         rowsTable.setAutoCreateColumnsFromModel(false);
 
         rowsTable.getSelectionModel().addListSelectionListener(
-            new ListSelectionListener() {
-                @Override
-                public void valueChanged(ListSelectionEvent e) {
-                    toggleRowControls(true);
-                }
-            });
+                new ListSelectionListener() {
+                    @Override
+                    public void valueChanged(ListSelectionEvent e) {
+                        toggleRowControls(true);
+                    }
+                });
 
         rowsTable.addMouseMotionListener(
-            new MouseMotionAdapter() {
-                @Override
-                public void mouseMoved(MouseEvent e) {
-                    Point p = e.getPoint();
-                    int row = rowsTable.rowAtPoint(p);
-                    int column = rowsTable.columnAtPoint(p);
-                    if (row != -1 && column != -1) {
-                        rowsTable.setToolTipText(String.valueOf(rowsTable.getValueAt(row, column)));
+                new MouseMotionAdapter() {
+                    @Override
+                    public void mouseMoved(MouseEvent e) {
+                        Point p = e.getPoint();
+                        int row = rowsTable.rowAtPoint(p);
+                        int column = rowsTable.columnAtPoint(p);
+                        if (row != -1 && column != -1) {
+                            rowsTable.setToolTipText(String.valueOf(rowsTable.getValueAt(row, column)));
+                        }
                     }
-                }
-            });
+                });
 
         rowsTable.addKeyListener(
-            new KeyAdapter() {
-                @Override
-                public void keyReleased(KeyEvent e) {
-                    if (e.isControlDown()) {
-                        if (e.getKeyCode() == KeyEvent.VK_C) {
-                            clearError();
+                new KeyAdapter() {
+                    @Override
+                    public void keyReleased(KeyEvent e) {
+                        if (e.isControlDown()) {
+                            if (e.getKeyCode() == KeyEvent.VK_C) {
+                                clearError();
 
-                            if (rowCopy.isEnabled()) {
-                                JTableModel.stopCellEditing(rowsTable);
-                                copySelectedRowsToClipboard();
+                                if (rowCopy.isEnabled()) {
+                                    JTableModel.stopCellEditing(rowsTable);
+                                    copySelectedRowsToClipboard();
+                                }
                             }
-                        }
-                        else if (e.getKeyCode() == KeyEvent.VK_V) {
-                            clearError();
+                            else if (e.getKeyCode() == KeyEvent.VK_V) {
+                                clearError();
 
-                            if (rowPaste.isEnabled()) {
-                                JTableModel.stopCellEditing(rowsTable);
-                                pasteRowsFromClipboard();
+                                if (rowPaste.isEnabled()) {
+                                    JTableModel.stopCellEditing(rowsTable);
+                                    pasteRowsFromClipboard();
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
 
         rowsTable.addPropertyChangeListener(
-            new PropertyChangeListener() {
-                @Override
-                public void propertyChange(PropertyChangeEvent evt) {
-                    if ("model".equals(evt.getPropertyName())) {
-                        changeTracker.clear();
+                new PropertyChangeListener() {
+                    @Override
+                    public void propertyChange(PropertyChangeEvent evt) {
+                        if ("model".equals(evt.getPropertyName())) {
+                            changeTracker.clear();
 
-                        toggleRowControls(false);
+                            toggleRowControls(false);
+                        }
                     }
-                }
-            });
+                });
 
         rowsTable.getColumnModel().addColumnModelListener(
-            new TableColumnModelListener() {
-                @Override
-                public void columnAdded(TableColumnModelEvent e) {
-                }
-
-                @Override
-                public void columnRemoved(TableColumnModelEvent e) {
-                }
-
-                @Override
-                public void columnMoved(TableColumnModelEvent e) {
-                }
-
-                @Override
-                public void columnMarginChanged(ChangeEvent e) {
-                    TableColumn column = rowsTable.getTableHeader().getResizingColumn();
-                    if (column != null) {
-                        clusterConfig.setTableConfig(getSelectedTableName(), column.getHeaderValue().toString(), "size", String.valueOf(column.getWidth()));
+                new TableColumnModelListener() {
+                    @Override
+                    public void columnAdded(TableColumnModelEvent e) {
                     }
-                }
 
-                @Override
-                public void columnSelectionChanged(ListSelectionEvent e) {
-                }
-            });
+                    @Override
+                    public void columnRemoved(TableColumnModelEvent e) {
+                    }
+
+                    @Override
+                    public void columnMoved(TableColumnModelEvent e) {
+                    }
+
+                    @Override
+                    public void columnMarginChanged(ChangeEvent e) {
+                        TableColumn column = rowsTable.getTableHeader().getResizingColumn();
+                        if (column != null) {
+                            clusterConfig.setTableConfig(getSelectedTableName(), column.getHeaderValue().toString(), "size", String.valueOf(column.getWidth()));
+                        }
+                    }
+
+                    @Override
+                    public void columnSelectionChanged(ListSelectionEvent e) {
+                    }
+                });
 
         changeTracker.addListener(
-            new ChangeTrackerListener() {
-                @Override
-                public void onCellChanged(DataCell cell) {
-                    clearError();
+                new ChangeTrackerListener() {
+                    @Override
+                    public void onCellChanged(DataCell cell) {
+                        clearError();
 
-                    rowSave.setEnabled(changeTracker.hasChanges());
-                }
-            });
+                        rowSave.setEnabled(changeTracker.hasChanges());
+                    }
+                });
     }
 
     /**
@@ -1566,7 +1566,7 @@ public class DesignerView {
 
             if (clearRows) {
                 clearTable(rowsTable);
-
+                changeTracker.clear();
                 rowsTotal.setText("?");
                 rowsVisible.setText("?");
                 rowsNumber.setEnabled(true);
@@ -1594,6 +1594,7 @@ public class DesignerView {
      *                  {@link Direction#Forward} or {@link Direction#Backward}.
      */
     private void populateRowsTable(Direction direction) {
+        changeTracker.clear();
         populateRowsTable(0, direction);
     }
 
@@ -1614,7 +1615,7 @@ public class DesignerView {
             String tableName = getSelectedTableName();
             if (tableName != null) {
                 clearTable(rowsTable);
-
+                changeTracker.clear();
                 scanner.setColumnTypes(columnTypes);
                 scanner.setQuery(lastQuery);
 
@@ -1640,34 +1641,34 @@ public class DesignerView {
                 rowsNumber.setEnabled(scanner.getLastRow() <= getPageSize());
 
                 rowsCountAction = RunnableAction.run(
-                    tableName + "-rowsCount", new Action<Boolean>() {
+                        tableName + "-rowsCount", new Action<Boolean>() {
 
-                    @Override
-                    public Boolean run() throws IOException {
-                        rowsNumberIcon.setVisible(true);
-                        rowsTotal.setVisible(false);
+                            @Override
+                            public Boolean run() throws IOException {
+                                rowsNumberIcon.setVisible(true);
+                                rowsTotal.setVisible(false);
 
-                        long totalNumberOfRows = scanner.getRowsCount(GlobalConfig.instance().getRowCountTimeout());
-                        if (scanner.isRowsCountPartiallyCalculated()) {
-                            rowsTotal.setText("more than " + totalNumberOfRows);
-                        }
-                        else {
-                            rowsTotal.setText(String.valueOf(totalNumberOfRows));
-                        }
+                                long totalNumberOfRows = scanner.getRowsCount(GlobalConfig.instance().getRowCountTimeout());
+                                if (scanner.isRowsCountPartiallyCalculated()) {
+                                    rowsTotal.setText("more than " + totalNumberOfRows);
+                                }
+                                else {
+                                    rowsTotal.setText(String.valueOf(totalNumberOfRows));
+                                }
 
-                        rowsNumberIcon.setVisible(false);
-                        rowsTotal.setVisible(true);
+                                rowsNumberIcon.setVisible(false);
+                                rowsTotal.setVisible(true);
 
-                        togglePagingControls();
+                                togglePagingControls();
 
-                        return true;
-                    }
+                                return true;
+                            }
 
-                    @Override
-                    public void onError(Exception ex) {
-                        setError("Failed to get the number of rows in the table.", ex);
-                    }
-                });
+                            @Override
+                            public void onError(Exception ex) {
+                                setError("Failed to get the number of rows in the table.", ex);
+                            }
+                        });
             }
 
             toggleRowControls(rowsTableModel.getRowCount() > 0);
@@ -1740,9 +1741,9 @@ public class DesignerView {
 
             if (row == null) {
                 scanner.setColumnTypes(
-                    new HashMap<String, ColumnType>() {{
-                        put(ColumnQualifier.KEY.getName(), ColumnType.String);
-                    }});
+                        new HashMap<String, ColumnType>() {{
+                            put(ColumnQualifier.KEY.getName(), ColumnType.String);
+                        }});
 
                 row = scanner.getFirstRow();
             }
@@ -1862,17 +1863,17 @@ public class DesignerView {
         tableColumn.setHeaderValue(qualifier);
         tableColumn.setCellEditor(ColumnQualifier.isKey(qualifier.getFullName()) ? readOnlyCellEditor : editableCellEditor);
         tableColumn.setHeaderRenderer(
-            new TableCellRenderer() {
-                @Override
-                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                    TableCellRenderer renderer = table.getTableHeader().getDefaultRenderer();
+                new TableCellRenderer() {
+                    @Override
+                    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                        TableCellRenderer renderer = table.getTableHeader().getDefaultRenderer();
 
-                    JComponent component = (JComponent)renderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                    component.setToolTipText(table.getColumnName(column));
+                        JComponent component = (JComponent)renderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                        component.setToolTipText(table.getColumnName(column));
 
-                    return component;
-                }
-            });
+                        return component;
+                    }
+                });
 
         try {
             Integer width = clusterConfig.getTableConfig(Integer.class, tableName, qualifier.getFullName(), "size");
@@ -1990,7 +1991,7 @@ public class DesignerView {
                                 // Update the column types according to the added row.
                                 for (DataCell cell : row.getCells()) {
                                     clusterConfig.setTableConfig(
-                                        getSelectedTableName(), cell.getColumn().getFullName(), cell.getType().toString());
+                                            getSelectedTableName(), cell.getColumn().getFullName(), cell.getType().toString());
                                 }
 
                                 populateColumnsTable(true, row);
@@ -2003,24 +2004,24 @@ public class DesignerView {
                         if (scanner != null) {
                             List<DataRow> sortedRows = new ArrayList<DataRow>(updatedRows);
                             Collections.sort(
-                                sortedRows, new Comparator<DataRow>() {
-                                @Override
-                                public int compare(DataRow o1, DataRow o2) {
-                                    byte[] a1 = o1.getKey().getValue();
-                                    byte[] a2 = o2.getKey().getValue();
+                                    sortedRows, new Comparator<DataRow>() {
+                                        @Override
+                                        public int compare(DataRow o1, DataRow o2) {
+                                            byte[] a1 = o1.getKey().getValue();
+                                            byte[] a2 = o2.getKey().getValue();
 
-                                    if (a1.length != a2.length) {
-                                        return a1.length - a2.length;
-                                    }
+                                            if (a1.length != a2.length) {
+                                                return a1.length - a2.length;
+                                            }
 
-                                    for (int i = 0 ; i < a1.length ; i++) {
-                                        if (a1[i] != a2[i]) {
-                                            return a1[i] - a2[i];
+                                            for (int i = 0 ; i < a1.length ; i++) {
+                                                if (a1[i] != a2[i]) {
+                                                    return a1[i] - a2[i];
+                                                }
+                                            }
+                                            return 0;
                                         }
-                                    }
-                                    return 0;
-                                }
-                            });
+                                    });
 
                             scanner.resetCurrent(sortedRows.get(0).getKey());
                         }
@@ -2104,8 +2105,8 @@ public class DesignerView {
             boolean isShown = (Boolean)columnsTableModel.getValueAt(i, 0);
             if (isShown) {
                 typedColumns.add(
-                    new TypedColumn(
-                        (ColumnQualifier)columnsTableModel.getValueAt(i, 1), (ColumnType)columnsTableModel.getValueAt(i, 2)));
+                        new TypedColumn(
+                                (ColumnQualifier)columnsTableModel.getValueAt(i, 1), (ColumnType)columnsTableModel.getValueAt(i, 2)));
             }
         }
         return typedColumns;
@@ -2518,9 +2519,9 @@ public class DesignerView {
         topSplitPane.setDividerSize(9);
         topSplitPane.setOneTouchExpandable(true);
         topPanel.add(
-            topSplitPane, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+                topSplitPane, new GridConstraints(
+                        0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         topSplitPane.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), null));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(4, 1, new Insets(0, 0, 0, 0), -1, -1));
@@ -2536,16 +2537,16 @@ public class DesignerView {
         panel2.setAlignmentX(0.5f);
         panel2.setAlignmentY(0.5f);
         panel1.add(
-            panel2, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+                panel2, new GridConstraints(
+                        1, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL,
+                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JToolBar toolBar1 = new JToolBar();
         toolBar1.setFloatable(false);
         panel2.add(
-            toolBar1, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
-            null, new Dimension(-1, 20), null, 0, false));
+                toolBar1, new GridConstraints(
+                        0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+                        null, new Dimension(-1, 20), null, 0, false));
         tableRefresh = new JButton();
         tableRefresh.setEnabled(true);
         tableRefresh.setHorizontalAlignment(0);
@@ -2571,27 +2572,27 @@ public class DesignerView {
         scrollPane1.setAlignmentX(0.5f);
         scrollPane1.setAlignmentY(0.5f);
         panel1.add(
-            scrollPane1, new GridConstraints(
-            3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(256, 286), null, 0, false));
+                scrollPane1, new GridConstraints(
+                        3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(256, 286), null, 0, false));
         tablesList = new JList();
         tablesList.setSelectionMode(2);
         scrollPane1.setViewportView(tablesList);
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         panel1.add(
-            panel3, new GridConstraints(
-            2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+                panel3, new GridConstraints(
+                        2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JToolBar toolBar2 = new JToolBar();
         toolBar2.setBorderPainted(false);
         toolBar2.setFloatable(false);
         toolBar2.setRollover(true);
         toolBar2.putClientProperty("JToolBar.isRollover", Boolean.TRUE);
         panel3.add(
-            toolBar2, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
-            null, new Dimension(-1, 20), null, 0, false));
+                toolBar2, new GridConstraints(
+                        0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+                        null, new Dimension(-1, 20), null, 0, false));
         tableAdd = new JButton();
         tableAdd.setEnabled(true);
         tableAdd.setHorizontalAlignment(0);
@@ -2680,25 +2681,25 @@ public class DesignerView {
         final JPanel panel4 = new JPanel();
         panel4.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel1.add(
-            panel4, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+                panel4, new GridConstraints(
+                        0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JLabel label1 = new JLabel();
         label1.setText("Tables:");
         panel4.add(
-            label1, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
-            null, 0, false));
+                label1, new GridConstraints(
+                        0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+                        null, 0, false));
         final Spacer spacer1 = new Spacer();
         panel4.add(
-            spacer1, new GridConstraints(
-            0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+                spacer1, new GridConstraints(
+                        0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         tablesNumber = new JLabel();
         tablesNumber.setText("0 of 0");
         panel4.add(
-            tablesNumber, new GridConstraints(
-            0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
-            null, 0, false));
+                tablesNumber, new GridConstraints(
+                        0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+                        null, 0, false));
         innerSplitPane = new JSplitPane();
         innerSplitPane.setContinuousLayout(true);
         innerSplitPane.setDividerSize(9);
@@ -2716,15 +2717,15 @@ public class DesignerView {
         final JPanel panel6 = new JPanel();
         panel6.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         panel5.add(
-            panel6, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+                panel6, new GridConstraints(
+                        1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JToolBar toolBar3 = new JToolBar();
         toolBar3.setFloatable(false);
         panel6.add(
-            toolBar3, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
-            null, new Dimension(-1, 20), null, 0, false));
+                toolBar3, new GridConstraints(
+                        0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+                        null, new Dimension(-1, 20), null, 0, false));
         columnRefresh = new JButton();
         columnRefresh.setEnabled(false);
         columnRefresh.setHorizontalAlignment(0);
@@ -2774,9 +2775,9 @@ public class DesignerView {
         final JScrollPane scrollPane2 = new JScrollPane();
         scrollPane2.setDoubleBuffered(true);
         panel5.add(
-            scrollPane2, new GridConstraints(
-            3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+                scrollPane2, new GridConstraints(
+                        3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
+                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         columnsTable = new JTable();
         columnsTable.setAutoCreateRowSorter(true);
         columnsTable.setAutoResizeMode(1);
@@ -2784,16 +2785,16 @@ public class DesignerView {
         final JPanel panel7 = new JPanel();
         panel7.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         panel5.add(
-            panel7, new GridConstraints(
-            2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+                panel7, new GridConstraints(
+                        2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JToolBar toolBar4 = new JToolBar();
         toolBar4.setBorderPainted(false);
         toolBar4.setFloatable(false);
         panel7.add(
-            toolBar4, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
-            null, new Dimension(-1, 20), null, 0, false));
+                toolBar4, new GridConstraints(
+                        0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+                        null, new Dimension(-1, 20), null, 0, false));
         columnCheck = new JButton();
         columnCheck.setEnabled(false);
         columnCheck.setIcon(new ImageIcon(getClass().getResource("/images/select.png")));
@@ -2853,25 +2854,25 @@ public class DesignerView {
         final JPanel panel8 = new JPanel();
         panel8.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel5.add(
-            panel8, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+                panel8, new GridConstraints(
+                        0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JLabel label2 = new JLabel();
         label2.setText("Columns:");
         panel8.add(
-            label2, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
-            null, 0, false));
+                label2, new GridConstraints(
+                        0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+                        null, 0, false));
         final Spacer spacer2 = new Spacer();
         panel8.add(
-            spacer2, new GridConstraints(
-            0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+                spacer2, new GridConstraints(
+                        0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         columnsNumber = new JLabel();
         columnsNumber.setText("0 of 0");
         panel8.add(
-            columnsNumber, new GridConstraints(
-            0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
-            null, 0, false));
+                columnsNumber, new GridConstraints(
+                        0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+                        null, 0, false));
         final JPanel panel9 = new JPanel();
         panel9.setLayout(new GridLayoutManager(2, 1, new Insets(0, 4, 0, 0), -1, -1));
         panel9.setAlignmentX(0.5f);
@@ -2883,22 +2884,22 @@ public class DesignerView {
         final JPanel panel10 = new JPanel();
         panel10.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel9.add(
-            panel10, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+                panel10, new GridConstraints(
+                        0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JLabel label3 = new JLabel();
         label3.setText("Rows:");
         panel10.add(
-            label3, new GridConstraints(
-            0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
-            null, 0, false));
+                label3, new GridConstraints(
+                        0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null,
+                        null, 0, false));
         final JToolBar toolBar5 = new JToolBar();
         toolBar5.setBorderPainted(false);
         toolBar5.setFloatable(false);
         panel10.add(
-            toolBar5, new GridConstraints(
-            0, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
-            new Dimension(-1, 20), null, 0, false));
+                toolBar5, new GridConstraints(
+                        0, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
+                        new Dimension(-1, 20), null, 0, false));
         rowOpen = new JButton();
         rowOpen.setEnabled(false);
         rowOpen.setIcon(new ImageIcon(getClass().getResource("/images/viewer.png")));
@@ -2953,9 +2954,9 @@ public class DesignerView {
         toolBar6.setBorderPainted(false);
         toolBar6.setFloatable(false);
         panel10.add(
-            toolBar6, new GridConstraints(
-            0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
-            new Dimension(-1, 20), null, 0, false));
+                toolBar6, new GridConstraints(
+                        0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
+                        new Dimension(-1, 20), null, 0, false));
         rowsNumber = new JSpinner();
         rowsNumber.setDoubleBuffered(true);
         rowsNumber.setEnabled(true);
@@ -3004,9 +3005,9 @@ public class DesignerView {
         toolBar6.add(rowsNext);
         final JScrollPane scrollPane3 = new JScrollPane();
         panel9.add(
-            scrollPane3, new GridConstraints(
-            1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+                scrollPane3, new GridConstraints(
+                        1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW,
+                        GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         rowsTable = new JTable();
         rowsTable.setAutoCreateRowSorter(true);
         rowsTable.setAutoResizeMode(0);

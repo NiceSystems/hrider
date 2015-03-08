@@ -10,7 +10,7 @@
     <description>h-rider updater</description>
 
     <packaging>jar</packaging>
-    <version>1.0.8.3</version>
+    <version>1.0.8.4</version>
 
     <dependencies>
         <dependency>
