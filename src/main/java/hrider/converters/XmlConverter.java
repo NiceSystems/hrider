@@ -1,7 +1,9 @@
 package hrider.converters;
 
-import com.sun.org.apache.xml.internal.serialize.OutputFormat;
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
+import org.apache.xml.serialize.OutputFormat;
+//import com.sun.org.apache.xml.internal.serialize.OutputFormat;
+//import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
+import org.apache.xml.serialize.XMLSerializer;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 

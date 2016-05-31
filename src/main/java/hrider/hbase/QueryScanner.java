@@ -112,11 +112,13 @@ public class QueryScanner extends Scanner {
             }
 
             if (this.query.getWord() != null || this.query.getOperator().isUnary()) {
-                WritableByteArrayComparable comparator;
+                RegexStringComparator comparator=null;
+                BinaryComparator bComparator=null;
 
                 switch (this.query.getOperator()) {
                     case Contains:
-                        comparator = new SubstringComparator(this.query.getWord());
+                        comparator = new RegexStringComparator(this.query.getWord());
+                        scan.setBatch(1);
                         break;
                     case StartsWith:
                         comparator = new RegexStringComparator(String.format("^%s.*", this.query.getWord()));
@@ -130,20 +132,25 @@ public class QueryScanner extends Scanner {
                     case NotEqual:
                     case GreaterOrEqual:
                     case Greater:
-                        comparator = new BinaryComparator(this.query.getWordAsByteArray());
+                        bComparator = new BinaryComparator(this.query.getWordAsByteArray());
                         break;
                     case IsNull:
                     case IsNotNull:
-                        comparator = new BinaryComparator(EMPTY_BYTES_ARRAY);
+                        bComparator = new BinaryComparator(EMPTY_BYTES_ARRAY);
                         break;
                     default:
                         throw new IllegalArgumentException(String.format("The specified operator type '%s' is not supported.", this.query.getOperator()));
                 }
-
-                scan.setFilter(
-                    new SingleColumnValueFilter(
-                        Bytes.toBytesBinary(this.query.getFamily()), Bytes.toBytesBinary(this.query.getColumn()), this.query.getOperator().toFilter(),
-                        comparator));
+                if (comparator!=null)
+                    scan.setFilter(
+                        new SingleColumnValueFilter(
+                            Bytes.toBytesBinary(this.query.getFamily()), Bytes.toBytesBinary(this.query.getColumn()), this.query.getOperator().toFilter(),
+                            comparator));
+                else if (bComparator!=null)
+                    scan.setFilter(
+                            new SingleColumnValueFilter(
+                                    Bytes.toBytesBinary(this.query.getFamily()), Bytes.toBytesBinary(this.query.getColumn()), this.query.getOperator().toFilter(),
+                                    bComparator));
             }
         }
 

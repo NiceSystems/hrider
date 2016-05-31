@@ -17,21 +17,64 @@
             <id>localrepository</id>
             <url>file://${project.basedir}/repo</url>
         </repository>
-        <repository>
+   <!--     <repository>
             <id>cloudera</id>
             <url>https://repository.cloudera.com/artifactory/cloudera-repos</url>
         </repository>
         <repository>
             <id>mvnrepository</id>
             <url>http://mvnrepository.com/artifact</url>
-        </repository>
+        </repository>-->
+        <repository>
+            <id>bi4</id>
+            <url>http://198.11.219.187:8081/nexus/content/groups/public</url>
+            </repository>
     </repositories>
 
     <properties>
-        <hbase.version>0.90.4</hbase.version>
+        <hbase.version>1.1.1-IBM-3</hbase.version>
     </properties>
 
     <profiles>
+        <profile>
+            <id>bi4</id>
+            <properties>
+                <hbase.version>1.1.1-IBM-3</hbase.version>
+                <hadoop.version>2.7.1-IBM-8</hadoop.version>
+            </properties>
+            <dependencies>
+                <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-hdfs</artifactId>
+                <version>${hadoop.version}</version>
+            </dependency>
+                <dependency>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-common</artifactId>
+                    <version>${hadoop.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.hbase</groupId>
+                    <artifactId>hbase-client</artifactId>
+                    <version>${hbase.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.hbase</groupId>
+                    <artifactId>hbase-server</artifactId>
+                    <version>${hbase.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.hbase</groupId>
+                    <artifactId>hbase-common</artifactId>
+                    <version>${hbase.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>xerces</groupId>
+                    <artifactId>xercesImpl</artifactId>
+                    <version>2.9.0</version>
+                </dependency>
+            </dependencies>
+        </profile>
         <profile>
             <id>cdh4</id>
             <properties>
@@ -56,7 +99,7 @@
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-core</artifactId>
-                    <version>${hadoop.version}</version>
+                    <version>1.0.3</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -71,8 +114,8 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase</artifactId>
-            <version>${hbase.version}</version>
+            <artifactId>hbase-client</artifactId>
+            <version>0.98.8_IBM_4-hadoop2</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -182,5 +225,22 @@
         </pluginManagement>
 
     </build>
+
+    <distributionManagement>
+    <repository>
+    <id>biginsights.maven.releases</id>
+    <name>Internal Release Repository</name>
+     <!--  This property is defined in the global Maven settings.xml file
+  -->
+        <url>http://198.11.219.187:8081/nexus/content/groups/</url>
+    </repository>
+     <snapshotRepository>
+    <id>biginsights.maven.snapshots</id>
+    <name>Internal Snapshot Repository</name>
+    <url>http://198.11.219.187:8081/nexus/content/groups/public</url>
+    </snapshotRepository>
+</distributionManagement>
+
+
 
 </project>

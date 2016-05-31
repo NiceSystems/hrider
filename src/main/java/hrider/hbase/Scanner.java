@@ -641,6 +641,7 @@ public class Scanner {
 
         HTable table = this.connection.getTableFactory().get(this.tableName);
         ResultScanner scanner = table.getScanner(scan);
+       // scanner.setMaxNumKeyValues(-1);
 
         try {
             Collection<DataRow> rows = new LinkedList<DataRow>();

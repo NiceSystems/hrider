@@ -20,8 +20,8 @@ package hrider.hbase;
  */
 public class TableUtil {
 
-    public static final String ROOT_TABLE = "-ROOT-";
-    public static final String META_TABLE = ".META.";
+    public static final String ROOT_TABLE = "hbase:namespace";
+    public static final String META_TABLE = "hbase:meta";
 
     private TableUtil() {
     }

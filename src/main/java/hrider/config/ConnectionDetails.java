@@ -70,6 +70,7 @@ public class ConnectionDetails implements Serializable {
         config.set("hbase.zookeeper.property.clientPort", this.zookeeper.getPort());
         config.set("hbase.client.retries.number", "3");
         config.set("hbase.rpc.timeout","900000");
+        //config.set("zookeeper.znode.parent","/hbase-unsecure");
 
 //        config.set("hbase.security.authentication", "kerberos");
 //        config.set("hbase.rpc.engine", "org.apache.hadoop.hbase.ipc.SecureRpcEngine");
