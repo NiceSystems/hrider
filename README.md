@@ -13,6 +13,10 @@ To get started, begin here:
 3. If you have any problems read the [FAQ](https://github.com/NiceSystems/hrider/wiki/FAQ) first.
 
 ## News
+### 12 March, 2015: Migrating version to Maven's SNAPSHOT/RELEASE standard.
+Master's version: 1.0.9-SNAPSHOT
+
+
 ### 08 March, 2015: Release 1.0.8.4 available
 Issues fixed: [#55](https://github.com/NiceSystems/hrider/issues/55)
 
