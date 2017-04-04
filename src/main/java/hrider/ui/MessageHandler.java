@@ -66,6 +66,7 @@ public class MessageHandler {
      */
     public static void addInfo(String message) {
         if (message != null && !message.isEmpty()) {
+            message = message.replace("%", "%%");
             logger.info(message);
         }
 
