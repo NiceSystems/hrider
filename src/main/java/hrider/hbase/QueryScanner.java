@@ -117,8 +117,10 @@ public class QueryScanner extends Scanner {
 
                 switch (this.query.getOperator()) {
                     case Contains:
-                        comparator = new RegexStringComparator(this.query.getWord());
-                        scan.setBatch(1);
+                        comparator = new RegexStringComparator(String.format(".*%s.*", this.query.getWord()));
+
+                        //comparator = new RegexStringComparator(this.query.getWord());
+                        //scan.setBatch(1);
                         break;
                     case StartsWith:
                         comparator = new RegexStringComparator(String.format("^%s.*", this.query.getWord()));
